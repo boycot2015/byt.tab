@@ -1,0 +1,13 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root {
+  --plasmo-csui-color-primary: #007bff;
+}
+html[theme="dark"] {
+  --plasmo-csui-color-primary: hwb(147 4% 38%);
+}
+a {
+  color: var(--plasmo-csui-color-primary);
+}
