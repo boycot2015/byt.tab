@@ -1,0 +1,20 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode", // 需安装prettier插件格式化
+  // "editor.defaultFormatter": "vscode.typescript-language-features",
+  "[css]": {
+    "editor.defaultFormatter": "vscode.css-language-features" // css文件
+  },
+  "[less]": {
+    "editor.defaultFormatter": "vscode.css-language-features" // less文件
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "vscode.css-language-features" // scss文件
+  },
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  }
+  // "[jsonc]": {
+  //     "editor.defaultFormatter": "vscode.json-language-features"
+  // }
+}

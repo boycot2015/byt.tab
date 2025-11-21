@@ -50,9 +50,9 @@ const CustomButton = () => {
  
     return (
         <div>
-            <div className="controlBtn" onClick={showModal}>
+            <Button className="controlBtn" onClick={showModal}>
                 抢购
-            </div>
+            </Button>
             <Modal
                 title="Basic Modal"
                 open={isModalOpen}

@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.css-var-r0 {
+  --byt-font-family: 'CangErYuYang', 'OPPOSans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji' !important;
+  --byt-font-family-code: 'CangErYuYang', 'OPPOSans', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace !important;
+}
+
+#__plasmo {
+  z-index: 99999;
+  font-family: 'CangErYuYang', 'OPPOSans', sans-serif;
+  background-color: #ccc;
+}
+
+/* html,
+body {
+  --byt-font-family: hwb(147 4% 38%);
+  --byt-font-family: 'CangErYuYang', 'OPPOSans', sans-serif;
+  --byt-background-color: #ccc;
+} */
+
+html[theme='dark'] {
+  background-color: #333;
+  --plasmo-csui-color-primary: hwb(147 4% 38%);
+}

@@ -1,22 +1,41 @@
-import ConfigProvider from "antd/es/config-provider"
-import type { ReactNode } from "react"
-// import antdResetCssText from "data-text:antd/dist/reset.css"
-// import styleText from 'data-text:~contents/styles/index.css'
-import '~contents/styles/index.css'
-import type { PlasmoGetStyle } from "plasmo"
-// console.log(styleText, 'styleText');
-// export const getStyle: PlasmoGetStyle = () => {
-//     const style = document.createElement("style")
-//     style.textContent = antdResetCssText + styleText
-//     return style
-// }
-export const ThemeProvider = ({ children = null as ReactNode }) => (
-  <ConfigProvider
-    theme={{
-      token: {
-        colorPrimary: "#ff9900"
-      }
-    }}>
-    {children}
-  </ConfigProvider>
-)
+import { ConfigProvider } from 'antd'
+import { useResponsive } from 'antd-style'
+import zhCN from 'antd/es/locale/zh_CN'
+import cssText from 'data-text:~styles/index.css'
+import type { ReactNode } from 'react'
+
+interface ThemeProviderProps {
+  children?: ReactNode
+  colorPrimary?: string
+}
+export const getStyle = () => {
+  const style = document.createElement('style')
+  style.textContent = cssText
+  document.head.appendChild(style)
+  return style
+}
+getStyle()
+// console.log(cssText, 'cssText');
+
+export const ThemeProvider = ({
+  children,
+  colorPrimary
+}: ThemeProviderProps) => {
+  const { xxl, xl } = useResponsive()
+  return (
+    <ConfigProvider
+      locale={zhCN}
+      prefixCls="byt"
+      componentSize={'middle'}
+      theme={{
+        cssVar: {
+          prefix: 'byt'
+        },
+        token: {
+          colorPrimary: colorPrimary || '#ff9900'
+        }
+      }}>
+      {children}
+    </ConfigProvider>
+  )
+}
