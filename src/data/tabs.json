@@ -1,0 +1,83 @@
+[
+    {
+        "id": 1,
+        "name": "常用",
+        "icon": "AndroidOutlined",
+        "children": [
+            {
+                "id": 11,
+                "icon": "BaiduOutlined",
+                "editable": true,
+                "closable": true,
+                "href": "https://www.baidu.com",
+                "target": "_blank",
+                "name": "百度一下"
+            },
+            {
+                "id": 12,
+                "name": "天气",
+                "closable": true,
+                "component": "WeatherWidget"
+            },
+            {
+                "id": 13,
+                "name": "日历",
+                "closable": true,
+                "component": "DateWidget"
+            },
+            {
+                "id": 14,
+                "name": "时间",
+                "closable": true,
+                "component": "TimeWidget"
+            },
+            {
+                "id": 15,
+                "name": "设置",
+                "component": "SettingWidget"
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "name": "娱乐",
+        "icon": "AppleOutlined",
+        "children": [
+            {
+                "id": 21,
+                "name": "shrek2"
+            },
+            {
+                "id": 22,
+                "name": "shrek22"
+            },
+            {
+                "id": 23,
+                "name": "shrek23"
+            }
+        ]
+    },
+    {
+        "id": 3,
+        "name": "办公",
+        "icon": "WindowsOutlined",
+        "children": [
+            {
+                "id": 31,
+                "name": "shrek31"
+            },
+            {
+                "id": 32,
+                "name": "shrek32"
+            },
+            {
+                "id": 33,
+                "name": "shrek33"
+            },
+            {
+                "id": 34,
+                "name": "shrek34"
+            }
+        ]
+    }
+]

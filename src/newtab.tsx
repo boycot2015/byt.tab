@@ -1,40 +1,25 @@
-import {
-  AndroidOutlined,
-  AppleOutlined,
-  WindowsOutlined
-} from '@ant-design/icons'
-import { Button, Card, Carousel, ColorPicker, Input, Tabs } from 'antd'
-import type { CarouselRef } from 'antd/lib/carousel'
-import type { PlasmoCSConfig } from 'plasmo'
+import { Button, Card, ColorPicker, ConfigProvider, Input, Tabs } from 'antd'
+import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
 import { useEffect, useRef, useState } from 'react'
+import { useContextMenu } from 'react-contexify'
 import { ReactSortable } from 'react-sortablejs'
 
 import { useStorage } from '@plasmohq/storage/hook'
 
-import { ThemeProvider } from './contents/layouts'
-import DateWidget from './contents/widgets/date'
-import SettingWidget from './contents/widgets/setting'
-import TimeWidget from './contents/widgets/time'
-import WeatherWidget from './contents/widgets/weather'
+import { renderComponent } from '~/contents/components'
 
-interface ItemType {
-  id: number
-  name: string
-  href?: string
-  target?: string
-  row?: number
-  col?: number
-  icon?: React.ReactNode
-  component?: React.ReactNode
-  closable?: boolean
-  editable?: boolean
-  children?: ItemType[]
+import { ThemeProvider } from './contents/layouts'
+import ContextMenu, { MENU_ID } from './contents/widgets/context'
+import tabsBase from './data/tabs.json'
+import type { Config, ItemType } from './types'
+
+export type PlasmoCSUIAnchor = {
+  type: 'overlay' | 'inline'
+  element: Element
 }
-interface Config {
-  theme: {
-    primary: string
-  }
-}
+export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
+  document.querySelector('#__plasmo')
+
 export const config: PlasmoCSConfig = {
   matches: ['<all_urls>'],
   all_frames: true
@@ -51,86 +36,14 @@ function IndexNewtab() {
     )
   })
   const [primary, setPrimary] = useState(config.theme.primary)
+  const [currentItem, setCurrentItem] = useState<ItemType>()
   const [activeKey, setActiveKey] = useState('1')
-  const [tabs, setTabs] = useState<ItemType[]>([
-    {
-      id: 1,
-      name: '新闻',
-      icon: <AndroidOutlined />,
-      children: [
-        {
-          id: 11,
-          icon: <WindowsOutlined />,
-          href: 'https://www.baidu.com',
-          target: '_blank',
-          name: 'shrek'
-        },
-        {
-          id: 12,
-          name: '天气',
-          component: <WeatherWidget />
-        },
-        {
-          id: 13,
-          name: '日历',
-          component: <DateWidget />
-        },
-        {
-          id: 14,
-          name: '时间',
-          component: <TimeWidget />
-        },
-        {
-          id: 15,
-          name: '设置',
-          component: <SettingWidget />
-        }
-      ]
-    },
-    {
-      id: 2,
-      name: '娱乐',
-      icon: <AppleOutlined />,
-      children: [
-        {
-          id: 21,
-          name: 'shrek2'
-        },
-        {
-          id: 22,
-          name: 'shrek22'
-        },
-        {
-          id: 23,
-          name: 'shrek23'
-        }
-      ]
-    },
-    {
-      id: 3,
-      name: '办公',
-      icon: <WindowsOutlined />,
-      children: [
-        {
-          id: 31,
-          name: 'shrek31'
-        },
-        {
-          id: 32,
-          name: 'shrek32'
-        },
-        {
-          id: 33,
-          name: 'shrek33'
-        },
-        {
-          id: 34,
-          name: 'shrek34'
-        }
-      ]
-    }
-  ])
-  const carouselRef = useRef<CarouselRef>(null)
+  const [tabs, setTabs] = useStorage<ItemType[]>(
+    'tabs',
+    (val) => val || tabsBase || []
+  )
+  const [weather, setWeather] = useStorage<any>('weather', (val) => val || {})
+  // const carouselRef = useRef<CarouselRef>(null)
   const TabConents = (item: ItemType) => {
     const [list, setList] = useState(item.children || [])
     return (
@@ -152,29 +65,48 @@ function IndexNewtab() {
           <a
             href={item.href || '#'}
             target={item.target}
+            onContextMenu={(event) => handleContextMenu(event, item)}
             className="text-center cursor-pointer">
             {item.component ? (
-              item.component
+              renderComponent(item.component) || item.name
             ) : (
-              <Card key={item.id}>
-                {item.component || item.icon || item.name}
-              </Card>
+              <ConfigProvider
+                prefixCls="byt"
+                theme={{ components: { Card: { bodyPadding: 14 } } }}>
+                <Card key={item.id} className="text-xl">
+                  {renderComponent(item.icon) || item.name}
+                </Card>
+              </ConfigProvider>
             )}
-            <div className="title">{item.name}</div>
+            <div className="title mt-2">{item.name}</div>
           </a>
         ))}
       </ReactSortable>
     )
   }
+  const { show } = useContextMenu({
+    id: MENU_ID
+  })
+  function handleContextMenu(event, item) {
+    show({
+      id: MENU_ID,
+      event,
+      props: item
+    })
+    setCurrentItem(item)
+  }
   useEffect(() => {
     setPrimary(config.theme.primary)
   }, [config])
   useEffect(() => {
-    carouselRef.current?.goTo(Number(activeKey) - 1)
-  }, [activeKey])
+    setWeather({})
+  }, [tabs])
+  // useEffect(() => {
+  //   carouselRef.current?.goTo(Number(activeKey) - 1)
+  // }, [activeKey])
   return (
-    <ThemeProvider colorPrimary={primary}>
-      <div className="h-[100vh] lg:overflow-hidden p-5 flex flex-col items-center justify-center">
+    <ThemeProvider token={{ colorPrimary: primary }}>
+      <div className="h-[100vh] lg:overflow-hidden p-5 flex flex-col items-center justify-center backdrop-blur-md">
         <div className="mb-10">
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-4">
             <h1 className="text-xl font-bold text-center">
@@ -236,7 +168,7 @@ function IndexNewtab() {
               return {
                 key: id,
                 label: item.name,
-                icon: item.icon,
+                icon: renderComponent(item.icon),
                 children: TabConents(item)
               }
             })}
@@ -244,6 +176,7 @@ function IndexNewtab() {
           />
         </div>
       </div>
+      <ContextMenu data={currentItem} />
     </ThemeProvider>
   )
 }

@@ -1,5 +1,5 @@
 import { Card, message } from 'antd'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { ThemeProvider } from '~/contents/layouts'
 
@@ -7,14 +7,22 @@ import Config from './config'
 
 function Widget() {
   const [visible, setVisible] = useState(false)
+  const [time, setTime] = useState<any>(new Date())
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date())
+    }, 1000)
+    return () => {
+      clearInterval(timer)
+    }
+  }, [])
   return (
     <ThemeProvider>
       <Card
-        style={{ color: '#2563eb', marginBottom: '12px' }}
         onClick={() => {
           setVisible(true)
         }}>
-        🎉 欢迎使用 byt tab！
+        <div className="text-md">{time.toLocaleTimeString()}</div>
       </Card>
       <Config visible={visible} onCancel={() => setVisible(false)} />
     </ThemeProvider>

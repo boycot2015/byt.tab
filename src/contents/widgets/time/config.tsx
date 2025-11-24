@@ -1,18 +1,29 @@
 import { Button, message, Modal } from 'antd'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { ThemeProvider } from '~/contents/layouts'
 
 function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
+  const [time, setTime] = useState<any>(new Date())
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date())
+    }, 1000)
+    return () => {
+      clearInterval(timer)
+    }
+  }, [])
   return (
     <ThemeProvider>
       <Modal
-        title="配置"
+        title=""
+        centered
         open={props.visible}
-        onCancel={() => props.onCancel()}>
-        <h2 style={{ color: '#2563eb', marginBottom: '12px' }}>
-          🎉 欢迎使用 byt tab！
-        </h2>
+        onCancel={() => props.onCancel()}
+        footer={null}>
+        <div className="text-[100px] flex items-center justify-center h-[300px]">
+          {time.toLocaleTimeString()}
+        </div>
       </Modal>
     </ThemeProvider>
   )

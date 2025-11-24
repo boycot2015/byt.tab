@@ -1,4 +1,5 @@
-import { Card, message } from 'antd'
+import { SettingOutlined } from '@ant-design/icons'
+import { Card, ConfigProvider } from 'antd'
 import { useState } from 'react'
 
 import { ThemeProvider } from '~/contents/layouts'
@@ -9,13 +10,17 @@ function Widget() {
   const [visible, setVisible] = useState(false)
   return (
     <ThemeProvider>
-      <Card
-        style={{ color: '#2563eb', marginBottom: '12px' }}
-        onClick={() => {
-          setVisible(true)
-        }}>
-        🎉 欢迎使用 byt tab！
-      </Card>
+      <ConfigProvider
+        prefixCls="byt"
+        theme={{ components: { Card: { bodyPadding: 14 } } }}>
+        <Card
+          className="text-xl"
+          onClick={() => {
+            setVisible(true)
+          }}>
+          <SettingOutlined />
+        </Card>
+      </ConfigProvider>
       <Config visible={visible} onCancel={() => setVisible(false)} />
     </ThemeProvider>
   )
