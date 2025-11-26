@@ -1,17 +1,19 @@
+import { PlusOutlined } from '@ant-design/icons'
 import { Button, Card, ColorPicker, ConfigProvider, Input, Tabs } from 'antd'
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
 import { useEffect, useRef, useState } from 'react'
 import { useContextMenu } from 'react-contexify'
 import { ReactSortable } from 'react-sortablejs'
 
+import { Storage } from '@plasmohq/storage'
 import { useStorage } from '@plasmohq/storage/hook'
 
-import { renderComponent } from '~/contents/components'
-
-import { ThemeProvider } from './contents/layouts'
-import ContextMenu, { MENU_ID } from './contents/widgets/context'
-import tabsBase from './data/tabs.json'
-import type { Config, ItemType } from './types'
+import { renderComponent } from '~components'
+import WidgetsModal from '~components/widgets'
+import ContextMenu, { MENU_ID } from '~components/widgets/context'
+import tabsBase from '~data/tabs.json'
+import { ThemeProvider } from '~layouts'
+import type { Config, ItemType } from '~types'
 
 export type PlasmoCSUIAnchor = {
   type: 'overlay' | 'inline'
@@ -39,55 +41,76 @@ function IndexNewtab() {
   const [currentItem, setCurrentItem] = useState<ItemType>()
   const [activeKey, setActiveKey] = useState('1')
   const [tabs, setTabs] = useStorage<ItemType[]>(
-    'tabs',
-    (val) => val || tabsBase || []
+    {
+      key: 'tabs',
+      instance: new Storage({
+        area: 'local'
+      })
+    },
+    (val) => {
+      return val || tabsBase
+    }
   )
-  const [weather, setWeather] = useStorage<any>('weather', (val) => val || {})
-  // const carouselRef = useRef<CarouselRef>(null)
+  const [visible, setVisible] = useState(false)
   const TabConents = (item: ItemType) => {
     const [list, setList] = useState(item.children || [])
     return (
-      <ReactSortable
-        list={list}
-        group={item.id + ''}
-        key={item.id + ''}
-        className="flex flex-wrap gap-2"
-        setList={setList}
-        onEnd={({ oldIndex, newIndex }) => {
-          const newTabList = [...tabs]
-          const newList = [...list]
-          newList.splice(newIndex, 0, newList.splice(oldIndex, 1)[0])
-          newTabList.splice(item.id - 1, 1, { ...item, children: newList })
-          setTabs(newTabList)
-        }}
-        animation={200}>
-        {item.children?.map((item) => (
-          <a
-            href={item.href || '#'}
-            target={item.target}
-            onContextMenu={(event) => handleContextMenu(event, item)}
-            className="text-center cursor-pointer">
-            {item.component ? (
-              renderComponent(item.component) || item.name
-            ) : (
-              <ConfigProvider
-                prefixCls="byt"
-                theme={{ components: { Card: { bodyPadding: 14 } } }}>
-                <Card key={item.id} className="text-xl">
-                  {renderComponent(item.icon) || item.name}
-                </Card>
-              </ConfigProvider>
-            )}
-            <div className="title mt-2">{item.name}</div>
-          </a>
-        ))}
-      </ReactSortable>
+      <div className="flex flex-wrap gap-1">
+        <ReactSortable
+          list={list}
+          group={item.id + ''}
+          key={item.id + ''}
+          className="flex flex-wrap gap-2"
+          setList={setList}
+          onEnd={({ oldIndex, newIndex }) => {
+            const newTabList = [...tabs]
+            const newList = [...list]
+            newList.splice(newIndex, 0, newList.splice(oldIndex, 1)[0])
+            newTabList.splice(item.id - 1, 1, { ...item, children: newList })
+            setTabs(newTabList)
+          }}
+          animation={200}>
+          {item.children?.map((child) => (
+            <a
+              href={child.href || '#'}
+              target={child.target}
+              onContextMenu={(event) =>
+                handleContextMenu(event, { ...child, pid: item.id })
+              }
+              className="cursor-pointer">
+              {child.component ? (
+                renderComponent(child.component) || child.name
+              ) : (
+                <ConfigProvider
+                  prefixCls="byt"
+                  theme={{ components: { Card: { bodyPadding: 14 } } }}>
+                  <Card
+                    key={child.id}
+                    className="text-xl text-center !border-none">
+                    {renderComponent(child.icon) || child.name}
+                  </Card>
+                </ConfigProvider>
+              )}
+              <div className="title text-center mt-2">{child.name}</div>
+            </a>
+          ))}
+        </ReactSortable>
+        ,
+        <a href="#" onClick={() => setVisible(true)}>
+          <Card className="text-xl text-center !border-none">
+            <PlusOutlined />
+          </Card>
+          <div className="title text-center mt-2">添加</div>
+        </a>
+      </div>
     )
   }
   const { show } = useContextMenu({
     id: MENU_ID
   })
   function handleContextMenu(event, item) {
+    event.preventDefault()
+    event.stopPropagation()
     show({
       id: MENU_ID,
       event,
@@ -98,12 +121,6 @@ function IndexNewtab() {
   useEffect(() => {
     setPrimary(config.theme.primary)
   }, [config])
-  useEffect(() => {
-    setWeather({})
-  }, [tabs])
-  // useEffect(() => {
-  //   carouselRef.current?.goTo(Number(activeKey) - 1)
-  // }, [activeKey])
   return (
     <ThemeProvider token={{ colorPrimary: primary }}>
       <div className="h-[100vh] lg:overflow-hidden p-5 flex flex-col items-center justify-center backdrop-blur-md">
@@ -177,6 +194,11 @@ function IndexNewtab() {
         </div>
       </div>
       <ContextMenu data={currentItem} />
+      <WidgetsModal
+        visible={visible}
+        data={currentItem}
+        onCancel={() => setVisible(false)}
+      />
     </ThemeProvider>
   )
 }

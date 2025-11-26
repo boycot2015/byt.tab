@@ -2,7 +2,7 @@ import Button from 'antd/es/button'
 
 import { useStorage } from '@plasmohq/storage/hook'
 
-import { ThemeProvider } from '~/contents/layouts'
+import { ThemeProvider } from '~layouts'
 
 function IndexOptions() {
   const [openCount, setOpenCount] = useStorage<number>('open-count')

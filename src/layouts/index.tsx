@@ -3,6 +3,7 @@ import { useResponsive } from 'antd-style'
 import zhCN from 'antd/es/locale/zh_CN'
 import cssText from 'data-text:~styles/index.css'
 import ContexifyCss from 'data-text:react-contexify/ReactContexify.css'
+import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
 import type { ReactNode } from 'react'
 
 interface ThemeProviderProps {
@@ -11,6 +12,8 @@ interface ThemeProviderProps {
   cssVar?: Record<string, any>
   token?: Record<string, any>
 }
+export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
+  document.querySelector('#__plasmo')
 export const getStyle = () => {
   const style = document.createElement('style')
   style.textContent = ContexifyCss + cssText
@@ -20,7 +23,11 @@ export const getStyle = () => {
 getStyle()
 // console.log(cssText, 'cssText');
 
-export const ThemeProvider = ({ children, token = {}, cssVar = {} }: ThemeProviderProps) => {
+export const ThemeProvider = ({
+  children,
+  token = {},
+  cssVar = {}
+}: ThemeProviderProps) => {
   const { xxl, xl } = useResponsive()
   return (
     <ConfigProvider

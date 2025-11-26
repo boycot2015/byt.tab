@@ -1,5 +1,6 @@
 export interface ItemType {
     id: number
+    pid?: number
     name: string
     href?: string
     target?: string

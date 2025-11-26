@@ -10,7 +10,7 @@ import 'dayjs/locale/zh-cn'
 
 import { HolidayUtil, Lunar } from 'lunar-typescript'
 
-import { ThemeProvider } from '~/contents/layouts'
+import { ThemeProvider } from '~layouts'
 
 dayjs.locale('zh-cn')
 

@@ -1,11 +1,14 @@
 import { Card, message } from 'antd'
+import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
 import { useEffect, useState } from 'react'
 
-import { ThemeProvider } from '~/contents/layouts'
+import { ThemeProvider } from '~layouts'
 
 import Config from './config'
 
-function Widget() {
+export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
+  document.querySelector('#__plasmo')
+function Widget(props: { withComponents?: boolean }) {
   const [visible, setVisible] = useState(false)
   const [time, setTime] = useState<any>(new Date())
   useEffect(() => {
@@ -19,10 +22,12 @@ function Widget() {
   return (
     <ThemeProvider>
       <Card
-        onClick={() => {
-          setVisible(true)
+        className="rounded-md overflow-hidden !border-none mx-auto"
+        onClick={(e) => {
+          e.stopPropagation()
+          !props.withComponents && setVisible(true)
         }}>
-        <div className="text-md">{time.toLocaleTimeString()}</div>
+        <div className="text-md font-bold">{time.toLocaleTimeString()}</div>
       </Card>
       <Config visible={visible} onCancel={() => setVisible(false)} />
     </ThemeProvider>

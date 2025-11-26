@@ -1,7 +1,7 @@
 import { Button, Drawer, message } from 'antd'
 import { useState } from 'react'
 
-import { ThemeProvider } from '~/contents/layouts'
+import { ThemeProvider } from '~layouts'
 
 function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
   return (

@@ -12,6 +12,9 @@ function Contexify(props: { data: ItemType }) {
         // console.log(id, props)
         props.href && window.open(props.href, props.target || '_blank')
         break
+      case 'add':
+        console.log(id, props)
+        break
       case 'edit':
         console.log(id, props)
         break
@@ -26,6 +29,9 @@ function Contexify(props: { data: ItemType }) {
   }
   return (
     <Menu id={MENU_ID}>
+      <Item id="add" onClick={handleItemClick}>
+        新增组件
+      </Item>
       {data.href ? (
         <Item id="open" onClick={handleItemClick}>
           在新窗口打开链接

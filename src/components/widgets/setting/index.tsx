@@ -2,7 +2,7 @@ import { SettingOutlined } from '@ant-design/icons'
 import { Card, ConfigProvider } from 'antd'
 import { useState } from 'react'
 
-import { ThemeProvider } from '~/contents/layouts'
+import { ThemeProvider } from '~layouts'
 
 import Config from './config'
 
