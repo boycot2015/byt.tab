@@ -14,7 +14,10 @@ function Widget() {
         prefixCls="byt"
         theme={{ components: { Card: { bodyPadding: 14 } } }}>
         <Card
-          className="text-xl"
+          className="text-xl w-[60px] h-[60px] text-center !border-none"
+          classNames={{
+            body: 'w-full h-full flex flex-col items-center justify-center'
+          }}
           onClick={() => {
             setVisible(true)
           }}>

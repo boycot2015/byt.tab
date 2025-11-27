@@ -1,17 +1,21 @@
 import { Card, message } from 'antd'
-import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { ThemeProvider } from '~layouts'
 
 import Config from './config'
+import FlipClock from './flipclock'
 
-export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
-  document.querySelector('#__plasmo')
-function Widget(props: { withComponents?: boolean }) {
+function Widget(props: {
+  withComponents?: boolean
+  size?: 'middle' | 'large'
+}) {
   const [visible, setVisible] = useState(false)
   const [time, setTime] = useState<any>(new Date())
   useEffect(() => {
+    if (props.size === 'large') {
+      return () => {}
+    }
     const timer = setInterval(() => {
       setTime(new Date())
     }, 1000)
@@ -22,14 +26,30 @@ function Widget(props: { withComponents?: boolean }) {
   return (
     <ThemeProvider>
       <Card
-        className="rounded-md overflow-hidden !border-none mx-auto"
+        className="!rounded-md !overflow-hidden !border-none mx-auto"
+        classNames={{
+          body: `w-full h-full flex !rounded-md items-center !overflow-hidden justify-center ${
+            props.size === 'large'
+              ? '!bg-black w-[250px] h-[140px]'
+              : 'w-[140px] h-[60px] '
+          }`
+        }}
         onClick={(e) => {
           e.stopPropagation()
           !props.withComponents && setVisible(true)
         }}>
-        <div className="text-md font-bold">{time.toLocaleTimeString()}</div>
+        {!props.size || props.size === 'middle' ? (
+          <div className="text-md font-bold">{time.toLocaleTimeString()}</div>
+        ) : (
+          <FlipClock
+            className="text-md font-bold"
+            theme={{ css: { fontSize: '1.8rem' } }}
+          />
+        )}
       </Card>
-      <Config visible={visible} onCancel={() => setVisible(false)} />
+      {visible && (
+        <Config visible={visible} onCancel={() => setVisible(false)} />
+      )}
     </ThemeProvider>
   )
 }

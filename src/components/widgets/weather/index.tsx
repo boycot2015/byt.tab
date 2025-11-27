@@ -103,7 +103,10 @@ export interface Weather {
     weather_icon: string
   }[]
 }
-function Widget(props: { withComponents?: boolean }) {
+function Widget(props: {
+  withComponents?: boolean
+  size?: 'small' | 'middle' | 'large'
+}) {
   const [visible, setVisible] = useState(false)
   const [hasData, setHasData] = useState(false)
   const [weather, setWeather] = useStorage<Weather[]>(
@@ -118,7 +121,7 @@ function Widget(props: { withComponents?: boolean }) {
       return val || ([] as Weather[])
     }
   )
-  useEffect(() => {
+  React.useMemo(() => {
     getWeather('深圳').then((res) => {
       let newWeather = [...weather]
       if (hasData) {
@@ -132,68 +135,116 @@ function Widget(props: { withComponents?: boolean }) {
         setWeather([res])
       }
     })
-    // document.addEventListener('DOMContentLoaded', () => {
-    //   console.log('load')
-    //   getWeather('深圳').then((res) => {
-    //     let newWeather = [...weather]
-    //     if (hasData) {
-    //       newWeather.splice(
-    //         weather.findIndex(
-    //           (item) => item.location.city === res.location.city
-    //         ),
-    //         1,
-    //         res
-    //       )
-    //       setWeather(newWeather)
-    //     } else {
-    //       setWeather([res])
-    //     }
-    //   })
-    // })
   }, [])
   return (
     <ThemeProvider>
       <Card
-        className="rounded-md overflow-hidden !border-none !bg-transparent"
+        className="!rounded-md overflow-hidden !border-none !bg-transparent"
         classNames={{
-          body: `w-[140px] h-[140px] mx-auto ${getWeatherBg(weather?.[0]?.weather?.condition || '晴')}`
+          body: `!overflow-hidden !rounded-md ${props.size === 'small' ? 'w-[60px] h-[60px] !p-1' : props.size === 'middle' ? 'w-[140px] h-[140px] !p-[12px]' : 'w-[250px] h-[140px]'} mx-auto ${getWeatherBg(weather?.[0]?.weather?.condition || '晴')}`
         }}
         onClick={(e) => {
           e.stopPropagation()
           !props.withComponents && setVisible(true)
         }}>
-        <div className="flex flex-col text-white gap-2">
-          <div className="flex justify-between w-full">
-            <div className="flex flex-col">
-              {weather?.[0]?.location?.county ||
-                weather?.[0]?.location?.city ||
-                '深圳'}
-              <span className="text-2xl">
-                {weather?.[0]?.weather?.temperature || '25'}°
-              </span>
+        {!props.size || props.size === 'middle' ? (
+          <div className="h-full flex flex-col text-white gap-2 justify-center">
+            <div className="flex justify-between w-full">
+              <div className="flex flex-col">
+                {weather?.[0]?.location?.county ||
+                  weather?.[0]?.location?.city ||
+                  '深圳'}
+                <span className="text-xl">
+                  {weather?.[0]?.weather?.temperature || '25'}°
+                </span>
+              </div>
+              <div className="flex flex-col items-center justify-center">
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      weatherIcon[weather?.[0]?.weather?.condition || '晴']
+                  }}></span>
+                <span>{weather?.[0]?.weather?.condition || '晴'}</span>
+              </div>
             </div>
-            <div className="flex flex-col items-center justify-center">
+            <span>
+              AQI{weather?.[0]?.air_quality?.level || '优'}/
+              {weather?.[0]?.air_quality?.aqi || '20'}
+            </span>
+            <span className="flex text-xs gap-2">
+              <span>
+                最低&nbsp;{weather?.[0]?.daily_forecast?.[1]?.min_temperature}°
+              </span>
+              <span>
+                最高&nbsp;{weather?.[0]?.daily_forecast?.[1]?.max_temperature}°
+              </span>
+            </span>
+            {/* 🎉 欢迎使用 byt tab！ */}
+          </div>
+        ) : props.size === 'small' ? (
+          <div className="flex flex-col items-center justify-center text-white">
+            {weather?.[0]?.location?.county ||
+              weather?.[0]?.location?.city ||
+              '深圳'}
+            <div className="text-md">
               <span
                 dangerouslySetInnerHTML={{
                   __html: weatherIcon[weather?.[0]?.weather?.condition || '晴']
                 }}></span>
-              <span>{weather?.[0]?.weather?.condition || '晴'}</span>
             </div>
+            {/* <span>{weather?.[0]?.weather?.temperature || '25'}°</span> */}
           </div>
-          <span>
-            AQI{weather?.[0]?.air_quality?.level || '优'}/
-            {weather?.[0]?.air_quality?.aqi || '20'}
-          </span>
-          <span className="flex text-xs gap-2">
-            <span>
-              最低&nbsp;{weather?.[0]?.daily_forecast?.[1]?.min_temperature}°
-            </span>
-            <span>
-              最高&nbsp;{weather?.[0]?.daily_forecast?.[1]?.max_temperature}°
-            </span>
-          </span>
-          {/* 🎉 欢迎使用 byt tab！ */}
-        </div>
+        ) : (
+          <div className="h-full flex flex-col text-white gap-2 justify-center">
+            <div className="flex justify-between w-full">
+              <div className="flex flex-col">
+                {weather?.[0]?.location?.county ||
+                  weather?.[0]?.location?.city ||
+                  '深圳'}
+                <span className="text-xl">
+                  {weather?.[0]?.weather?.temperature || '25'}°
+                </span>
+              </div>
+              <div className="flex flex-col items-center justify-center">
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      weatherIcon[weather?.[0]?.weather?.condition || '晴']
+                  }}></span>
+                <span>{weather?.[0]?.weather?.condition || '晴'}</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="flex flex-col">
+                <span>
+                  AQI{weather?.[0]?.air_quality?.level || '优'}/
+                  {weather?.[0]?.air_quality?.aqi || '20'}
+                </span>
+                <span className="flex text-xs gap-2">
+                  <span>
+                    最低&nbsp;
+                    {weather?.[0]?.daily_forecast?.[1]?.min_temperature}°
+                  </span>
+                  <span>
+                    最高&nbsp;
+                    {weather?.[0]?.daily_forecast?.[1]?.max_temperature}°
+                  </span>
+                </span>
+              </div>
+              <div className="flex flex-col text-md">
+                <span>
+                  日出&nbsp;&nbsp;
+                  {weather?.[0]?.sunrise?.sunrise_desc}
+                </span>
+                <span>
+                  日落&nbsp;&nbsp;
+                  {weather?.[0]?.sunrise?.sunset_desc}
+                </span>
+              </div>
+            </div>
+            {/* 🎉 欢迎使用 byt tab！ */}
+          </div>
+        )}
       </Card>
       <Config visible={visible} onCancel={() => setVisible(false)} />
     </ThemeProvider>

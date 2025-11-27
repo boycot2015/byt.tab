@@ -5,7 +5,10 @@ import cssText from 'data-text:~styles/index.css'
 import ContexifyCss from 'data-text:react-contexify/ReactContexify.css'
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
 import type { ReactNode } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
+import { useStorage } from '@plasmohq/storage/hook'
+import type { Config } from '~types'
 interface ThemeProviderProps {
   children?: ReactNode
   colorPrimary?: string
@@ -22,7 +25,6 @@ export const getStyle = () => {
 }
 getStyle()
 // console.log(cssText, 'cssText');
-
 export const ThemeProvider = ({
   children,
   token = {},

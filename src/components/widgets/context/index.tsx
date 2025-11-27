@@ -13,7 +13,8 @@ function Contexify(props: { data: ItemType }) {
         props.href && window.open(props.href, props.target || '_blank')
         break
       case 'add':
-        console.log(id, props)
+        const { addComponent, ...item } = props
+        addComponent && addComponent(item)
         break
       case 'edit':
         console.log(id, props)

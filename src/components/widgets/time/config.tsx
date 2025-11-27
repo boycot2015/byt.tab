@@ -1,33 +1,17 @@
 import { CloseOutlined } from '@ant-design/icons'
 import { Button, message, Modal } from 'antd'
 import { clock, css, flipClock, theme } from 'flipclock'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { ThemeProvider } from '~layouts'
 
+import FlipClock from './flipclock'
+
 function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
-  // const [time, setTime] = useState<any>(new Date())
   const [loading, setLoading] = useState<boolean>(true)
-  // const parent = useRef<HTMLDivElement>(null)
-  const parent = document.querySelector('#clock')
-  useMemo(() => {
-    parent &&
-      flipClock({
-        parent,
-        face: clock({
-          format: '[hh]:[mm]:[ss]'
-        }),
-        theme: theme({
-          dividers: ':',
-          css: css({
-            width: '1em',
-            height: '1.8em',
-            fontSize: '4rem'
-          })
-        })
-      })
+  useEffect(() => {
     setLoading(false)
-  }, [parent])
+  }, [])
   return (
     <ThemeProvider>
       <Modal
@@ -43,9 +27,7 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
         closeIcon={<CloseOutlined className="!text-white" />}
         onCancel={() => props.onCancel()}
         footer={null}>
-        <div
-          id="clock"
-          className="text-[100px] w-full flex fle-col items-center justify-center text-white min-h-[200px]"></div>
+        <FlipClock />
       </Modal>
     </ThemeProvider>
   )

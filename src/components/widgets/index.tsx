@@ -1,59 +1,140 @@
 import { CloseOutlined, MenuOutlined } from '@ant-design/icons'
-import { Card, Col, Modal, Row } from 'antd'
-import { useState } from 'react'
+import { Carousel, Col, Modal, Row, Tabs } from 'antd'
+import type { TabsProps } from 'antd'
+import { useEffect, useRef, useState } from 'react'
 
 import { Storage } from '@plasmohq/storage'
 import { useStorage } from '@plasmohq/storage/hook'
 
 import { renderComponent } from '~components'
-import tabsBase from '~data/tabs.json'
+import appsBase from '~data/apps.json'
 import { ThemeProvider } from '~layouts'
 import type { Config, ItemType } from '~types'
+import { mouseOverEffect } from '~utils'
 
+interface Component {
+  id: string
+  ctype: 'hot' | 'common' | 'recommend'
+  name: string
+  size: ('small' | 'middle' | 'large')[]
+  component: string
+}
 // import { data } from '~data/weather'
-
-const components = [
-  {
-    id: 'DateWidget',
-    name: '日历',
-    component: 'DateWidget'
-  },
-  {
-    id: 'TimeWidget',
-    name: '时间',
-    component: 'TimeWidget'
-  },
-  {
-    id: 'WeatherWidget',
-    name: '天气',
-    component: 'WeatherWidget'
-  }
-]
-
+const TabConents = (props: {
+  key: string
+  components: Component[]
+  onAdd: (e: React.MouseEvent, component: Component) => void
+}) => {
+  const parentRefs = useRef<HTMLDivElement[]>([])
+  const itemRefs = useRef<HTMLDivElement[]>([])
+  useEffect(() => {
+    parentRefs.current?.forEach((parent, index) => {
+      mouseOverEffect(parent, itemRefs.current[index])
+    })
+    return () => {
+      parentRefs.current?.forEach((parent) => {
+        parent?.removeEventListener('mouseover', null)
+      })
+    }
+  }, [parentRefs.current])
+  return (
+    <Row gutter={6}>
+      {props.components.map((component) => (
+        <Col key={component.id} span={24} sm={12} lg={8} xxl={6}>
+          <Carousel
+            key={props.key + '_' + component.id}
+            style={{
+              perspective: 500,
+              transformStyle: 'preserve-3d'
+            }}
+            className="p-5"
+            draggable>
+            {component.size.map((size, index) => (
+              <div key={props.key + '_' + component.id + '_' + size}>
+                <div
+                  style={{
+                    perspective: 500,
+                    padding: '15px',
+                    transition: 'all .2s',
+                    transformStyle: 'preserve-3d'
+                  }}
+                  className="cursor-pointer"
+                  ref={(el) => parentRefs.current?.push(el)}>
+                  <div
+                    ref={(item) => itemRefs.current?.push(item)}
+                    onClick={(e) => props.onAdd(e, component)}
+                    style={{
+                      transformStyle: 'preserve-3d',
+                      transition: 'all .2s',
+                      transform: 'rotateX(5deg) rotateY(20deg)'
+                    }}
+                    className="w-full mb-2 h-[140px] select-none !flex flex-col cursor-pointer item-center justify-center">
+                    {renderComponent(component.component, {
+                      withComponents: true,
+                      size
+                    })}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </Carousel>
+          <div className="text-center select-none text-md text-white mt-2">
+            {component.name}
+          </div>
+        </Col>
+      ))}
+    </Row>
+  )
+}
 function WidgetModal(props: {
   visible: boolean
   onCancel: () => void
   data: ItemType
 }) {
-  const [tabs, setTabs] = useStorage<ItemType[]>(
+  const [config] = useStorage<Config>('config')
+  const [apps, setApps] = useStorage<ItemType[]>(
     {
-      key: 'tabs',
+      key: 'apps',
       instance: new Storage({
         area: 'local'
       })
     },
     (val) => {
-      return val || tabsBase
+      return val || appsBase
     }
   )
+  const [components, setComponents] = useState<Component[]>([
+    {
+      id: 'DateWidget',
+      ctype: 'hot',
+      name: '日历',
+      size: ['small', 'middle', 'large'],
+      component: 'DateWidget'
+    },
+    {
+      id: 'TimeWidget',
+      ctype: 'common',
+      name: '时间',
+      size: ['middle', 'large'],
+      component: 'TimeWidget'
+    },
+    {
+      id: 'WeatherWidget',
+      ctype: 'recommend',
+      size: ['small', 'middle', 'large'],
+      name: '天气',
+      component: 'WeatherWidget'
+    }
+  ])
   const onAdd = (
     e,
     { component, name }: { component: string; name: string }
   ) => {
     e.preventDefault()
-    console.log(props.data, component, name)
-    let newTabs = [...tabs]
-    newTabs.map((item) => {
+    e.stopPropagation()
+    // console.log(props.data, component, name)
+    let newApps = [...apps]
+    newApps.map((item) => {
       if (item.id == props.data?.pid) {
         item.children?.push({
           id: Date.now(),
@@ -62,41 +143,73 @@ function WidgetModal(props: {
         })
       }
     })
-    setTabs([...newTabs])
+    setApps([...newApps])
+  }
+  const [tabs, setTabs] = useState<TabsProps['items']>([
+    {
+      key: 'all',
+      label: '全部',
+      children: TabConents({ key: 'all', components, onAdd })
+    },
+    {
+      key: 'recommend',
+      label: '推荐',
+      forceRender: true,
+      children: TabConents({
+        key: 'recommend',
+        components: components.filter((item) => item.ctype == 'recommend'),
+        onAdd
+      })
+    },
+    {
+      key: 'common',
+      label: '常用',
+      forceRender: true,
+      children: TabConents({
+        key: 'common',
+        components: components.filter((item) => item.ctype == 'common'),
+        onAdd
+      })
+    },
+    {
+      key: 'hot',
+      label: '热门',
+      forceRender: true,
+      children: TabConents({
+        key: 'hot',
+        components: components.filter((item) => item.ctype == 'hot'),
+        onAdd
+      })
+    }
+  ])
+  const onTabsChange = (key: string) => {
+    console.log(key)
   }
   return (
-    <ThemeProvider>
+    <ThemeProvider
+      token={{
+        colorPrimary: config?.theme?.primary,
+        Tabs: { itemColor: '#fff' }
+      }}>
       <Modal
-        title=""
+        title={<h3 className="!text-white">添加小组件</h3>}
         classNames={{
+          header: '!bg-transparent !text-white',
           content:
-            '!overflow-hidden !rounded-md !p-0 !bg-black/50 backdrop-blur-md',
-          body: '!p-5'
+            '!overflow-hidden !rounded-md !p-3 !bg-black/50 backdrop-blur-md',
+          body: '!p-0'
         }}
-        width={800}
+        width={1000}
         footer={null}
         open={props.visible}
         closeIcon={<CloseOutlined className="!text-white" />}
         onCancel={() => props.onCancel()}>
-        <div className="flex gap-2">
-          {components.map((component) => (
-            <Card
-              key={component.id}
-              className="rounded-md overflow-hidden !border-none !bg-transparent"
-              classNames={{
-                body: `!bg-transparent`
-              }}>
-              <div
-                onClick={(e) => onAdd(e, component)}
-                className="w-full cursor-pointer item-center justify-center">
-                {renderComponent(component.component, { withComponents: true })}
-                <div className="text-center text-md text-white mt-2">
-                  {component.name}
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <Tabs
+          defaultActiveKey="all"
+          animated
+          items={tabs}
+          onChange={onTabsChange}
+        />
       </Modal>
     </ThemeProvider>
   )

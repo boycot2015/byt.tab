@@ -1,5 +1,13 @@
 import { PlusOutlined } from '@ant-design/icons'
-import { Button, Card, ColorPicker, ConfigProvider, Input, Tabs } from 'antd'
+import {
+  Button,
+  Card,
+  ColorPicker,
+  ConfigProvider,
+  Input,
+  message,
+  Tabs
+} from 'antd'
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
 import { useEffect, useRef, useState } from 'react'
 import { useContextMenu } from 'react-contexify'
@@ -11,7 +19,7 @@ import { useStorage } from '@plasmohq/storage/hook'
 import { renderComponent } from '~components'
 import WidgetsModal from '~components/widgets'
 import ContextMenu, { MENU_ID } from '~components/widgets/context'
-import tabsBase from '~data/tabs.json'
+import appsBase from '~data/apps.json'
 import { ThemeProvider } from '~layouts'
 import type { Config, ItemType } from '~types'
 
@@ -40,15 +48,15 @@ function IndexNewtab() {
   const [primary, setPrimary] = useState(config.theme.primary)
   const [currentItem, setCurrentItem] = useState<ItemType>()
   const [activeKey, setActiveKey] = useState('1')
-  const [tabs, setTabs] = useStorage<ItemType[]>(
+  const [apps, setApps] = useStorage<ItemType[]>(
     {
-      key: 'tabs',
+      key: 'apps',
       instance: new Storage({
         area: 'local'
       })
     },
     (val) => {
-      return val || tabsBase
+      return val || appsBase
     }
   )
   const [visible, setVisible] = useState(false)
@@ -63,31 +71,32 @@ function IndexNewtab() {
           className="flex flex-wrap gap-2"
           setList={setList}
           onEnd={({ oldIndex, newIndex }) => {
-            const newTabList = [...tabs]
+            const newAppsList = [...apps]
             const newList = [...list]
             newList.splice(newIndex, 0, newList.splice(oldIndex, 1)[0])
-            newTabList.splice(item.id - 1, 1, { ...item, children: newList })
-            setTabs(newTabList)
+            newAppsList.splice(item.id - 1, 1, { ...item, children: newList })
+            setApps(newAppsList)
           }}
           animation={200}>
           {item.children?.map((child) => (
             <a
               href={child.href || '#'}
               target={child.target}
+              key={child.id}
               onContextMenu={(event) =>
                 handleContextMenu(event, { ...child, pid: item.id })
               }
               className="cursor-pointer">
               {child.component ? (
-                renderComponent(child.component) || child.name
+                renderComponent(child.component, child.props) || child.name
               ) : (
                 <ConfigProvider
                   prefixCls="byt"
                   theme={{ components: { Card: { bodyPadding: 14 } } }}>
                   <Card
                     key={child.id}
-                    className="text-xl text-center !border-none">
-                    {renderComponent(child.icon) || child.name}
+                    className="text-xl w-[60px] h-[60px] text-center !border-none">
+                    {renderComponent(child.icon, child.props) || child.name}
                   </Card>
                 </ConfigProvider>
               )}
@@ -97,7 +106,7 @@ function IndexNewtab() {
         </ReactSortable>
         ,
         <a href="#" onClick={() => setVisible(true)}>
-          <Card className="text-xl text-center !border-none">
+          <Card className="text-xl w-[60px] h-[60px] text-center !border-none">
             <PlusOutlined />
           </Card>
           <div className="title text-center mt-2">添加</div>
@@ -114,7 +123,7 @@ function IndexNewtab() {
     show({
       id: MENU_ID,
       event,
-      props: item
+      props: { ...item, addComponent: () => setVisible(true) }
     })
     setCurrentItem(item)
   }
@@ -146,7 +155,8 @@ function IndexNewtab() {
             />
             <Button
               type="primary"
-              onClick={() =>
+              onClick={() => {
+                message.success('保存成功')
                 setConfig({
                   ...config,
                   theme: {
@@ -154,7 +164,7 @@ function IndexNewtab() {
                     primary
                   }
                 })
-              }>
+              }}>
               保存
             </Button>
             <Button type="link" color="primary" href="/options.html">
@@ -180,12 +190,12 @@ function IndexNewtab() {
             animated
             defaultActiveKey="1"
             activeKey={activeKey}
-            items={tabs.map((item) => {
+            items={apps.map((item) => {
               const id = String(item.id)
               return {
                 key: id,
                 label: item.name,
-                icon: renderComponent(item.icon),
+                icon: renderComponent(item.icon, item.props),
                 children: TabConents(item)
               }
             })}
@@ -194,11 +204,13 @@ function IndexNewtab() {
         </div>
       </div>
       <ContextMenu data={currentItem} />
-      <WidgetsModal
-        visible={visible}
-        data={currentItem}
-        onCancel={() => setVisible(false)}
-      />
+      {visible && (
+        <WidgetsModal
+          visible={visible}
+          data={currentItem}
+          onCancel={() => setVisible(false)}
+        />
+      )}
     </ThemeProvider>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import EchartsInit from '~components/Echarts'
 
@@ -63,28 +63,29 @@ const baseOptions = {
   }
 }
 export const weather_icon_url = 'https://d.scggqx.com/forecast/img'
-const getWeatherRich = () => {
-  const weather = ['小雨', '小雨', '阴', '小雨', '多云', '小雨', '小雨']
-  const rich: any = {}
-  for (let i = 0; i < weather.length; i++) {
-    rich[i] = {
-      backgroundColor: {
-        image: `${weather_icon_url}/${weather[i]}.png`
-      },
-      height: 40,
-      width: 40
-    }
-  }
-  return { weather, rich }
-}
+let hourilyEcharts = null
+let dailyEcharts = null
 const HoursChart = (props: Record<string, any>) => {
-  let weather_echarts_options = {
+  const [weather_echarts, setWeatherEcharts] = useState({
     ...baseOptions,
+    xAxis: [
+      {
+        ...baseOptions.xAxis[0],
+        data: props.data?.map((item: any) => item.datetime) || []
+      }
+    ],
+    yAxis: {
+      ...baseOptions.yAxis,
+      min: Math.min(
+        ...(props.data?.map((item: any) => item.temperature) || [])
+      ),
+      max: Math.max(...(props.data?.map((item: any) => item.temperature) || []))
+    },
     series: [
       {
         name: '气温',
         type: 'line',
-        data: ['16.3', '16.2', '17.6', '14.2', '17.6', '15.7', '14.3'],
+        data: props.data?.map((item: any) => item.temperature) || [],
         symbol: 'circle',
         symbolSize: 6,
         showSymbol: true,
@@ -108,37 +109,49 @@ const HoursChart = (props: Record<string, any>) => {
         }
       }
     ]
-  }
-  weather_echarts_options.xAxis[0].data =
-    props.data?.map((item: any) => item.datetime) || []
-  weather_echarts_options.series[0].data =
-    props.data?.map((item: any) => item.temperature) || []
-  weather_echarts_options.yAxis.min = Math.min(
-    ...(props.data?.map((item: any) => item.temperature) || [])
-  )
-  weather_echarts_options.yAxis.max = Math.max(
-    ...(props.data?.map((item: any) => item.temperature) || [])
-  )
-  let weather_echarts = EchartsInit(
-    document.getElementById('weather-echarts-hours') as HTMLElement,
-    weather_echarts_options
-  )
-  window.addEventListener('resize', () => {
-    weather_echarts?.resize()
   })
+  useEffect(() => {
+    if (hourilyEcharts) {
+      hourilyEcharts?.setOption(weather_echarts)
+    } else {
+      hourilyEcharts = EchartsInit(
+        document.getElementById('weather-echarts-hours') as HTMLElement,
+        weather_echarts
+      )
+    }
+    window.addEventListener('resize', () => {
+      hourilyEcharts?.resize()
+    })
+    hourilyEcharts?.resize()
+  }, [props.data])
   return (
     <div id="weather-echarts-hours" className="!h-[100px] !w-[2960px]"></div>
   )
 }
 const DailyChart = (props: Record<string, any>) => {
   console.log(props.data, 'props.data')
-  let weather_echarts_options = {
+  const [weather_echarts, setWeatherEcharts] = useState({
     ...baseOptions,
+    xAxis: [
+      {
+        ...baseOptions.xAxis[0],
+        data: props.data?.map((item: any) => item.date) || []
+      }
+    ],
+    yAxis: {
+      ...baseOptions.yAxis,
+      min: Math.min(
+        ...(props.data?.map((item: any) => item.min_temperature) || [])
+      ),
+      max: Math.max(
+        ...(props.data?.map((item: any) => item.max_temperature) || [])
+      )
+    },
     series: [
       {
         name: '最高气温',
         type: 'line',
-        data: ['16.3', '16.2', '17.6', '14.2', '17.6', '15.7', '14.3'],
+        data: props.data?.map((item: any) => item.max_temperature) || [],
         symbol: 'circle',
         symbolSize: 6,
         showSymbol: true,
@@ -164,7 +177,7 @@ const DailyChart = (props: Record<string, any>) => {
       {
         name: '最低气温',
         type: 'line',
-        data: ['13.4', '12.8', '13.5', '12.5', '12.4', '13.2', '13'],
+        data: props.data?.map((item: any) => item.min_temperature) || [],
         symbol: 'circle',
         symbolSize: 6,
         showSymbol: true,
@@ -188,26 +201,21 @@ const DailyChart = (props: Record<string, any>) => {
         }
       }
     ]
-  }
-  weather_echarts_options.xAxis[0].data =
-    props.data?.map((item: any) => item.date) || []
-  weather_echarts_options.series[0].data =
-    props.data?.map((item: any) => item.max_temperature) || []
-  weather_echarts_options.series[1].data =
-    props.data?.map((item: any) => item.min_temperature) || []
-  weather_echarts_options.yAxis.min = Math.min(
-    ...(props.data?.map((item: any) => item.temperature) || [])
-  )
-  weather_echarts_options.yAxis.max = Math.max(
-    ...(props.data?.map((item: any) => item.temperature) || [])
-  )
-  let weather_echarts = EchartsInit(
-    document.getElementById('weather-echarts-daily') as HTMLElement,
-    weather_echarts_options
-  )
-  window.addEventListener('resize', () => {
-    weather_echarts?.resize()
   })
+  useEffect(() => {
+    if (!dailyEcharts) {
+      dailyEcharts = EchartsInit(
+        document.getElementById('weather-echarts-daily') as HTMLElement,
+        weather_echarts
+      )
+    } else {
+      dailyEcharts.setOption(weather_echarts, true)
+    }
+    window.addEventListener('resize', () => {
+      dailyEcharts?.resize()
+    })
+    dailyEcharts?.resize()
+  }, [props.data])
   return <div id="weather-echarts-daily" className="!h-[120px] w-[780px]"></div>
 }
 export { HoursChart, DailyChart }

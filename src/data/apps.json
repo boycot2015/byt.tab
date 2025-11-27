@@ -17,6 +17,10 @@
                 "id": 12,
                 "name": "天气",
                 "closable": true,
+                "props": {
+                    "location": "深圳",
+                    "size": "small"
+                },
                 "component": "WeatherWidget"
             },
             {

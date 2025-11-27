@@ -8,6 +8,7 @@ export interface ItemType {
     col?: number
     icon?: React.ReactNode
     component?: React.ReactNode
+    props?: Record<string, any>
     closable?: boolean
     editable?: boolean
     children?: ItemType[]

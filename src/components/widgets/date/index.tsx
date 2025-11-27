@@ -24,7 +24,7 @@ function Widget(props: { withComponents: boolean }) {
           className="w-[140px] h-[140px] overflow-hidden !rounded-md !border-none mx-auto !bg-transparent"
           classNames={{
             header: '!bg-red-500 !text-white',
-            body: '!bg-white'
+            body: '!bg-white w-full h-[100px]'
           }}
           title={
             <div className="title w-full text-center">
@@ -39,7 +39,7 @@ function Widget(props: { withComponents: boolean }) {
             !props.withComponents && setVisible(true)
           }}>
           <div className="flex flex-col items-center justify-center">
-            <div className="text-[42px] text-[var(--byt-color-text)] font-bold">
+            <div className="text-[36px] text-[var(--byt-color-text)] font-bold">
               {new Date().getDate()}
             </div>
             <div className="text-sm flex gap-3">

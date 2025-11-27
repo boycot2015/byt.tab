@@ -26,3 +26,25 @@ export function throttle<T>(fn: T, wait?: number): () => void {
         }, wait);
     }
 }
+
+export const mouseOverEffect = (target: HTMLDivElement, element: HTMLElement) => {
+    const multiple = 6;
+    const mouseOverContainer = target
+
+    function transformElement(x, y) {
+        let box = element.getBoundingClientRect();
+        let calcX = -(y - box.y - (box.height / 2)) / multiple;
+        let calcY = (x - box.x - (box.width / 2)) / multiple;
+
+        element.style.transform = "rotateX(" + calcX + "deg) "
+            + "rotateY(" + calcY + "deg)";
+    }
+
+    mouseOverContainer.addEventListener("mousemove", (e) => {
+        // console.log(target, element);
+        e.stopPropagation();
+        window.requestAnimationFrame(function () {
+            transformElement(e.clientX, e.clientY);
+        });
+    });
+}
