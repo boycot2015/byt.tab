@@ -1,18 +1,21 @@
-import { Card, message } from 'antd'
+import { useAsyncEffect, useLocalStorageState } from 'ahooks'
+import { Card, message, theme } from 'antd'
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import { Storage } from '@plasmohq/storage'
 import { useStorage } from '@plasmohq/storage/hook'
 
 import { getWeather, getWeatherBg, weatherIcon } from '~data/weather'
 import { ThemeProvider } from '~layouts'
+import type { Config } from '~types.d'
 
-import Config from './config'
+import WidgetModal from './config'
 
 export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
   document.querySelector('#__plasmo')
 export interface Weather {
+  id: string | number
   location: {
     name: string
     province: string
@@ -105,43 +108,40 @@ export interface Weather {
 }
 function Widget(props: {
   withComponents?: boolean
+  location?: string
   size?: 'small' | 'middle' | 'large'
 }) {
   const [visible, setVisible] = useState(false)
-  const [hasData, setHasData] = useState(false)
-  const [weather, setWeather] = useStorage<Weather[]>(
-    {
-      key: 'weather',
-      instance: new Storage({
-        area: 'local'
-      })
-    },
-    (val) => {
-      val && setHasData(true)
-      return val || ([] as Weather[])
-    }
-  )
-  React.useMemo(() => {
-    getWeather('深圳').then((res) => {
-      let newWeather = [...weather]
-      if (hasData) {
-        newWeather.splice(
-          weather.findIndex((item) => item.location.city === res.location.city),
-          1,
-          res
+  const [weather, setWeather] = useState<Weather>()
+  const [config] = useStorage<Config>('config')
+  const [weathers, setWeathers] = useLocalStorageState<Weather[]>('weathers', {
+    defaultValue: [],
+    listenStorageChange: true
+  })
+  useAsyncEffect(async () => {
+    if (
+      props.location &&
+      !weathers
+        .map((item) => item.location.city)
+        .includes(props.location || '深圳市')
+    ) {
+      let res = await getWeather(props.location || '深圳市')
+      setWeathers([...weathers, res])
+      setWeather(res)
+    } else {
+      setWeather(
+        weathers.find(
+          (item) => item.location.city === (props.location || '深圳市')
         )
-        setWeather(newWeather)
-      } else {
-        setWeather([res])
-      }
-    })
-  }, [])
+      )
+    }
+  }, [props.location])
   return (
-    <ThemeProvider>
+    <ThemeProvider token={{ colorPrimary: config?.theme?.primary }}>
       <Card
         className="!rounded-md overflow-hidden !border-none !bg-transparent"
         classNames={{
-          body: `!overflow-hidden !rounded-md ${props.size === 'small' ? 'w-[60px] h-[60px] !p-1' : props.size === 'middle' ? 'w-[140px] h-[140px] !p-[12px]' : 'w-[250px] h-[140px]'} mx-auto ${getWeatherBg(weather?.[0]?.weather?.condition || '晴')}`
+          body: `!overflow-hidden !rounded-md ${props.size === 'small' ? 'w-[60px] h-[60px] !p-1' : props.size === 'middle' ? 'w-[140px] h-[140px] !p-[12px]' : 'w-[250px] h-[140px]'} mx-auto ${getWeatherBg(weather?.weather?.condition || '晴')}`
         }}
         onClick={(e) => {
           e.stopPropagation()
@@ -151,94 +151,92 @@ function Widget(props: {
           <div className="h-full flex flex-col text-white gap-2 justify-center">
             <div className="flex justify-between w-full">
               <div className="flex flex-col">
-                {weather?.[0]?.location?.county ||
-                  weather?.[0]?.location?.city ||
-                  '深圳'}
+                {weather?.location?.county ||
+                  weather?.location?.city ||
+                  '深圳市'}
                 <span className="text-xl">
-                  {weather?.[0]?.weather?.temperature || '25'}°
+                  {weather?.weather?.temperature || '25'}°
                 </span>
               </div>
               <div className="flex flex-col items-center justify-center">
                 <span
                   dangerouslySetInnerHTML={{
-                    __html:
-                      weatherIcon[weather?.[0]?.weather?.condition || '晴']
+                    __html: weatherIcon[weather?.weather?.condition || '晴']
                   }}></span>
-                <span>{weather?.[0]?.weather?.condition || '晴'}</span>
+                <span>{weather?.weather?.condition || '晴'}</span>
               </div>
             </div>
             <span>
-              AQI{weather?.[0]?.air_quality?.level || '优'}/
-              {weather?.[0]?.air_quality?.aqi || '20'}
+              AQI&nbsp;{weather?.air_quality?.quality || '优'}/
+              {weather?.air_quality?.aqi || '20'}
             </span>
             <span className="flex text-xs gap-2">
               <span>
-                最低&nbsp;{weather?.[0]?.daily_forecast?.[1]?.min_temperature}°
+                最低&nbsp;
+                {weather?.daily_forecast?.[1]?.min_temperature || 20}°
               </span>
               <span>
-                最高&nbsp;{weather?.[0]?.daily_forecast?.[1]?.max_temperature}°
+                最高&nbsp;
+                {weather?.daily_forecast?.[1]?.max_temperature || 25}°
               </span>
             </span>
             {/* 🎉 欢迎使用 byt tab！ */}
           </div>
         ) : props.size === 'small' ? (
           <div className="flex flex-col items-center justify-center text-white">
-            {weather?.[0]?.location?.county ||
-              weather?.[0]?.location?.city ||
-              '深圳'}
+            {weather?.location?.county || weather?.location?.city || '深圳市'}
             <div className="text-md">
               <span
                 dangerouslySetInnerHTML={{
-                  __html: weatherIcon[weather?.[0]?.weather?.condition || '晴']
+                  __html: weatherIcon[weather?.weather?.condition || '晴']
                 }}></span>
             </div>
-            {/* <span>{weather?.[0]?.weather?.temperature || '25'}°</span> */}
+            {/* <span>{weather?.weather?.temperature || '25'}°</span> */}
           </div>
         ) : (
           <div className="h-full flex flex-col text-white gap-2 justify-center">
             <div className="flex justify-between w-full">
               <div className="flex flex-col">
-                {weather?.[0]?.location?.county ||
-                  weather?.[0]?.location?.city ||
-                  '深圳'}
+                {weather?.location?.county ||
+                  weather?.location?.city ||
+                  '深圳市'}
                 <span className="text-xl">
-                  {weather?.[0]?.weather?.temperature || '25'}°
+                  {weather?.weather?.temperature || '25'}°
                 </span>
               </div>
               <div className="flex flex-col items-center justify-center">
                 <span
                   dangerouslySetInnerHTML={{
-                    __html:
-                      weatherIcon[weather?.[0]?.weather?.condition || '晴']
+                    __html: weatherIcon[weather?.weather?.condition || '晴']
                   }}></span>
-                <span>{weather?.[0]?.weather?.condition || '晴'}</span>
+                <span>{weather?.weather?.condition || '晴'}</span>
               </div>
             </div>
             <div className="flex justify-between items-center">
               <div className="flex flex-col">
                 <span>
-                  AQI{weather?.[0]?.air_quality?.level || '优'}/
-                  {weather?.[0]?.air_quality?.aqi || '20'}
+                  AQI&nbsp;{weather?.air_quality?.quality || '优'}/
+                  {weather?.air_quality?.aqi || '20'}
                 </span>
                 <span className="flex text-xs gap-2">
                   <span>
                     最低&nbsp;
-                    {weather?.[0]?.daily_forecast?.[1]?.min_temperature}°
+                    {weather?.daily_forecast?.[1]?.min_temperature || 20}°
                   </span>
                   <span>
                     最高&nbsp;
-                    {weather?.[0]?.daily_forecast?.[1]?.max_temperature}°
+                    {weather?.daily_forecast?.[1]?.max_temperature || 25}°
                   </span>
                 </span>
               </div>
               <div className="flex flex-col text-md">
                 <span>
                   日出&nbsp;&nbsp;
-                  {weather?.[0]?.sunrise?.sunrise_desc}
+                  {weather?.sunrise?.sunrise_desc}
                 </span>
                 <span>
                   日落&nbsp;&nbsp;
-                  {weather?.[0]?.sunrise?.sunset_desc}
+                  {weather?.sunrise?.sunset_desc}
                 </span>
               </div>
             </div>
@@ -246,7 +244,13 @@ function Widget(props: {
           </div>
         )}
       </Card>
-      <Config visible={visible} onCancel={() => setVisible(false)} />
+      {visible && (
+        <WidgetModal
+          visible={visible}
+          location={props.location || '深圳市'}
+          onCancel={() => setVisible(false)}
+        />
+      )}
     </ThemeProvider>
   )
 }

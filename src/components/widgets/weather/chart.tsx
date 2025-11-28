@@ -63,8 +63,6 @@ const baseOptions = {
   }
 }
 export const weather_icon_url = 'https://d.scggqx.com/forecast/img'
-let hourilyEcharts = null
-let dailyEcharts = null
 const HoursChart = (props: Record<string, any>) => {
   const [weather_echarts, setWeatherEcharts] = useState({
     ...baseOptions,
@@ -110,26 +108,54 @@ const HoursChart = (props: Record<string, any>) => {
       }
     ]
   })
+  const [hourilyEcharts, setHourilyEcharts] = useState<any>(null)
   useEffect(() => {
-    if (hourilyEcharts) {
-      hourilyEcharts?.setOption(weather_echarts)
+    if (hourilyEcharts && document.getElementById('weather-echarts-hours')) {
+      setWeatherEcharts({
+        ...weather_echarts,
+        xAxis: [
+          {
+            ...weather_echarts.xAxis[0],
+            data: props.data?.map((item: any) => item.datetime) || []
+          }
+        ],
+        yAxis: {
+          ...weather_echarts.yAxis,
+          min: Math.min(
+            ...(props.data?.map((item: any) => item.temperature) || [])
+          ),
+          max: Math.max(
+            ...(props.data?.map((item: any) => item.temperature) || [])
+          )
+        },
+        series: [
+          {
+            ...weather_echarts.series[0],
+            data: props.data?.map((item: any) => item.temperature) || []
+          }
+        ]
+      })
+      hourilyEcharts?.setOption(weather_echarts, true, true)
     } else {
-      hourilyEcharts = EchartsInit(
-        document.getElementById('weather-echarts-hours') as HTMLElement,
-        weather_echarts
+      setHourilyEcharts(
+        EchartsInit(
+          document.getElementById('weather-echarts-hours') as HTMLElement,
+          weather_echarts
+        )
       )
+      hourilyEcharts?.resize()
     }
     window.addEventListener('resize', () => {
       hourilyEcharts?.resize()
     })
-    hourilyEcharts?.resize()
   }, [props.data])
   return (
     <div id="weather-echarts-hours" className="!h-[100px] !w-[2960px]"></div>
   )
 }
 const DailyChart = (props: Record<string, any>) => {
-  console.log(props.data, 'props.data')
+  // console.log(props.data, 'props.data')
+  const [dailyEcharts, setDailyEcharts] = useState<any>(null)
   const [weather_echarts, setWeatherEcharts] = useState({
     ...baseOptions,
     xAxis: [
@@ -203,18 +229,48 @@ const DailyChart = (props: Record<string, any>) => {
     ]
   })
   useEffect(() => {
-    if (!dailyEcharts) {
-      dailyEcharts = EchartsInit(
-        document.getElementById('weather-echarts-daily') as HTMLElement,
-        weather_echarts
+    if (!dailyEcharts || !document.getElementById('weather-echarts-daily')) {
+      setDailyEcharts(
+        EchartsInit(
+          document.getElementById('weather-echarts-daily') as HTMLElement,
+          weather_echarts
+        )
       )
     } else {
-      dailyEcharts.setOption(weather_echarts, true)
+      setWeatherEcharts({
+        ...weather_echarts,
+        xAxis: [
+          {
+            ...weather_echarts.xAxis[0],
+            data: props.data?.map((item: any) => item.date) || []
+          }
+        ],
+        yAxis: {
+          ...weather_echarts.yAxis,
+          min: Math.min(
+            ...(props.data?.map((item: any) => item.min_temperature) || [])
+          ),
+          max: Math.max(
+            ...(props.data?.map((item: any) => item.max_temperature) || [])
+          )
+        },
+        series: [
+          {
+            ...weather_echarts.series[0],
+            data: props.data?.map((item: any) => item.max_temperature) || []
+          },
+          {
+            ...weather_echarts.series[1],
+            data: props.data?.map((item: any) => item.min_temperature) || []
+          }
+        ]
+      })
+      dailyEcharts.setOption(weather_echarts, true, true)
+      dailyEcharts?.resize()
     }
     window.addEventListener('resize', () => {
       dailyEcharts?.resize()
     })
-    dailyEcharts?.resize()
   }, [props.data])
   return <div id="weather-echarts-daily" className="!h-[120px] w-[780px]"></div>
 }

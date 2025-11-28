@@ -8,6 +8,8 @@ import {
   message,
   Tabs
 } from 'antd'
+// import cssText from 'data-text:gridstack/dist/gridstack.css'
+// import { GridStack } from 'gridstack'
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
 import { useEffect, useRef, useState } from 'react'
 import { useContextMenu } from 'react-contexify'
@@ -17,12 +19,20 @@ import { Storage } from '@plasmohq/storage'
 import { useStorage } from '@plasmohq/storage/hook'
 
 import { renderComponent } from '~components'
+import Gridstack from '~components/Gridstack'
 import WidgetsModal from '~components/widgets'
 import ContextMenu, { MENU_ID } from '~components/widgets/context'
 import appsBase from '~data/apps.json'
 import { ThemeProvider } from '~layouts'
 import type { Config, ItemType } from '~types'
 
+// export const getStyle = () => {
+//   const style = document.createElement('style')
+//   style.textContent = cssText
+//   document.head.appendChild(style)
+//   return style
+// }
+// getStyle()
 export type PlasmoCSUIAnchor = {
   type: 'overlay' | 'inline'
   element: Element
@@ -33,6 +43,11 @@ export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
 export const config: PlasmoCSConfig = {
   matches: ['<all_urls>'],
   all_frames: true
+}
+const sizeMap = {
+  small: '1',
+  middle: '2',
+  large: '3'
 }
 function IndexNewtab() {
   const [data, setData] = useState('')
@@ -68,7 +83,7 @@ function IndexNewtab() {
           list={list}
           group={item.id + ''}
           key={item.id + ''}
-          className="flex flex-wrap gap-2"
+          className="flex flex-wrap gap-4 grid-stack w-full"
           setList={setList}
           onEnd={({ oldIndex, newIndex }) => {
             const newAppsList = [...apps]
@@ -86,7 +101,11 @@ function IndexNewtab() {
               onContextMenu={(event) =>
                 handleContextMenu(event, { ...child, pid: item.id })
               }
-              className="cursor-pointer">
+              className="cursor-pointer grid-stack-item"
+              gs-w={sizeMap[child.props?.size || 'small']}
+              gs-h={
+                !child.props?.size || child.props?.size === 'small' ? '1' : '2'
+              }>
               {child.component ? (
                 renderComponent(child.component, child.props) || child.name
               ) : (
@@ -95,7 +114,7 @@ function IndexNewtab() {
                   theme={{ components: { Card: { bodyPadding: 14 } } }}>
                   <Card
                     key={child.id}
-                    className="text-xl w-[60px] h-[60px] text-center !border-none">
+                    className="grid-stack-item-content text-xl w-[60px] h-[60px] text-center !border-none">
                     {renderComponent(child.icon, child.props) || child.name}
                   </Card>
                 </ConfigProvider>
@@ -104,9 +123,8 @@ function IndexNewtab() {
             </a>
           ))}
         </ReactSortable>
-        ,
         <a href="#" onClick={() => setVisible(true)}>
-          <Card className="text-xl w-[60px] h-[60px] text-center !border-none">
+          <Card className="grid-stack-item-content text-xl w-[60px] h-[60px] text-center !border-none">
             <PlusOutlined />
           </Card>
           <div className="title text-center mt-2">添加</div>
@@ -127,6 +145,9 @@ function IndexNewtab() {
     })
     setCurrentItem(item)
   }
+  useEffect(() => {
+    // GridStack.init()
+  }, [])
   useEffect(() => {
     setPrimary(config.theme.primary)
   }, [config])
@@ -203,6 +224,7 @@ function IndexNewtab() {
           />
         </div>
       </div>
+      {/* <Gridstack /> */}
       <ContextMenu data={currentItem} />
       {visible && (
         <WidgetsModal

@@ -18,25 +18,54 @@
                 "name": "天气",
                 "closable": true,
                 "props": {
-                    "location": "深圳",
+                    "location": "南山区",
                     "size": "small"
                 },
                 "component": "WeatherWidget"
             },
             {
                 "id": 13,
+                "name": "天气",
+                "closable": true,
+                "props": {
+                    "location": "上海市",
+                    "size": "middle"
+                },
+                "component": "WeatherWidget"
+            },
+            {
+                "id": 14,
+                "name": "天气",
+                "closable": true,
+                "props": {
+                    "location": "深圳市",
+                    "size": "large"
+                },
+                "component": "WeatherWidget"
+            },
+            {
+                "id": 15,
                 "name": "日历",
                 "closable": true,
                 "component": "DateWidget"
             },
             {
-                "id": 14,
+                "id": 16,
                 "name": "时间",
                 "closable": true,
                 "component": "TimeWidget"
             },
             {
-                "id": 15,
+                "id": 17,
+                "name": "时间",
+                "closable": true,
+                "props": {
+                    "size": "large"
+                },
+                "component": "TimeWidget"
+            },
+            {
+                "id": 18,
                 "name": "设置",
                 "component": "SettingWidget"
             }

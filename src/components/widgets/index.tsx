@@ -25,18 +25,29 @@ const TabConents = (props: {
   components: Component[]
   onAdd: (e: React.MouseEvent, component: Component) => void
 }) => {
-  const parentRefs = useRef<HTMLDivElement[]>([])
-  const itemRefs = useRef<HTMLDivElement[]>([])
+  const [parentRefs] = useState<
+    { ref: HTMLDivElement; props?: Record<string, any> }[]
+  >([])
+  const [itemRefs] = useState<
+    { ref: HTMLDivElement; props: Record<string, any> }[]
+  >([])
   useEffect(() => {
-    parentRefs.current?.forEach((parent, index) => {
-      mouseOverEffect(parent, itemRefs.current[index])
+    parentRefs?.forEach((parent, index) => {
+      let multiple = {
+        small: 5,
+        middle: 10,
+        large: 15
+      }
+      mouseOverEffect(parent.ref, itemRefs[index].ref, {
+        multiple: multiple[itemRefs[index].props?.size || 'middle']
+      })
     })
     return () => {
-      parentRefs.current?.forEach((parent) => {
-        parent?.removeEventListener('mouseover', null)
+      parentRefs?.forEach((parent) => {
+        parent.ref?.removeEventListener('mouseover', null)
       })
     }
-  }, [parentRefs.current])
+  }, [parentRefs])
   return (
     <Row gutter={6}>
       {props.components.map((component) => (
@@ -59,9 +70,9 @@ const TabConents = (props: {
                     transformStyle: 'preserve-3d'
                   }}
                   className="cursor-pointer"
-                  ref={(el) => parentRefs.current?.push(el)}>
+                  ref={(ref) => parentRefs?.push({ ref })}>
                   <div
-                    ref={(item) => itemRefs.current?.push(item)}
+                    ref={(ref) => itemRefs?.push({ ref, props: { size } })}
                     onClick={(e) => props.onAdd(e, component)}
                     style={{
                       transformStyle: 'preserve-3d',

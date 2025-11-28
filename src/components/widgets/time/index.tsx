@@ -28,10 +28,10 @@ function Widget(props: {
       <Card
         className="!rounded-md !overflow-hidden !border-none mx-auto"
         classNames={{
-          body: `w-full h-full flex !rounded-md items-center !overflow-hidden justify-center ${
+          body: `flex !rounded-md items-center !overflow-hidden justify-center ${
             props.size === 'large'
               ? '!bg-black w-[250px] h-[140px]'
-              : 'w-[140px] h-[60px] '
+              : 'w-[100%] h-[60px]'
           }`
         }}
         onClick={(e) => {
@@ -43,7 +43,7 @@ function Widget(props: {
         ) : (
           <FlipClock
             className="text-md font-bold"
-            theme={{ css: { fontSize: '1.8rem' } }}
+            theme={{ css: { height: '2em', fontSize: '2rem' } }}
           />
         )}
       </Card>

@@ -27,8 +27,8 @@ export function throttle<T>(fn: T, wait?: number): () => void {
     }
 }
 
-export const mouseOverEffect = (target: HTMLDivElement, element: HTMLElement) => {
-    const multiple = 6;
+export const mouseOverEffect = (target: HTMLDivElement, element: HTMLElement, options?: { multiple?: number }) => {
+    const multiple = options?.multiple || 6;
     const mouseOverContainer = target
 
     function transformElement(x, y) {

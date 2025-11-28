@@ -4,9 +4,9 @@ export const data = {
     "message": "获取成功，开源地址 https://github.com/vikiboss/60s，反馈群 595941841",
     "data": {
         "location": {
-            "name": "广东深圳",
+            "name": "广东深圳市",
             "province": "广东省",
-            "city": "深圳市",
+            "city": "深圳市市",
             "county": ""
         },
         "weather": {
@@ -827,23 +827,23 @@ const getIP = async (req?: Request): Promise<{ ip: string, location: string, pro
             }).catch(err => {
                 return {
                     ip: '127.0.0.1',
-                    location: '深圳',
+                    location: '深圳市',
                 }
             })
     } catch (error) {
         return {
             ip: '127.0.0.1',
-            location: '深圳',
+            location: '深圳市',
         }
     }
 }
 const getWeather = async (city?: string) => {
     if (!city) {
         let { ip, location, city: CT, district } = await getIP()
-        if (district && district.includes('南山') && CT.includes('深圳')) {
-            district = '深圳'
+        if (district && district.includes('南山') && CT.includes('深圳市')) {
+            district = '深圳市'
         }
-        city = district || CT || '深圳'
+        city = district || CT || '深圳市'
     }
     const response = await fetch(`${apiUrl}/weather?query=${city}`);
     const data = await response.json();
@@ -853,12 +853,12 @@ const getWeather = async (city?: string) => {
 const getWeatherForecast = async (city?: string) => {
     if (!city) {
         let { ip, location, city: CT, district } = await getIP()
-        if (district && district.includes('南山') && CT.includes('深圳')) {
-            district = '深圳'
+        if (district && district.includes('南山') && CT.includes('深圳市')) {
+            district = '深圳市'
         }
-        city = district || CT || '深圳'
+        city = district || CT || '深圳市'
     }
-    const response = await fetch(`${apiUrl}/weather/forecast?query=${city || '深圳'}`);
+    const response = await fetch(`${apiUrl}/weather/forecast?query=${city || '深圳市'}`);
     const data = await response.json();
     return data.data;
 };
@@ -914,6 +914,7 @@ export const weatherBg: Record<string, string> = {
     '浮尘': 'haze',
     '扬沙': 'haze',
     '强沙尘暴': 'haze',
+    '霾': 'haze',
     '冰雹': 'other',
     '暴雨': 'rain',
 }
