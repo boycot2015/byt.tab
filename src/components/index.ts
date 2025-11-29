@@ -1,5 +1,7 @@
 import React from 'react'
+
 import {
+    PlusOutlined,
     AndroidOutlined,
     AppleOutlined,
     WindowsOutlined,
@@ -11,6 +13,7 @@ import SettingWidget from './widgets/setting'
 import TimeWidget from './widgets/time'
 import WeatherWidget from './widgets/weather'
 const components = {
+    PlusOutlined,
     BaiduOutlined,
     AndroidOutlined,
     AppleOutlined,
@@ -23,6 +26,5 @@ const components = {
 }
 export const renderComponent = (componentName, props?: Record<string, any>) => {
     const Component = components[componentName]
-    // console.log(componentName, Component, 'Component');
-    return Component ? React.useMemo(() => React.createElement(Component, { ...(props || {}) }), [Component, props]) : null
+    return Component ? React.createElement(Component, { ...(props || {}) }) : null
 };

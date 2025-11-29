@@ -1,7 +1,7 @@
 import { Card, message } from 'antd'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import { ThemeProvider } from '~layouts'
+import { sizeMap, ThemeProvider } from '~layouts'
 
 import Config from './config'
 import FlipClock from './flipclock'
@@ -26,16 +26,11 @@ function Widget(props: {
   return (
     <ThemeProvider>
       <Card
-        className="!rounded-md !overflow-hidden !border-none mx-auto"
+        className={`!overflow-hidden !border-none mx-auto ${sizeMap[props.size || 'small']} ${props.size === 'large' ? '!bg-black' : ''}`}
         classNames={{
-          body: `flex !rounded-md items-center !overflow-hidden justify-center ${
-            props.size === 'large'
-              ? '!bg-black w-[250px] h-[140px]'
-              : 'w-[100%] h-[60px]'
-          }`
+          body: `flex !rounded-xl items-center w-full h-full !overflow-hidden justify-center`
         }}
-        onClick={(e) => {
-          e.stopPropagation()
+        onClick={() => {
           !props.withComponents && setVisible(true)
         }}>
         {!props.size || props.size === 'middle' ? (

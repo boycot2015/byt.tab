@@ -1,7 +1,7 @@
 export interface ItemType {
-    id: number
-    pid?: number
-    name: string
+    id: number | string
+    pid?: number | string
+    name?: string
     href?: string
     target?: string
     row?: number
@@ -11,10 +11,14 @@ export interface ItemType {
     props?: Record<string, any>
     closable?: boolean
     editable?: boolean
+    chosen?: boolean
+    selected?: boolean
     children?: ItemType[]
 }
 export interface Config {
+    seo?: string
     theme: {
+        background?: string
         primary: string
     }
 }

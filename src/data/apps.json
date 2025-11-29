@@ -47,16 +47,28 @@
                 "id": 15,
                 "name": "日历",
                 "closable": true,
+                "props": {
+                    "size": "middle"
+                },
                 "component": "DateWidget"
             },
             {
                 "id": 16,
+                "name": "日历",
+                "closable": true,
+                "props": {
+                    "size": "small"
+                },
+                "component": "DateWidget"
+            },
+            {
+                "id": 17,
                 "name": "时间",
                 "closable": true,
                 "component": "TimeWidget"
             },
             {
-                "id": 17,
+                "id": 18,
                 "name": "时间",
                 "closable": true,
                 "props": {
@@ -65,7 +77,7 @@
                 "component": "TimeWidget"
             },
             {
-                "id": 18,
+                "id": 19,
                 "name": "设置",
                 "component": "SettingWidget"
             }
@@ -78,15 +90,22 @@
         "children": [
             {
                 "id": 21,
-                "name": "shrek2"
+                "name": "天气",
+                "closable": true,
+                "props": {
+                    "location": "深圳市",
+                    "size": "large"
+                },
+                "component": "WeatherWidget"
             },
             {
                 "id": 22,
-                "name": "shrek22"
-            },
-            {
-                "id": 23,
-                "name": "shrek23"
+                "name": "日历",
+                "closable": true,
+                "props": {
+                    "size": "middle"
+                },
+                "component": "DateWidget"
             }
         ]
     },
@@ -97,19 +116,26 @@
         "children": [
             {
                 "id": 31,
-                "name": "shrek31"
+                "name": "日历",
+                "closable": true,
+                "props": {
+                    "size": "small"
+                },
+                "component": "DateWidget"
             },
             {
                 "id": 32,
-                "name": "shrek32"
+                "name": "时间",
+                "closable": true,
+                "props": {
+                    "size": "large"
+                },
+                "component": "TimeWidget"
             },
             {
                 "id": 33,
-                "name": "shrek33"
-            },
-            {
-                "id": 34,
-                "name": "shrek34"
+                "name": "设置",
+                "component": "SettingWidget"
             }
         ]
     }

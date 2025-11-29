@@ -1,7 +1,7 @@
 import { CloseOutlined } from '@ant-design/icons'
 import { Button, message, Modal } from 'antd'
 import { clock, css, flipClock, theme } from 'flipclock'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { ThemeProvider } from '~layouts'
 

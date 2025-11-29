@@ -101,7 +101,10 @@ const useStyle = createStyles(({ token, css, cx }) => {
     weekend
   }
 })
-const WidgetCalendar: React.FC = () => {
+export const WidgetCalendar: React.FC = (props: {
+  fullscreen?: boolean
+  className?: string
+}) => {
   const { styles } = useStyle({ test: true })
 
   const [selectDate, setSelectDate] = React.useState<Dayjs>(() => dayjs())
@@ -187,10 +190,10 @@ const WidgetCalendar: React.FC = () => {
   }, [])
 
   return (
-    <div className={styles.wrapper + ' !w-full !p-8'}>
+    <div className={styles.wrapper + ' !w-full !p-8' + props.className}>
       <Calendar
         fullCellRender={cellRender}
-        fullscreen={false}
+        fullscreen={props.fullscreen || false}
         onPanelChange={onPanelChange}
         onSelect={onDateChange}
         headerRender={({ value, type, onChange, onTypeChange }) => {
@@ -218,7 +221,7 @@ const WidgetCalendar: React.FC = () => {
             return options
           }, [year, getYearLabel])
           return (
-            <Row justify="end" gutter={8} style={{ padding: 8 }}>
+            <Row justify="start" gutter={8} style={{ padding: 8 }}>
               <Col>
                 <Select
                   size="small"

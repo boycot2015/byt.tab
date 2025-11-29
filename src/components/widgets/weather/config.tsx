@@ -215,7 +215,7 @@ function WidgetModal(props: {
                   </div>
                 </div>
                 {/* hourly_forecast */}
-                <div className="bg-white/10 p-3 rounded-md mb-3">
+                <div className="bg-white/10 p-3 !rounded-xl mb-3">
                   <div className="title mb-3 text-white/60 pl-2">
                     <FieldTimeOutlined />
                     <span className="ml-2">24小时天气预报</span>
@@ -223,7 +223,7 @@ function WidgetModal(props: {
                   <div className="flex flex-nowrap text-white overflow-x-auto gap-2 relative">
                     {currentWeather?.hourly_forecast?.map((el) => (
                       <div key={el.datetime} className="flex flex-col gap-2">
-                        <div className="flex flex-col items-center justify-center gap-2 hover:bg-white/30 p-2 hover:rounded-md">
+                        <div className="flex flex-col items-center justify-center gap-2 hover:bg-white/30 p-2 hover:!rounded-xl">
                           <span>{el.datetime?.split(' ')[1]}</span>
                           <span
                             dangerouslySetInnerHTML={{
@@ -248,7 +248,7 @@ function WidgetModal(props: {
                   </div>
                 </div>
                 {/* dayily_forecast */}
-                <div className="bg-white/10 p-3 rounded-md mb-3">
+                <div className="bg-white/10 p-3 !rounded-xl mb-3">
                   <div className="title mb-3 text-white/60 pl-2">
                     <CalendarOutlined />
                     <span className="ml-2">7天天气预报</span>
@@ -256,7 +256,7 @@ function WidgetModal(props: {
                   <div className="flex flex-nowrap text-white overflow-x-auto gap-[32px] relative">
                     {currentWeather?.daily_forecast?.map((el) => (
                       <div key={el.date} className="flex flex-col gap-2">
-                        <div className="flex flex-col items-center justify-center gap-2 hover:bg-white/30 p-2 hover:rounded-md">
+                        <div className="flex flex-col items-center justify-center gap-2 hover:bg-white/30 p-2 hover:!rounded-xl">
                           <span>{el.date?.split('-').slice(1).join('-')}</span>
                           <span>周{getWeek(new Date(el.date).getDay())}</span>
                           <div className="flex gap-1 justify-center items-center">
@@ -296,14 +296,14 @@ function WidgetModal(props: {
                   </div>
                 </div>
                 {/* life */}
-                <div className="rounded-md">
+                <div className="!rounded-xl">
                   <div className="title mb-3 text-white/60 pl-2">
                     <SkinOutlined />
                     <span className="ml-2">生活指数</span>
                   </div>
                   <Row
                     gutter={[8, 8]}
-                    className="!bg-transparent !overflow-hidden flex flex-wrap !rounded-md">
+                    className="!bg-transparent !overflow-hidden flex flex-wrap !rounded-xl">
                     {currentWeather?.life_indices
                       ?.filter((item) => item?.name?.length < 5)
                       .map((item) => (
@@ -311,7 +311,7 @@ function WidgetModal(props: {
                           <Card
                             className="!border-none !bg-white/10"
                             classNames={{
-                              body: '!bg-transparent !overflow-hidden !rounded-md text-white'
+                              body: '!bg-transparent !overflow-hidden !rounded-xl text-white'
                             }}
                             hoverable={false}
                             key={item.key}>
@@ -353,9 +353,9 @@ function WidgetModal(props: {
                 {weathers.map((item, index) => (
                   <Card
                     key={item?.location?.city || index}
-                    className="!relative group !overflow-hidden cursor-pointer whitespace-nowrap !rounded-md bg-white/20 shadow-md !border-none"
+                    className={`${getWeatherBg(item?.weather?.condition)} !relative group !overflow-hidden cursor-pointer whitespace-nowrap !rounded-xl bg-white/20 shadow-md !border-none`}
                     classNames={{
-                      body: '!bg-transparent !overflow-hidden !rounded-md text-white !p-2'
+                      body: '!bg-transparent !overflow-hidden !rounded-xl text-white !p-2'
                     }}
                     onClick={() => onWeatherChange(item)}>
                     <div className="flex items-center gap-2 justify-between">

@@ -3,24 +3,25 @@ import { Item, Menu, Separator, Submenu } from 'react-contexify'
 import type { ItemType } from '~types'
 
 export const MENU_ID = 'blahblah'
-function Contexify(props: { data: ItemType }) {
-  const data: ItemType = props.data || ({} as ItemType)
-  const handleItemClick = (data) => {
+function Contexify(props: { data: Record<string, any> }) {
+  const data = props.data || ({} as ItemType)
+  const handleItemClick = (data: Record<string, any>) => {
     const { id, props } = data
+    const { addComponent, deleteComponent, ...items } = props
     switch (id) {
       case 'open':
         // console.log(id, props)
         props.href && window.open(props.href, props.target || '_blank')
         break
       case 'add':
-        const { addComponent, ...item } = props
-        addComponent && addComponent(item)
+        addComponent && addComponent(items)
         break
       case 'edit':
         console.log(id, props)
         break
       case 'delete':
         console.log(id, props)
+        deleteComponent && deleteComponent(items)
         break
       case 'edit-all':
         console.log(id, props)

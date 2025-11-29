@@ -39,10 +39,8 @@ export const mouseOverEffect = (target: HTMLDivElement, element: HTMLElement, op
         element.style.transform = "rotateX(" + calcX + "deg) "
             + "rotateY(" + calcY + "deg)";
     }
-
     mouseOverContainer.addEventListener("mousemove", (e) => {
         // console.log(target, element);
-        e.stopPropagation();
         window.requestAnimationFrame(function () {
             transformElement(e.clientX, e.clientY);
         });

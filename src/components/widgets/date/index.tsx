@@ -1,16 +1,19 @@
-import { Card, ConfigProvider } from 'antd'
+import { Calendar, Card, ConfigProvider } from 'antd'
 import { HolidayUtil, Lunar } from 'lunar-typescript'
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
 import { useState } from 'react'
 
-import { ThemeProvider } from '~layouts'
+import { sizeMap, ThemeProvider } from '~layouts'
 import { getWeek } from '~utils'
 
-import Config from './config'
+import Config, { WidgetCalendar } from './config'
 
 export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
   document.querySelector('#__plasmo')
-function Widget(props: { withComponents: boolean }) {
+function Widget(props: {
+  withComponents: boolean
+  size?: 'large' | 'small' | 'middle'
+}) {
   const [visible, setVisible] = useState(false)
   const d2 = Lunar.fromDate(new Date())
   const month = d2.getMonthInChinese()
@@ -20,36 +23,77 @@ function Widget(props: { withComponents: boolean }) {
       <ConfigProvider
         prefixCls="byt"
         theme={{ components: { Card: { bodyPadding: 10, headerHeight: 40 } } }}>
-        <Card
-          className="w-[140px] h-[140px] overflow-hidden !rounded-md !border-none mx-auto !bg-transparent"
-          classNames={{
-            header: '!bg-red-500 !text-white',
-            body: '!bg-white w-full h-[100px]'
-          }}
-          title={
-            <div className="title w-full text-center">
-              {new Date().getFullYear() +
-                '年' +
-                (new Date().getMonth() + 1) +
-                '月'}
-            </div>
-          }
-          onClick={(e) => {
-            e.stopPropagation()
-            !props.withComponents && setVisible(true)
-          }}>
-          <div className="flex flex-col items-center justify-center">
-            <div className="text-[36px] text-[var(--byt-color-text)] font-bold">
-              {new Date().getDate()}
-            </div>
-            <div className="text-sm flex gap-3">
-              <span>
-                {month}月{day}
-              </span>
-              周{getWeek(new Date().getDay())}
-            </div>
-          </div>
-        </Card>
+        {!props.size ||
+          (props.size == 'middle' && (
+            <Card
+              className={`!border-none overflow-hidden h-full mx-auto !bg-transparent ${sizeMap[props.size || 'small']}`}
+              classNames={{
+                header: '!bg-red-500 !text-white',
+                body: '!bg-white w-full h-full'
+              }}
+              title={
+                <div className="title w-full text-center">
+                  {new Date().getFullYear() +
+                    '年' +
+                    (new Date().getMonth() + 1) +
+                    '月'}
+                </div>
+              }
+              onClick={(e) => {
+                e.stopPropagation()
+                !props.withComponents && setVisible(true)
+              }}>
+              <div className="flex flex-col items-center justify-center">
+                <div className="text-[42px] text-[var(--byt-color-text)] font-bold">
+                  {new Date().getDate()}
+                </div>
+                <div className="text-sm flex gap-3">
+                  <span>
+                    {month}月{day}
+                  </span>
+                  周{getWeek(new Date().getDay())}
+                </div>
+              </div>
+            </Card>
+          ))}
+        {(props.size == 'small' || props.size == 'large') && (
+          <Card
+            className={`app-item-icon !overflow-hidden ${props.withComponents ? sizeMap[props.size || 'small'] : 'h-full'} !rounded-xl !border-none mx-auto !bg-transparent`}
+            classNames={{
+              header: '!bg-red-500 !text-white',
+              body: `!p-2 !bg-white ${props.withComponents ? sizeMap[props.size || 'small'] : 'h-full'}`
+            }}
+            onClick={(e) => {
+              !props.withComponents && setVisible(true)
+            }}>
+            {props.size == 'small' && (
+              <div className={`flex flex-col items-center justify-between`}>
+                <div className="!text-[12px] text-center">
+                  周{getWeek(new Date().getDay())}
+                </div>
+                <div className="!text-[16px] text-[var(--byt-color-text)] font-bold">
+                  {new Date().getDate()}
+                </div>
+              </div>
+            )}
+            {props.size == 'large' && (
+              <div className="flex-1">
+                <Calendar
+                  fullscreen={false}
+                  headerRender={() => (
+                    <div className="title w-full text-center">
+                      {new Date().getFullYear() +
+                        '年' +
+                        (new Date().getMonth() + 1) +
+                        '月'}
+                      周{getWeek(new Date().getDay())}
+                    </div>
+                  )}
+                />
+              </div>
+            )}
+          </Card>
+        )}
       </ConfigProvider>
       <Config visible={visible} onCancel={() => setVisible(false)} />
     </ThemeProvider>

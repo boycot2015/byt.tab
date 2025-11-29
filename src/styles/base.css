@@ -9,6 +9,19 @@
   --byt-card-body-padding: 12px;
   --byt-font-family: 'CangErYuYang', 'OPPOSans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji' !important;
   --byt-font-family-code: 'CangErYuYang', 'OPPOSans', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace !important;
+
+  --icon-transition-duration: 0.3s;
+  --icon-radius: 12.8px;
+  --icon-size: 60px;
+  --icon-gap-x: 24px;
+  --icon-gap-y: 24px;
+  --icon-max-width: 1350px;
+  --icon-opacity: 1;
+  --icon-name: block;
+  --icon-nameSize: 12px;
+  --icon-nameColor: #fff;
+  --sidebar-width: 240px;
+  --icon-bg-color: #222;
 }
 
 /* .css-var-r0 {
@@ -26,6 +39,7 @@
   z-index: 99999;
   font-family: 'CangErYuYang', 'OPPOSans', sans-serif;
   background-color: #ccc;
+  text-shadow: 0 0 30px #ccc;
 }
 
 .contexify {
@@ -59,11 +73,16 @@ body {
   --byt-font-family: 'CangErYuYang', 'OPPOSans', sans-serif;
   --byt-bg-color: rgba(0, 0, 0, .5);
   scrollbar-width: thin;
+  background-color: #ccc;
   scrollbar-color: #eaeaea transparent;
 }
 
 html[theme='dark'] {
   --plasmo-csui-color-primary: hwb(147 4% 38%);
+}
+
+.slick-list .slick-slide {
+  pointer-events: auto !important;
 }
 
 .weather-sunny_d {
@@ -128,10 +147,12 @@ html[theme='dark'] {
 
 .weather-snow_d {
   /* background-image: url(/weather/snow_d.webp) */
+  background-image: linear-gradient(45deg, #8d8882 20%, #bbb7af)
 }
 
 .weather-snow_n {
   /* background-image: url(/weather/snow_n.webp) */
+  background-image: linear-gradient(45deg, #8d8882 20%, #bbb7af)
 }
 
 .weather-thunder_d {

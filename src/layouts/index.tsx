@@ -3,12 +3,9 @@ import { useResponsive } from 'antd-style'
 import zhCN from 'antd/es/locale/zh_CN'
 import cssText from 'data-text:~styles/index.css'
 import ContexifyCss from 'data-text:react-contexify/ReactContexify.css'
-import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
+import type { PlasmoGetInlineAnchor } from 'plasmo'
 import type { ReactNode } from 'react'
-import { useEffect, useRef, useState } from 'react'
 
-import { useStorage } from '@plasmohq/storage/hook'
-import type { Config } from '~types'
 interface ThemeProviderProps {
   children?: ReactNode
   colorPrimary?: string
@@ -52,4 +49,10 @@ export const ThemeProvider = ({
       {children}
     </ConfigProvider>
   )
+}
+
+export const sizeMap = {
+  small: 'h-[60px] w-[60px]',
+  middle: 'h-full w-[144px]',
+  large: 'h-full w-full'
 }

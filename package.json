@@ -21,7 +21,6 @@
     "dayjs": "^1.11.19",
     "echarts": "^6.0.0",
     "flipclock": "^1.0.1",
-    "gridstack": "^12.3.3",
     "lunar-typescript": "^1.8.6",
     "plasmo": "0.90.5",
     "react": "18.2.0",

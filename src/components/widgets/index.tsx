@@ -1,9 +1,9 @@
 import { CloseOutlined, MenuOutlined } from '@ant-design/icons'
-import { Carousel, Col, Modal, Row, Tabs } from 'antd'
+import { useLocalStorageState } from 'ahooks'
+import { Carousel, Col, message, Modal, Row, Tabs } from 'antd'
 import type { TabsProps } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 
-import { Storage } from '@plasmohq/storage'
 import { useStorage } from '@plasmohq/storage/hook'
 
 import { renderComponent } from '~components'
@@ -23,7 +23,7 @@ interface Component {
 const TabConents = (props: {
   key: string
   components: Component[]
-  onAdd: (e: React.MouseEvent, component: Component) => void
+  onAdd: (e: React.MouseEvent, item: ItemType) => void
 }) => {
   const [parentRefs] = useState<
     { ref: HTMLDivElement; props?: Record<string, any> }[]
@@ -48,18 +48,23 @@ const TabConents = (props: {
       })
     }
   }, [parentRefs])
+  const onCellClick = (e: React.MouseEvent, item: ItemType) => {
+    e.preventDefault()
+    props.onAdd(e, item)
+  }
   return (
     <Row gutter={6}>
       {props.components.map((component) => (
-        <Col key={component.id} span={24} sm={12} lg={8} xxl={6}>
+        <Col span={24} sm={12} md={8} xxl={6} key={component.id}>
           <Carousel
+            arrows={true}
             key={props.key + '_' + component.id}
             style={{
               perspective: 500,
               transformStyle: 'preserve-3d'
             }}
-            className="p-5"
-            draggable>
+            draggable={true}
+            className="p-5">
             {component.size.map((size, index) => (
               <div key={props.key + '_' + component.id + '_' + size}>
                 <div
@@ -70,20 +75,26 @@ const TabConents = (props: {
                     transformStyle: 'preserve-3d'
                   }}
                   className="cursor-pointer"
-                  ref={(ref) => parentRefs?.push({ ref })}>
+                  ref={(ref) => parentRefs?.push({ ref })}
+                  onClick={(e) =>
+                    onCellClick(e, { ...component, props: { size } })
+                  }>
                   <div
-                    ref={(ref) => itemRefs?.push({ ref, props: { size } })}
-                    onClick={(e) => props.onAdd(e, component)}
+                    ref={(ref) =>
+                      itemRefs?.push({ ref, props: { size, ...component } })
+                    }
                     style={{
                       transformStyle: 'preserve-3d',
                       transition: 'all .2s',
                       transform: 'rotateX(5deg) rotateY(20deg)'
                     }}
-                    className="w-full mb-2 h-[140px] select-none !flex flex-col cursor-pointer item-center justify-center">
-                    {renderComponent(component.component, {
-                      withComponents: true,
-                      size
-                    })}
+                    className="w-full mb-2 h-[144px] overflow-hidden !rounded-xl select-none !flex flex-col cursor-pointer item-center justify-center">
+                    <div>
+                      {renderComponent(component.component, {
+                        withComponents: true,
+                        size
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -103,17 +114,10 @@ function WidgetModal(props: {
   data: ItemType
 }) {
   const [config] = useStorage<Config>('config')
-  const [apps, setApps] = useStorage<ItemType[]>(
-    {
-      key: 'apps',
-      instance: new Storage({
-        area: 'local'
-      })
-    },
-    (val) => {
-      return val || appsBase
-    }
-  )
+  const [apps, setApps] = useLocalStorageState<ItemType[]>('apps', {
+    defaultValue: appsBase,
+    listenStorageChange: true
+  })
   const [components, setComponents] = useState<Component[]>([
     {
       id: 'DateWidget',
@@ -137,24 +141,26 @@ function WidgetModal(props: {
       component: 'WeatherWidget'
     }
   ])
-  const onAdd = (
-    e,
-    { component, name }: { component: string; name: string }
-  ) => {
+  const onAdd = (e, { component, props: data, name }: ItemType) => {
     e.preventDefault()
     e.stopPropagation()
-    // console.log(props.data, component, name)
+    console.log(props.data, data, name)
     let newApps = [...apps]
     newApps.map((item) => {
       if (item.id == props.data?.pid) {
         item.children?.push({
           id: Date.now(),
           name,
+          closable: true,
+          props: data,
+          chosen: false,
+          selected: false,
           component
         })
       }
     })
     setApps([...newApps])
+    message.success('添加成功')
   }
   const [tabs, setTabs] = useState<TabsProps['items']>([
     {
@@ -207,7 +213,7 @@ function WidgetModal(props: {
         classNames={{
           header: '!bg-transparent !text-white',
           content:
-            '!overflow-hidden !rounded-md !p-3 !bg-black/50 backdrop-blur-md',
+            '!overflow-hidden !rounded-xl !p-3 !bg-black/50 backdrop-blur-md',
           body: '!p-0'
         }}
         width={1000}

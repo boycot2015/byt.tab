@@ -1,13 +1,13 @@
 import { useAsyncEffect, useLocalStorageState } from 'ahooks'
 import { Card, message, theme } from 'antd'
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useState } from 'react'
 
 import { Storage } from '@plasmohq/storage'
 import { useStorage } from '@plasmohq/storage/hook'
 
 import { getWeather, getWeatherBg, weatherIcon } from '~data/weather'
-import { ThemeProvider } from '~layouts'
+import { sizeMap, ThemeProvider } from '~layouts'
 import type { Config } from '~types.d'
 
 import WidgetModal from './config'
@@ -126,7 +126,14 @@ function Widget(props: {
         .includes(props.location || '深圳市')
     ) {
       let res = await getWeather(props.location || '深圳市')
-      setWeathers([...weathers, res])
+      setWeathers(
+        [...weathers, res].filter(
+          (el, index, self) =>
+            self.findIndex(
+              (item) => item.location?.city === el.location?.city
+            ) === index
+        )
+      )
       setWeather(res)
     } else {
       setWeather(
@@ -139,12 +146,11 @@ function Widget(props: {
   return (
     <ThemeProvider token={{ colorPrimary: config?.theme?.primary }}>
       <Card
-        className="!rounded-md overflow-hidden !border-none !bg-transparent"
+        className={`!rounded-xl mx-auto overflow-hidden ${props.withComponents ? sizeMap[props.size || 'small'] : 'h-full'} !border-none !bg-transparent`}
         classNames={{
-          body: `!overflow-hidden !rounded-md ${props.size === 'small' ? 'w-[60px] h-[60px] !p-1' : props.size === 'middle' ? 'w-[140px] h-[140px] !p-[12px]' : 'w-[250px] h-[140px]'} mx-auto ${getWeatherBg(weather?.weather?.condition || '晴')}`
+          body: `!overflow-hidden w-full h-full ${props.size === 'small' ? '!p-1' : ''} !rounded-xl mx-auto ${getWeatherBg(weather?.weather?.condition || '晴')}`
         }}
         onClick={(e) => {
-          e.stopPropagation()
           !props.withComponents && setVisible(true)
         }}>
         {!props.size || props.size === 'middle' ? (
@@ -166,11 +172,14 @@ function Widget(props: {
                 <span>{weather?.weather?.condition || '晴'}</span>
               </div>
             </div>
-            <span>
-              AQI&nbsp;{weather?.air_quality?.quality || '优'}/
-              {weather?.air_quality?.aqi || '20'}
+            <span className="flex">
+              AQI&nbsp;
+              <span className="line-clamp-1 max-w-[30px]">
+                {weather?.air_quality?.quality || '优'}
+              </span>
+              /{weather?.air_quality?.aqi || '20'}
             </span>
-            <span className="flex text-xs gap-2">
+            <span className="flex whitespace-nowrap text-xs gap-2">
               <span>
                 最低&nbsp;
                 {weather?.daily_forecast?.[1]?.min_temperature || 20}°

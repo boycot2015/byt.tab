@@ -35,9 +35,6 @@ importers:
       flipclock:
         specifier: ^1.0.1
         version: 1.0.1(csstype@3.2.3)
-      gridstack:
-        specifier: ^12.3.3
-        version: 12.3.3
       lunar-typescript:
         specifier: ^1.8.6
         version: 1.8.6
@@ -2383,9 +2380,6 @@ packages:
   graphql@15.10.1:
     resolution: {integrity: sha512-BL/Xd/T9baO6NFzoMpiMD7YUZ62R6viR5tp/MULVEnbYJXZA//kRNW7J0j1w/wXArgL0sCxhDfK5dczSKn3+cg==}
     engines: {node: '>= 10.x'}
-
-  gridstack@12.3.3:
-    resolution: {integrity: sha512-Bboi4gj7HXGnx1VFXQNde4Nwi5srdUSuCCnOSszKhFjBs8EtMEWhsKX02BjIKkErq/FjQUkNUbXUYeQaVMQ0jQ==}
 
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
@@ -6475,8 +6469,6 @@ snapshots:
       graphql: 15.10.1
 
   graphql@15.10.1: {}
-
-  gridstack@12.3.3: {}
 
   has-flag@4.0.0: {}
 

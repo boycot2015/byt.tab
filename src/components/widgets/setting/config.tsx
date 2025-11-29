@@ -1,9 +1,34 @@
-import { Button, Drawer, message } from 'antd'
-import { useState } from 'react'
+import {
+  Button,
+  Card,
+  ColorPicker,
+  ConfigProvider,
+  Drawer,
+  Input,
+  message,
+  Tabs
+} from 'antd'
+import React, { useEffect, useRef, useState } from 'react'
+
+import { useStorage } from '@plasmohq/storage/hook'
 
 import { ThemeProvider } from '~layouts'
+import type { Config } from '~types'
+
+const configDefault: Config = {
+  theme: {
+    primary: '#1677ff'
+  }
+}
 
 function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
+  const [config, setConfig] = useStorage<Config>(
+    'config',
+    (val) => val || configDefault
+  )
+  const [primary, setPrimary] = useState(
+    config?.theme?.primary || configDefault.theme.primary
+  )
   return (
     <ThemeProvider>
       <Drawer
@@ -13,6 +38,28 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
         <h2 style={{ color: '#2563eb', marginBottom: '12px' }}>
           🎉 欢迎使用 byt tab！
         </h2>
+        <ColorPicker
+          showText
+          value={primary}
+          onChange={(color) => setPrimary(color.toHexString())}
+        />
+        <Button
+          type="primary"
+          onClick={() => {
+            message.success('保存成功')
+            setConfig({
+              ...config,
+              theme: {
+                ...config?.theme,
+                primary
+              }
+            })
+          }}>
+          保存
+        </Button>
+        <Button type="link" color="primary" href="/options.html">
+          设置
+        </Button>
       </Drawer>
     </ThemeProvider>
   )
