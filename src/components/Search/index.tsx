@@ -4,18 +4,12 @@ import React, { useState } from 'react'
 
 import { useStorage } from '@plasmohq/storage/hook'
 
+import tabConfig from '~tabConfig'
 import type { Config, ItemType } from '~types'
 
 const Search = () => {
   const [config, setConfig] = useStorage<Config>('config', (val) => {
-    return (
-      val || {
-        seo: '百度',
-        theme: {
-          primary: '#1677ff'
-        }
-      }
-    )
+    return val || tabConfig
   })
   const [data, setData] = useState('')
   const seoList = [
@@ -44,7 +38,7 @@ const Search = () => {
     seoList.find((item) => item.name === config.seo)?.url || ''
   )
   return (
-    <div className="flex gap-2 w-full lg:max-w-[1000px] mb-5">
+    <div className="flex gap-2 w-full lg:max-w-[1000px] mb-5 text-shadow">
       <Space.Compact block>
         <Select
           value={url}
@@ -72,13 +66,13 @@ const Search = () => {
           placeholder="请输入搜索内容..."
           prefix={<SearchOutlined />}
         />
+        <Button
+          type="primary"
+          size="large"
+          onClick={() => window.open(`${url}${data}`)}>
+          搜索
+        </Button>
       </Space.Compact>
-      <Button
-        type="primary"
-        size="large"
-        onClick={() => window.open(`${url}${data}`)}>
-        搜索
-      </Button>
     </div>
   )
 }

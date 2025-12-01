@@ -13,9 +13,9 @@ import { useStorage } from '@plasmohq/storage/hook'
 
 export default function Header() {
   return (
-    <div className="flex w-full flex-col md:flex-row items-center justify-center gap-4 mb-1">
-      <div className="power flex items-center justify-center">
-        <h1 className="text-md text-center">Powered by</h1>
+    <div className="flex w-full flex-col md:flex-row items-center justify-center gap-4 mb-1 text-white text-shadow">
+      <div className="power flex items-center justify-center text-center">
+        <h1 className="text-md">Powered by</h1>
         <Button
           color="primary"
           type="link"
@@ -27,7 +27,7 @@ export default function Header() {
         </Button>
       </div>
       <div className="copyright">
-        <h1 className="text-sm font-bold text-center">
+        <h1 className="text-sm font-bold">
           © 2025 Boycot. All rights reserved.
         </h1>
       </div>

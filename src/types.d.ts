@@ -17,6 +17,7 @@ export interface ItemType {
 }
 export interface Config {
     seo?: string
+    apps?: ItemType[]
     theme: {
         background?: string
         primary: string

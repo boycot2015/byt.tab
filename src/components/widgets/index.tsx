@@ -16,9 +16,10 @@ interface Component {
   id: string
   ctype: 'hot' | 'common' | 'recommend'
   name: string
-  size: ('small' | 'middle' | 'large')[]
+  size: ('mini' | 'small' | 'middle' | 'large')[]
   component: string
 }
+let containerId: string | number = ''
 // import { data } from '~data/weather'
 const TabConents = (props: {
   key: string
@@ -77,7 +78,10 @@ const TabConents = (props: {
                   className="cursor-pointer"
                   ref={(ref) => parentRefs?.push({ ref })}
                   onClick={(e) =>
-                    onCellClick(e, { ...component, props: { size } })
+                    onCellClick(e, {
+                      ...component,
+                      props: { size }
+                    })
                   }>
                   <div
                     ref={(ref) =>
@@ -113,6 +117,7 @@ function WidgetModal(props: {
   onCancel: () => void
   data: ItemType
 }) {
+  containerId = props.data?.pid || ''
   const [config] = useStorage<Config>('config')
   const [apps, setApps] = useLocalStorageState<ItemType[]>('apps', {
     defaultValue: appsBase,
@@ -123,20 +128,20 @@ function WidgetModal(props: {
       id: 'DateWidget',
       ctype: 'hot',
       name: '日历',
-      size: ['small', 'middle', 'large'],
+      size: ['mini', 'middle', 'large'],
       component: 'DateWidget'
     },
     {
       id: 'TimeWidget',
       ctype: 'common',
       name: '时间',
-      size: ['middle', 'large'],
+      size: ['small', 'large'],
       component: 'TimeWidget'
     },
     {
       id: 'WeatherWidget',
       ctype: 'recommend',
-      size: ['small', 'middle', 'large'],
+      size: ['mini', 'middle', 'large'],
       name: '天气',
       component: 'WeatherWidget'
     }
@@ -144,12 +149,17 @@ function WidgetModal(props: {
   const onAdd = (e, { component, props: data, name }: ItemType) => {
     e.preventDefault()
     e.stopPropagation()
-    console.log(props.data, data, name)
+    // console.log(containerId, props.data, data, name)
     let newApps = [...apps]
     newApps.map((item) => {
-      if (item.id == props.data?.pid) {
+      if (item.id == (props.data?.pid || containerId)) {
         item.children?.push({
-          id: Date.now(),
+          id:
+            containerId +
+            '_' +
+            Date.now().toString() +
+            '_' +
+            item.children.length,
           name,
           closable: true,
           props: data,
@@ -166,7 +176,12 @@ function WidgetModal(props: {
     {
       key: 'all',
       label: '全部',
-      children: TabConents({ key: 'all', components, onAdd })
+      forceRender: true,
+      children: TabConents({
+        key: 'all',
+        components,
+        onAdd
+      })
     },
     {
       key: 'recommend',
@@ -206,18 +221,22 @@ function WidgetModal(props: {
     <ThemeProvider
       token={{
         colorPrimary: config?.theme?.primary,
+        Modal: {
+          contentBg: 'rgba(0, 0, 0, 0.8)'
+        },
         Tabs: { itemColor: '#fff' }
       }}>
       <Modal
         title={<h3 className="!text-white">添加小组件</h3>}
+        wrapClassName="!bg-black/30 backdrop-blur-md"
         classNames={{
           header: '!bg-transparent !text-white',
-          content:
-            '!overflow-hidden !rounded-xl !p-3 !bg-black/50 backdrop-blur-md',
+          content: '!overflow-hidden !rounded-xl !p-3 !bg-black/30',
           body: '!p-0'
         }}
-        width={1000}
+        width={1200}
         footer={null}
+        forceRender={true}
         open={props.visible}
         closeIcon={<CloseOutlined className="!text-white" />}
         onCancel={() => props.onCancel()}>

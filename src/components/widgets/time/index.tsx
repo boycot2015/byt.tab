@@ -8,7 +8,7 @@ import FlipClock from './flipclock'
 
 function Widget(props: {
   withComponents?: boolean
-  size?: 'middle' | 'large'
+  size?: 'mini' | 'small' | 'middle' | 'large'
 }) {
   const [visible, setVisible] = useState(false)
   const [time, setTime] = useState<any>(new Date())
@@ -33,7 +33,7 @@ function Widget(props: {
         onClick={() => {
           !props.withComponents && setVisible(true)
         }}>
-        {!props.size || props.size === 'middle' ? (
+        {!props.size || props.size === 'small' ? (
           <div className="text-md font-bold">{time.toLocaleTimeString()}</div>
         ) : (
           <FlipClock

@@ -1,6 +1,9 @@
-export const getWeek = (day: number) => {
+export const getWeek = (day: number, prefix: string = '周', showToday: boolean = false) => {
     const week = ['日', '一', '二', '三', '四', '五', '六']
-    return week[day]
+    if (showToday && day == new Date().getDay()) return '今天'
+    if (showToday && day == new Date().getDay() - 1) return '昨天'
+    if (showToday && day == new Date().getDay() + 1) return '明天'
+    return prefix + week[day]
 }
 // 防抖点击之后过了wait才响应，如果一直点，就一直没有响应，直到你停下来后，wait后执行。防抖是一进来就清，然后wait后再做
 export function antishake<T>(fn: T, wait?: number): () => void { //第一个参数是函数 第二个参数是毫秒值

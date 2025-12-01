@@ -108,9 +108,10 @@ const HoursChart = (props: Record<string, any>) => {
       }
     ]
   })
+  const id = props.id || 'weather-echarts-hours'
   const [hourilyEcharts, setHourilyEcharts] = useState<any>(null)
   useEffect(() => {
-    if (hourilyEcharts && document.getElementById('weather-echarts-hours')) {
+    if (hourilyEcharts && document.getElementById(id)) {
       setWeatherEcharts({
         ...weather_echarts,
         xAxis: [
@@ -138,10 +139,7 @@ const HoursChart = (props: Record<string, any>) => {
       hourilyEcharts?.setOption(weather_echarts, true, true)
     } else {
       setHourilyEcharts(
-        EchartsInit(
-          document.getElementById('weather-echarts-hours') as HTMLElement,
-          weather_echarts
-        )
+        EchartsInit(document.getElementById(id) as HTMLElement, weather_echarts)
       )
       hourilyEcharts?.resize()
     }
@@ -149,9 +147,7 @@ const HoursChart = (props: Record<string, any>) => {
       hourilyEcharts?.resize()
     })
   }, [props.data])
-  return (
-    <div id="weather-echarts-hours" className="!h-[100px] !w-[2960px]"></div>
-  )
+  return <div id={id} className="!h-[100px] !w-[2960px]"></div>
 }
 const DailyChart = (props: Record<string, any>) => {
   // console.log(props.data, 'props.data')
@@ -228,13 +224,11 @@ const DailyChart = (props: Record<string, any>) => {
       }
     ]
   })
+  const id = props.id || 'weather-echarts-daily'
   useEffect(() => {
-    if (!dailyEcharts || !document.getElementById('weather-echarts-daily')) {
+    if (!dailyEcharts || !document.getElementById(id)) {
       setDailyEcharts(
-        EchartsInit(
-          document.getElementById('weather-echarts-daily') as HTMLElement,
-          weather_echarts
-        )
+        EchartsInit(document.getElementById(id) as HTMLElement, weather_echarts)
       )
     } else {
       setWeatherEcharts({
@@ -272,6 +266,6 @@ const DailyChart = (props: Record<string, any>) => {
       dailyEcharts?.resize()
     })
   }, [props.data])
-  return <div id="weather-echarts-daily" className="!h-[120px] w-[780px]"></div>
+  return <div id={id} className="!h-[120px] w-[780px]"></div>
 }
 export { HoursChart, DailyChart }

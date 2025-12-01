@@ -1,3 +1,4 @@
+import { useLocalStorageState } from 'ahooks'
 import {
   Button,
   Card,
@@ -12,13 +13,13 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import { useStorage } from '@plasmohq/storage/hook'
 
+import appsBase from '~data/apps.json'
 import { ThemeProvider } from '~layouts'
-import type { Config } from '~types'
+import tabConfig from '~tabConfig'
+import type { Config, ItemType } from '~types'
 
 const configDefault: Config = {
-  theme: {
-    primary: '#1677ff'
-  }
+  ...tabConfig
 }
 
 function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
@@ -26,6 +27,9 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
     'config',
     (val) => val || configDefault
   )
+  const [apps, setApps] = useLocalStorageState<ItemType[]>('apps', {
+    defaultValue: appsBase
+  })
   const [primary, setPrimary] = useState(
     config?.theme?.primary || configDefault.theme.primary
   )
@@ -57,8 +61,18 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
           }}>
           保存
         </Button>
-        <Button type="link" color="primary" href="/options.html">
+        {/* <Button type="link" color="primary" href="/options.html">
           设置
+        </Button> */}
+        <Button
+          type="primary"
+          color="danger"
+          onClick={() => {
+            message.success('重置成功')
+            setApps(appsBase)
+            setConfig(configDefault)
+          }}>
+          重置
         </Button>
       </Drawer>
     </ThemeProvider>

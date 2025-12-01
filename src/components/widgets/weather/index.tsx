@@ -1,9 +1,8 @@
-import { useAsyncEffect, useLocalStorageState } from 'ahooks'
+import { useAsyncEffect, useInterval, useLocalStorageState } from 'ahooks'
 import { Card, message, theme } from 'antd'
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
 import React, { useState } from 'react'
 
-import { Storage } from '@plasmohq/storage'
 import { useStorage } from '@plasmohq/storage/hook'
 
 import { getWeather, getWeatherBg, weatherIcon } from '~data/weather'
@@ -109,7 +108,7 @@ export interface Weather {
 function Widget(props: {
   withComponents?: boolean
   location?: string
-  size?: 'small' | 'middle' | 'large'
+  size?: 'mini' | 'small' | 'middle' | 'large'
 }) {
   const [visible, setVisible] = useState(false)
   const [weather, setWeather] = useState<Weather>()
@@ -143,12 +142,27 @@ function Widget(props: {
       )
     }
   }, [props.location])
+  useInterval(() => {
+    if (weather?.location?.city) {
+      getWeather(weather?.location?.city).then((res) => {
+        setWeathers(
+          [res, ...weathers].filter(
+            (el, index, self) =>
+              self.findIndex(
+                (item) => item.location?.city === el.location?.city
+              ) === index
+          )
+        )
+        setWeather(res)
+      })
+    }
+  }, 60000)
   return (
     <ThemeProvider token={{ colorPrimary: config?.theme?.primary }}>
       <Card
-        className={`!rounded-xl mx-auto overflow-hidden ${props.withComponents ? sizeMap[props.size || 'small'] : 'h-full'} !border-none !bg-transparent`}
+        className={`!rounded-xl mx-auto overflow-hidden ${props.withComponents ? sizeMap[props.size || 'mini'] : 'h-full'} !border-none !bg-transparent`}
         classNames={{
-          body: `!overflow-hidden w-full h-full ${props.size === 'small' ? '!p-1' : ''} !rounded-xl mx-auto ${getWeatherBg(weather?.weather?.condition || '晴')}`
+          body: `!overflow-hidden w-full h-full ${props.size === 'mini' ? '!p-1' : ''} !rounded-xl mx-auto ${getWeatherBg(weather?.weather?.condition || '晴')}`
         }}
         onClick={(e) => {
           !props.withComponents && setVisible(true)
@@ -191,7 +205,7 @@ function Widget(props: {
             </span>
             {/* 🎉 欢迎使用 byt tab！ */}
           </div>
-        ) : props.size === 'small' ? (
+        ) : props.size === 'mini' ? (
           <div className="flex flex-col items-center justify-center text-white">
             {weather?.location?.county || weather?.location?.city || '深圳市'}
             <div className="text-md">

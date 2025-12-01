@@ -12,7 +12,7 @@ export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
   document.querySelector('#__plasmo')
 function Widget(props: {
   withComponents: boolean
-  size?: 'large' | 'small' | 'middle'
+  size?: 'mini' | 'small' | 'large' | 'middle'
 }) {
   const [visible, setVisible] = useState(false)
   const d2 = Lunar.fromDate(new Date())
@@ -26,7 +26,7 @@ function Widget(props: {
         {!props.size ||
           (props.size == 'middle' && (
             <Card
-              className={`!border-none overflow-hidden h-full mx-auto !bg-transparent ${sizeMap[props.size || 'small']}`}
+              className={`!border-none overflow-hidden h-full mx-auto !bg-transparent ${sizeMap[props.size || 'mini']}`}
               classNames={{
                 header: '!bg-red-500 !text-white',
                 body: '!bg-white w-full h-full'
@@ -51,25 +51,25 @@ function Widget(props: {
                   <span>
                     {month}月{day}
                   </span>
-                  周{getWeek(new Date().getDay())}
+                  {getWeek(new Date().getDay())}
                 </div>
               </div>
             </Card>
           ))}
-        {(props.size == 'small' || props.size == 'large') && (
+        {(props.size == 'mini' || props.size == 'large') && (
           <Card
-            className={`app-item-icon !overflow-hidden ${props.withComponents ? sizeMap[props.size || 'small'] : 'h-full'} !rounded-xl !border-none mx-auto !bg-transparent`}
+            className={`app-item-icon !overflow-hidden ${props.withComponents ? sizeMap[props.size || 'mini'] : 'h-full'} !rounded-xl !border-none mx-auto !bg-transparent`}
             classNames={{
               header: '!bg-red-500 !text-white',
-              body: `!p-2 !bg-white ${props.withComponents ? sizeMap[props.size || 'small'] : 'h-full'}`
+              body: `!p-2 !bg-white ${props.withComponents ? sizeMap[props.size || 'mini'] : 'h-full'}`
             }}
             onClick={(e) => {
               !props.withComponents && setVisible(true)
             }}>
-            {props.size == 'small' && (
+            {props.size == 'mini' && (
               <div className={`flex flex-col items-center justify-between`}>
                 <div className="!text-[12px] text-center">
-                  周{getWeek(new Date().getDay())}
+                  {getWeek(new Date().getDay())}
                 </div>
                 <div className="!text-[16px] text-[var(--byt-color-text)] font-bold">
                   {new Date().getDate()}
@@ -86,7 +86,7 @@ function Widget(props: {
                         '年' +
                         (new Date().getMonth() + 1) +
                         '月'}
-                      周{getWeek(new Date().getDay())}
+                      {getWeek(new Date().getDay())}
                     </div>
                   )}
                 />

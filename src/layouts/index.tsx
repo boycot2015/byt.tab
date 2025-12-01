@@ -52,7 +52,8 @@ export const ThemeProvider = ({
 }
 
 export const sizeMap = {
-  small: 'h-[60px] w-[60px]',
-  middle: 'h-full w-[144px]',
-  large: 'h-full w-full'
+  mini: 'icon-size-1x1',
+  small: 'icon-size-1x2',
+  middle: 'icon-size-2x2',
+  large: 'icon-size-2x4'
 }

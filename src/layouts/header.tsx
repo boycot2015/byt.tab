@@ -23,7 +23,7 @@ export default function Header() {
   }, [])
   return (
     <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-4">
-      <h1 className="text-[54px] font-bold text-center">
+      <h1 className="text-[60px] font-bold text-center text-white text-shadow">
         {time.toLocaleTimeString()}
       </h1>
     </div>

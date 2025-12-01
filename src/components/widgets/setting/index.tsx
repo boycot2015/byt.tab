@@ -14,7 +14,7 @@ function Widget() {
         prefixCls="byt"
         theme={{ components: { Card: { bodyPadding: 14 } } }}>
         <Card
-          className="!text-[24px] w-[60px] h-[60px] text-center !border-none app-item-icon"
+          className="!text-[24px] !w-[60px] !h-[60px] text-center !border-none app-item-icon"
           classNames={{
             body: 'w-full h-full flex flex-col items-center justify-center'
           }}

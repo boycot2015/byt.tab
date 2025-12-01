@@ -1,4 +1,5 @@
 import {
+  ArrowUpOutlined,
   CalendarOutlined,
   CloseOutlined,
   FieldTimeOutlined,
@@ -7,7 +8,7 @@ import {
   SearchOutlined,
   SkinOutlined
 } from '@ant-design/icons'
-import { useAsyncEffect, useLocalStorageState } from 'ahooks'
+import { useAsyncEffect, useLocalStorageState, useTimeout } from 'ahooks'
 import {
   AutoComplete,
   Card,
@@ -19,12 +20,13 @@ import {
   Tooltip
 } from 'antd'
 import type { AutoCompleteProps } from 'antd'
-import { useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
 import { ReactSortable } from 'react-sortablejs'
 
 import { Storage } from '@plasmohq/storage'
 import { useStorage } from '@plasmohq/storage/hook'
 
+import { renderComponent } from '~components'
 import type { Weather } from '~components/widgets/weather'
 import { getWeather, getWeatherBg, lifeIcon, weatherIcon } from '~data/weather'
 import { ThemeProvider } from '~layouts'
@@ -33,6 +35,16 @@ import { antishake, getWeek } from '~utils'
 
 import { DailyChart, HoursChart } from './chart'
 
+const wind_direction = {
+  南风: -90,
+  东北风: 120,
+  东南风: -120,
+  西风: 0,
+  西南风: -45,
+  西北风: 45,
+  北风: 90
+}
+
 function WidgetModal(props: {
   visible: boolean
   location?: string
@@ -40,6 +52,7 @@ function WidgetModal(props: {
 }) {
   const [menuShow, setMenuShow] = useState(false)
   const [config] = useStorage<Config>('config')
+  const scrollRef = useRef<HTMLDivElement>(null)
   const [tempWeather, setTempWeather] = useState<Weather>()
   const [options, setOptions] = useState<AutoCompleteProps['options']>([])
   const [weathers, setWeathers] = useLocalStorageState<Weather[]>('weathers', {
@@ -82,7 +95,7 @@ function WidgetModal(props: {
       )
     )
     // setCurrentWeather(tempWeather)
-    onWeatherChange(tempWeather)
+    onWeatherChange(tempWeather, true)
   }
   const onSearch = (value: string) => {
     // console.log(value)
@@ -98,21 +111,19 @@ function WidgetModal(props: {
       ? []
       : [{ label: obj.province + obj.city + obj.county, value: obj.city }]
   }
-  const onWeatherChange = (item: Weather) => {
+  const onWeatherChange = (item: Weather, refresh: boolean = false) => {
     if (currentWeather.location.city == item.location?.city) return
-    setLoading(true)
     setCurrentWeather(item)
-    setTimeout(() => {
-      setLoading(false)
-    }, 300)
+    scrollRef.current?.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
   }
   const onDelete = (e: React.MouseEvent, item: Weather) => {
     e.stopPropagation()
     setWeathers(
       weathers.filter((el) => el.location?.city != item.location?.city)
     )
-    currentWeather.location.city == item.location?.city &&
-      setCurrentWeather(weathers[0])
+    if (currentWeather.location.city == item.location?.city) {
+      onWeatherChange(weathers[0])
+    }
     message.success('删除成功')
   }
   return (
@@ -130,7 +141,9 @@ function WidgetModal(props: {
         onCancel={() => props.onCancel()}>
         <Spin spinning={loading}>
           <div className="flex !p-4 !pt-9 !pr-0">
-            <div className="flex-1 max-h-[60vh] pr-1 overflow-y-auto relative">
+            <div
+              className="flex-1 max-h-[60vh] pr-1 overflow-y-auto relative"
+              ref={(el) => (scrollRef.current = el)}>
               <div
                 className=" !text-white"
                 onContextMenu={(event) => event.stopPropagation()}
@@ -177,8 +190,23 @@ function WidgetModal(props: {
                     </div>
                     <div className="flex gap-2">
                       <span>{currentWeather?.weather?.condition}</span>
-                      <span>
-                        {currentWeather?.weather?.wind_direction}
+                      <span className="flex items-center gap-1">
+                        <span
+                          style={{
+                            transform: `rotate(${wind_direction[currentWeather?.weather?.wind_direction]}deg)`
+                          }}>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24">
+                            <path
+                              fill="currentColor"
+                              d="m6.998 10.247l.435.76c.277.485.415.727.415.993s-.138.508-.415.992l-.435.761c-1.238 2.167-1.857 3.25-1.375 3.788c.483.537 1.627.037 3.913-.963l6.276-2.746c1.795-.785 2.693-1.178 2.693-1.832s-.898-1.047-2.693-1.832L9.536 7.422c-2.286-1-3.43-1.5-3.913-.963s.137 1.62 1.375 3.788"
+                            />
+                          </svg>
+                        </span>
+                        <span>{currentWeather?.weather?.wind_direction}</span>
                         {currentWeather?.weather?.wind_power}级
                       </span>
                     </div>
@@ -236,6 +264,7 @@ function WidgetModal(props: {
                     {currentWeather?.hourly_forecast?.length ? (
                       <div className="absolute left-0 bottom-0 w-full">
                         <HoursChart
+                          id={`${currentWeather?.location?.city}-hourly-forecast`}
                           data={currentWeather?.hourly_forecast?.map(
                             (item) => ({
                               datetime: item.datetime?.split(' ')[1],
@@ -258,7 +287,9 @@ function WidgetModal(props: {
                       <div key={el.date} className="flex flex-col gap-2">
                         <div className="flex flex-col items-center justify-center gap-2 hover:bg-white/30 p-2 hover:!rounded-xl">
                           <span>{el.date?.split('-').slice(1).join('-')}</span>
-                          <span>周{getWeek(new Date(el.date).getDay())}</span>
+                          <span>
+                            {getWeek(new Date(el.date).getDay(), '周', true)}
+                          </span>
                           <div className="flex gap-1 justify-center items-center">
                             <span
                               dangerouslySetInnerHTML={{
@@ -277,12 +308,31 @@ function WidgetModal(props: {
                               {el.night_condition}
                             </span>
                           </div>
+                          <span className="flex items-center gap-2">
+                            <span
+                              style={{
+                                transform: `rotate(${wind_direction[el.day_wind_direction]}deg)`
+                              }}>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24">
+                                <path
+                                  fill="currentColor"
+                                  d="m6.998 10.247l.435.76c.277.485.415.727.415.993s-.138.508-.415.992l-.435.761c-1.238 2.167-1.857 3.25-1.375 3.788c.483.537 1.627.037 3.913-.963l6.276-2.746c1.795-.785 2.693-1.178 2.693-1.832s-.898-1.047-2.693-1.832L9.536 7.422c-2.286-1-3.43-1.5-3.913-.963s.137 1.62 1.375 3.788"
+                                />
+                              </svg>
+                            </span>
+                            {el.day_wind_power}级
+                          </span>
                         </div>
                       </div>
                     ))}
                     {currentWeather?.daily_forecast?.length ? (
-                      <div className="absolute left-0 bottom-[40px] w-full">
+                      <div className="absolute left-0 bottom-[70px] w-full">
                         <DailyChart
+                          id={`${currentWeather?.location?.city}-daily-forecast`}
                           data={currentWeather?.daily_forecast?.map((item) => ({
                             datetime: item.date?.split('-')[2],
                             day_condition: item.day_condition,

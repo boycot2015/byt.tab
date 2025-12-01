@@ -19,7 +19,7 @@
                 "closable": true,
                 "props": {
                     "location": "南山区",
-                    "size": "small"
+                    "size": "mini"
                 },
                 "component": "WeatherWidget"
             },
@@ -57,7 +57,7 @@
                 "name": "日历",
                 "closable": true,
                 "props": {
-                    "size": "small"
+                    "size": "mini"
                 },
                 "component": "DateWidget"
             },
@@ -65,6 +65,9 @@
                 "id": 17,
                 "name": "时间",
                 "closable": true,
+                "props": {
+                    "size": "small"
+                },
                 "component": "TimeWidget"
             },
             {
@@ -119,7 +122,7 @@
                 "name": "日历",
                 "closable": true,
                 "props": {
-                    "size": "small"
+                    "size": "mini"
                 },
                 "component": "DateWidget"
             },

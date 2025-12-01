@@ -7,7 +7,13 @@ function Contexify(props: { data: Record<string, any> }) {
   const data = props.data || ({} as ItemType)
   const handleItemClick = (data: Record<string, any>) => {
     const { id, props } = data
-    const { addComponent, deleteComponent, ...items } = props
+    const {
+      addComponent,
+      deleteComponent,
+      editComponent,
+      editAllComponent,
+      ...items
+    } = props
     switch (id) {
       case 'open':
         // console.log(id, props)
@@ -18,6 +24,7 @@ function Contexify(props: { data: Record<string, any> }) {
         break
       case 'edit':
         console.log(id, props)
+        editComponent && editComponent(items)
         break
       case 'delete':
         console.log(id, props)
@@ -25,6 +32,7 @@ function Contexify(props: { data: Record<string, any> }) {
         break
       case 'edit-all':
         console.log(id, props)
+        editAllComponent && editAllComponent(items)
         break
       // etc...
     }
