@@ -1,0 +1,46 @@
+[
+    {
+        "label": "热门",
+        "key": "hot"
+    },
+    {
+        "label": "新闻",
+        "key": "news"
+    },
+    {
+        "label": "影音",
+        "key": "music"
+    },
+    {
+        "label": "学习",
+        "key": "education"
+    },
+    {
+        "label": "社交",
+        "key": "social"
+    },
+    {
+        "label": "阅读",
+        "key": "read"
+    },
+    {
+        "label": "金融",
+        "key": "finance"
+    },
+    {
+        "label": "购物",
+        "key": "shopping"
+    },
+    {
+        "label": "生活",
+        "key": "life"
+    },
+    {
+        "label": "游戏",
+        "key": "game"
+    },
+    {
+        "label": "其他",
+        "key": "others"
+    }
+]

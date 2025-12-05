@@ -1,28 +1,18 @@
 import React from 'react'
 
-import {
-    PlusOutlined,
-    AndroidOutlined,
-    AppleOutlined,
-    WindowsOutlined,
-    BaiduOutlined,
-    SettingFilled
-} from '@ant-design/icons'
+import * as icons from '@ant-design/icons/lib/icons/index'
 import DateWidget from './widgets/date'
 import SettingWidget from './widgets/setting'
 import TimeWidget from './widgets/time'
 import WeatherWidget from './widgets/weather'
+import WallpaperWidget from './widgets/wallpaper'
 const components = {
-    PlusOutlined,
-    BaiduOutlined,
-    AndroidOutlined,
-    AppleOutlined,
-    WindowsOutlined,
-    SettingFilled,
+    ...icons,
     DateWidget,
     SettingWidget,
     TimeWidget,
-    WeatherWidget
+    WeatherWidget,
+    WallpaperWidget
 }
 export const renderComponent = (componentName, props?: Record<string, any>) => {
     const Component = components[componentName]

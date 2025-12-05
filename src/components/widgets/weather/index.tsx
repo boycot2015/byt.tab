@@ -1,18 +1,15 @@
 import { useAsyncEffect, useInterval, useLocalStorageState } from 'ahooks'
-import { Card, message, theme } from 'antd'
-import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
+import { Card } from 'antd'
+// import type { PlasmoGetInlineAnchor } from 'plasmo'
 import React, { useState } from 'react'
-
-import { useStorage } from '@plasmohq/storage/hook'
 
 import { getWeather, getWeatherBg, weatherIcon } from '~data/weather'
 import { sizeMap, ThemeProvider } from '~layouts'
-import type { Config } from '~types.d'
 
 import WidgetModal from './config'
 
-export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
-  document.querySelector('#__plasmo')
+// export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
+//   document.querySelector('#__plasmo')
 export interface Weather {
   id: string | number
   location: {
@@ -105,14 +102,17 @@ export interface Weather {
     weather_icon: string
   }[]
 }
-function Widget(props: {
+type WidgetProp = {
   withComponents?: boolean
   location?: string
+  id?: string | number
+  update?: (args: { id: WidgetProp['id']; props: WidgetProp }) => void
   size?: 'mini' | 'small' | 'middle' | 'large'
-}) {
+}
+function Widget(props: WidgetProp) {
   const [visible, setVisible] = useState(false)
+  const [show, setShow] = useState(false)
   const [weather, setWeather] = useState<Weather>()
-  const [config] = useStorage<Config>('config')
   const [weathers, setWeathers] = useLocalStorageState<Weather[]>('weathers', {
     defaultValue: [],
     listenStorageChange: true
@@ -158,7 +158,7 @@ function Widget(props: {
     }
   }, 60000)
   return (
-    <ThemeProvider token={{ colorPrimary: config?.theme?.primary }}>
+    <ThemeProvider>
       <Card
         className={`!rounded-xl mx-auto overflow-hidden ${props.withComponents ? sizeMap[props.size || 'mini'] : 'h-full'} !border-none !bg-transparent`}
         classNames={{
@@ -166,6 +166,7 @@ function Widget(props: {
         }}
         onClick={(e) => {
           !props.withComponents && setVisible(true)
+          !props.withComponents && setShow(true)
         }}>
         {!props.size || props.size === 'middle' ? (
           <div className="h-full flex flex-col text-white gap-2 justify-center">
@@ -267,11 +268,21 @@ function Widget(props: {
           </div>
         )}
       </Card>
-      {visible && (
+      {show && (
         <WidgetModal
           visible={visible}
           location={props.location || '深圳市'}
-          onCancel={() => setVisible(false)}
+          onCancel={(data) => {
+            setVisible(false)
+            setWeather(data)
+            props.update({
+              id: props.id,
+              props: { size: props.size, location: data.location?.city }
+            })
+            setTimeout(() => {
+              setShow(false)
+            }, 300)
+          }}
         />
       )}
     </ThemeProvider>

@@ -16,7 +16,7 @@ function IndexPopup() {
           width: 300,
           height: 'auto',
           background: '#fff',
-          borderRadius: '12px',
+          // borderRadius: '12px',
           boxShadow: '0 0.5rem 1rem rgba(0, 0, 0, 0.15)'
         }}>
         <h2 style={{ color: '#2563eb', marginBottom: '12px' }}>

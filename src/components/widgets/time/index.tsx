@@ -42,9 +42,7 @@ function Widget(props: {
           />
         )}
       </Card>
-      {visible && (
-        <Config visible={visible} onCancel={() => setVisible(false)} />
-      )}
+      <Config visible={visible} onCancel={() => setVisible(false)} />
     </ThemeProvider>
   )
 }

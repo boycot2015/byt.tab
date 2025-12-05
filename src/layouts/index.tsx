@@ -1,3 +1,4 @@
+import { useLocalStorageState } from 'ahooks'
 import { ConfigProvider } from 'antd'
 import { useResponsive } from 'antd-style'
 import zhCN from 'antd/es/locale/zh_CN'
@@ -5,6 +6,9 @@ import cssText from 'data-text:~styles/index.css'
 import ContexifyCss from 'data-text:react-contexify/ReactContexify.css'
 import type { PlasmoGetInlineAnchor } from 'plasmo'
 import type { ReactNode } from 'react'
+
+import tabConfig from '~tabConfig'
+import type { Config } from '~types'
 
 interface ThemeProviderProps {
   children?: ReactNode
@@ -28,6 +32,10 @@ export const ThemeProvider = ({
   cssVar = {}
 }: ThemeProviderProps) => {
   const { xxl, xl } = useResponsive()
+  const [config] = useLocalStorageState<Config>('config', {
+    defaultValue: tabConfig,
+    listenStorageChange: true
+  })
   return (
     <ConfigProvider
       locale={zhCN}
@@ -42,7 +50,7 @@ export const ThemeProvider = ({
           fontFamily:
             'CangErYuYang, OPPOSans, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji',
           ...token,
-          colorPrimary: token.colorPrimary || '#ff9900',
+          colorPrimary: token.colorPrimary || config.theme.primary || '#ff9900',
           paddingLG: 16
         }
       }}>

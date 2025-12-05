@@ -6,7 +6,9 @@ export interface ItemType {
     target?: string
     row?: number
     col?: number
-    icon?: React.ReactNode
+    icon?: string
+    iconType?: string | 'text' | 'font' | 'image'
+    backgroundColor?: string
     component?: React.ReactNode
     props?: Record<string, any>
     closable?: boolean
@@ -21,5 +23,21 @@ export interface Config {
     theme: {
         background?: string
         primary: string
+    },
+    title?: string
+    description?: string
+    search?: {
+        engine?: string
+        url?: string
     }
+    footer?: {
+        beian?: string
+        hitokoto?: string
+        copyright?: string
+        power?: {
+            text?: string
+            href?: string
+        }
+    }
+    favicon?: string
 }

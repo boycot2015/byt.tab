@@ -2,26 +2,27 @@
     {
         "id": 1,
         "name": "常用",
+        "key": "hot",
         "icon": "AndroidOutlined",
         "children": [
             {
                 "id": 11,
-                "icon": "BaiduOutlined",
-                "editable": true,
-                "closable": true,
-                "href": "https://www.baidu.com",
-                "target": "_blank",
-                "name": "百度一下"
-            },
-            {
-                "id": 12,
                 "name": "天气",
                 "closable": true,
                 "props": {
-                    "location": "南山区",
-                    "size": "mini"
+                    "location": "深圳市",
+                    "size": "large"
                 },
                 "component": "WeatherWidget"
+            },
+            {
+                "id": 12,
+                "name": "日历",
+                "closable": true,
+                "props": {
+                    "size": "middle"
+                },
+                "component": "DateWidget"
             },
             {
                 "id": 13,
@@ -35,31 +36,32 @@
             },
             {
                 "id": 14,
-                "name": "天气",
-                "closable": true,
-                "props": {
-                    "location": "深圳市",
-                    "size": "large"
-                },
-                "component": "WeatherWidget"
-            },
-            {
-                "id": 15,
-                "name": "日历",
-                "closable": true,
-                "props": {
-                    "size": "middle"
-                },
-                "component": "DateWidget"
-            },
-            {
-                "id": 16,
                 "name": "日历",
                 "closable": true,
                 "props": {
                     "size": "mini"
                 },
                 "component": "DateWidget"
+            },
+            {
+                "id": 15,
+                "icon": "BaiduOutlined",
+                "iconType": "font",
+                "editable": true,
+                "closable": true,
+                "href": "https://www.baidu.com",
+                "target": "_blank",
+                "name": "百度一下"
+            },
+            {
+                "id": 16,
+                "name": "天气",
+                "closable": true,
+                "props": {
+                    "location": "北京市",
+                    "size": "mini"
+                },
+                "component": "WeatherWidget"
             },
             {
                 "id": 17,
@@ -72,15 +74,6 @@
             },
             {
                 "id": 18,
-                "name": "时间",
-                "closable": true,
-                "props": {
-                    "size": "large"
-                },
-                "component": "TimeWidget"
-            },
-            {
-                "id": 19,
                 "name": "设置",
                 "component": "SettingWidget"
             }
@@ -89,6 +82,7 @@
     {
         "id": 2,
         "name": "娱乐",
+        "key": "game",
         "icon": "AppleOutlined",
         "children": [
             {
@@ -115,17 +109,9 @@
     {
         "id": 3,
         "name": "办公",
+        "key": "education",
         "icon": "WindowsOutlined",
         "children": [
-            {
-                "id": 31,
-                "name": "日历",
-                "closable": true,
-                "props": {
-                    "size": "mini"
-                },
-                "component": "DateWidget"
-            },
             {
                 "id": 32,
                 "name": "时间",
@@ -134,6 +120,15 @@
                     "size": "large"
                 },
                 "component": "TimeWidget"
+            },
+            {
+                "id": 31,
+                "name": "日历",
+                "closable": true,
+                "props": {
+                    "size": "mini"
+                },
+                "component": "DateWidget"
             },
             {
                 "id": 33,

@@ -23,14 +23,9 @@ import type { AutoCompleteProps } from 'antd'
 import { useRef, useState } from 'react'
 import { ReactSortable } from 'react-sortablejs'
 
-import { Storage } from '@plasmohq/storage'
-import { useStorage } from '@plasmohq/storage/hook'
-
-import { renderComponent } from '~components'
 import type { Weather } from '~components/widgets/weather'
 import { getWeather, getWeatherBg, lifeIcon, weatherIcon } from '~data/weather'
 import { ThemeProvider } from '~layouts'
-import type { Config } from '~types.d'
 import { antishake, getWeek } from '~utils'
 
 import { DailyChart, HoursChart } from './chart'
@@ -48,10 +43,9 @@ const wind_direction = {
 function WidgetModal(props: {
   visible: boolean
   location?: string
-  onCancel: () => void
+  onCancel: (args: Weather) => void
 }) {
   const [menuShow, setMenuShow] = useState(false)
-  const [config] = useStorage<Config>('config')
   const scrollRef = useRef<HTMLDivElement>(null)
   const [tempWeather, setTempWeather] = useState<Weather>()
   const [options, setOptions] = useState<AutoCompleteProps['options']>([])
@@ -127,7 +121,7 @@ function WidgetModal(props: {
     message.success('删除成功')
   }
   return (
-    <ThemeProvider token={{ colorPrimary: config?.theme?.primary }}>
+    <ThemeProvider>
       <Modal
         title=""
         classNames={{
@@ -138,7 +132,7 @@ function WidgetModal(props: {
         footer={null}
         open={props.visible}
         closeIcon={<CloseOutlined className="!text-white" />}
-        onCancel={() => props.onCancel()}>
+        onCancel={() => props.onCancel(currentWeather)}>
         <Spin spinning={loading}>
           <div className="flex !p-4 !pt-9 !pr-0">
             <div
