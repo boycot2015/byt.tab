@@ -6,13 +6,15 @@ import SettingWidget from './widgets/setting'
 import TimeWidget from './widgets/time'
 import WeatherWidget from './widgets/weather'
 import WallpaperWidget from './widgets/wallpaper'
+import NewsWidget from './widgets/news'
 const components = {
     ...icons,
     DateWidget,
     SettingWidget,
     TimeWidget,
     WeatherWidget,
-    WallpaperWidget
+    WallpaperWidget,
+    NewsWidget
 }
 export const renderComponent = (componentName, props?: Record<string, any>) => {
     const Component = components[componentName]

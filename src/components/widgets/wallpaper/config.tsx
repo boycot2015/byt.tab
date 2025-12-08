@@ -37,6 +37,7 @@ function WidgetModal(props: {
   source?: string
   id?: string
   onCancel: () => void
+  afterOpenChange?: (visible: boolean) => void
 }) {
   const [page, setPage] = useState(1)
   const [config, setConfig] = useLocalStorageState<Config>('config', {
@@ -187,7 +188,7 @@ function WidgetModal(props: {
     item?.url &&
       document.documentElement.style.setProperty(
         '--byt-bg-image',
-        config.theme.background.includes('http')
+        config.theme.background?.includes('http')
           ? `url(${config.theme.background}) center/cover no-repeat fixed`
           : config.theme.background
       )
@@ -222,6 +223,7 @@ function WidgetModal(props: {
         footer={null}
         open={props.visible}
         closeIcon={<CloseOutlined className="!text-white" />}
+        afterOpenChange={props.afterOpenChange}
         onCancel={() => props.onCancel()}>
         <div
           className="flex h-[60vh] w-full overflow-hidden"

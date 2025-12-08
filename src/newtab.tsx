@@ -130,6 +130,12 @@ function IndexTab() {
                         if (child.name == '添加小组件') {
                           setShowAdd(true)
                           setVisible(true)
+                          setCurrentItem({
+                            pid: activeKey,
+                            icon: 'PlusOutlined',
+                            name: '',
+                            id: ''
+                          })
                         }
                       }}
                       className={`app-item-icon !text-[24px] !w-[60px] !h-[60px] backdrop-blur-md text-center text-white !border-none !bg-transparent`}>
@@ -298,6 +304,12 @@ function IndexTab() {
       props: {
         ...item,
         addComponent: () => {
+          setCurrentItem({
+            pid: activeKey,
+            icon: 'PlusOutlined',
+            name: '',
+            id: ''
+          })
           setShowAdd(true)
           setVisible(true)
         },
@@ -308,8 +320,34 @@ function IndexTab() {
           setVisible(true)
           console.log(data, 'editComponent')
         },
+        moveComponent: (item, targetData) => {
+          // console.log(item, targetData, 'moveComponent')
+          let newApps = [...apps]
+          newApps.map((el) => {
+            if (el.id === item.pid) {
+              el.children = el.children.filter((child) => child.id !== item.id)
+            }
+            if (el.id === targetData.id) {
+              el.children = [
+                ...el.children,
+                {
+                  ...item,
+                  id:
+                    targetData.id +
+                    '_' +
+                    Date.now().toString() +
+                    '_' +
+                    el.children.length +
+                    1
+                }
+              ]
+            }
+          })
+          setApps(newApps)
+          message.success('操作成功')
+        },
         editAllComponent: (data) => {
-          console.log(data, 'editAllComponent')
+          // console.log(data, 'editAllComponent')
           setEdit(!isEdit)
         },
         deleteAllComponent,
@@ -338,7 +376,7 @@ function IndexTab() {
     config.theme.background &&
       document.documentElement.style.setProperty(
         '--byt-bg-image',
-        config.theme.background.includes('http')
+        config.theme.background?.includes('http')
           ? `url(${config.theme.background}) center/cover no-repeat fixed`
           : config.theme.background
       )
@@ -409,11 +447,11 @@ function IndexTab() {
           visible={visible}
           data={currentItem}
           onUpdate={updateComponent}
+          afterOpenChange={(open) => {
+            !open && setShowAdd(false)
+          }}
           onCancel={() => {
             setVisible(false)
-            setTimeout(() => {
-              setShowAdd(false)
-            }, 500)
           }}
         />
       )}

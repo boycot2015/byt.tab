@@ -65,34 +65,30 @@ function Widget(props: {
       <Card
         className={`!rounded-xl mx-auto overflow-hidden ${props.withComponents ? sizeMap[props.size || 'mini'] : 'h-full'} !border-none !bg-transparent`}
         classNames={{
-          body: `!overflow-hidden w-full h-full ${props.size === 'mini' ? '!p-1' : ''} !rounded-xl mx-auto`
+          body: `!overflow-hidden w-full h-full !p-0 !rounded-xl mx-auto`
         }}
         onClick={(e) => {
           !props.withComponents && setVisible(true)
           !props.withComponents && setShow(true)
         }}>
-        {!props.size || props.size === 'middle' ? (
-          <div className="h-full flex flex-col text-white gap-2 justify-center">
-            {/* 🎉 欢迎使用 byt tab！ */}
-          </div>
-        ) : props.size === 'mini' ? (
-          <div className="flex flex-col items-center justify-center text-white"></div>
-        ) : (
-          <div className="h-full flex flex-col text-white gap-2 justify-center">
-            🎉 欢迎使用 byt tab！
-          </div>
-        )}
+        <div className="h-full flex flex-col text-white gap-2 justify-center">
+          <img
+            className="w-full h-full object-cover"
+            src={config.theme.background}
+            alt="random image"
+          />
+        </div>
       </Card>
       {show && (
         <WidgetModal
           visible={visible}
           source={props.source || 'birdpaper'}
           id={props.id || ''}
+          afterOpenChange={(visible) => {
+            setShow(visible)
+          }}
           onCancel={() => {
             setVisible(false)
-            setTimeout(() => {
-              setShow(false)
-            }, 1000)
           }}
         />
       )}

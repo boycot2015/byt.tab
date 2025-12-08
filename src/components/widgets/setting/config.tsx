@@ -12,13 +12,14 @@ import {
 import type { FormProps } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 
-import { seoList } from '~components/Search'
 import { appBase, getAppBase } from '~data/apps'
 import { ThemeProvider } from '~layouts'
 import tabConfig from '~tabConfig'
 import type { Config, ItemType } from '~types'
 
 import Wallpaper from '../wallpaper/config'
+
+const { seoList = [] } = tabConfig.search || {}
 
 const configDefault: Config = {
   ...tabConfig
@@ -130,7 +131,7 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
           </Form.Item>
 
           <Form.Item<FieldType> label="主题背景" name="background">
-            {background.includes('http') ? (
+            {background && background.includes('http') ? (
               <div
                 className="img rounded-xl flex flex-col overflow-hidden cursor-pointer"
                 onClick={() => setWallpaperVisible(true)}>

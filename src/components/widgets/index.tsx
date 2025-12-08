@@ -26,7 +26,13 @@ import {
   Tabs,
   Upload
 } from 'antd'
-import type { GetProp, TabsProps, UploadFile, UploadProps } from 'antd'
+import type {
+  FormInstance,
+  GetProp,
+  TabsProps,
+  UploadFile,
+  UploadProps
+} from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 
 import { renderComponent } from '~components'
@@ -97,7 +103,7 @@ const ComponentContent = (props: {
     <div className="max-h-[60vh] overflow-hidden overflow-y-auto">
       <Row gutter={6}>
         {props.components.map((component) => (
-          <Col span={24} sm={12} md={8} xxl={6} key={component.id}>
+          <Col span={24} sm={12} lg={8} xxl={6} key={component.id}>
             <Carousel
               arrows={true}
               key={props.key + '_' + component.id}
@@ -316,9 +322,13 @@ const IconContent = (props: {
   onAdd: (item: ItemType) => void
   onUpdate: (item: ItemType) => void
 }) => {
+  interface SubmitButtonProps {
+    form: FormInstance
+  }
+  const [form] = Form.useForm()
   const [state, setState] = useState<ItemType>({
-    iconType: 'text',
     ...props.data,
+    iconType: props.data?.iconType || 'font',
     href: props.data?.href || '',
     name:
       props.data?.id && props.data?.pid != props.data?.id.toString()
@@ -332,6 +342,7 @@ const IconContent = (props: {
       icon: state.icon || '',
       iconType: state.iconType || 'text',
       href: state.href,
+      editable: props.data.editable || false,
       backgroundColor: state.backgroundColor || 'rgba(255, 255, 255, 0.3)'
     }
     !state.id ? props.onAdd(data) : props.onUpdate(data)
@@ -352,19 +363,54 @@ const IconContent = (props: {
   const onFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo)
   }
+  const SubmitButton: React.FC<React.PropsWithChildren<SubmitButtonProps>> = ({
+    form,
+    children
+  }) => {
+    const [submittable, setSubmittable] = React.useState<boolean>(false)
+
+    // Watch all values
+    const values = Form.useWatch([], form)
+
+    React.useEffect(() => {
+      form
+        .validateFields({ validateOnly: true })
+        .then(() => setSubmittable(true))
+        .catch(() => setSubmittable(false))
+    }, [form, values])
+
+    return (
+      <Button
+        type="primary"
+        htmlType="submit"
+        style={{ width: '100%' }}
+        disabled={!submittable}>
+        {children}
+      </Button>
+    )
+  }
   useEffect(() => {
-    setState({
-      iconType: 'text',
-      ...props.data,
-      href: props.data?.href || '',
-      name:
-        props.data?.id && props.data?.pid != props.data?.id.toString()
-          ? props.data.name || ''
-          : ''
-    })
-  }, [props])
+    props.data?.icon && props.data?.editable
+      ? setState({
+          ...props.data,
+          iconType: props.data?.iconType || 'font',
+          href: props.data?.href || '',
+          name:
+            props.data?.id && props.data?.pid != props.data?.id.toString()
+              ? props.data.name || ''
+              : ''
+        })
+      : setState({
+          id: '',
+          icon: '',
+          name: '',
+          href: '',
+          iconType: 'font'
+        })
+  }, [props.data])
   return (
     <Form
+      form={form}
       initialValues={{
         ...state
       }}
@@ -376,23 +422,23 @@ const IconContent = (props: {
       onFinish={onFinish}
       colon={false}
       onFinishFailed={onFinishFailed}>
-      <Form.Item label="名称" name="name">
+      <Form.Item label="名称" name="name" rules={[{ required: true }]}>
         <Input placeholder="请输入名称" />
       </Form.Item>
-      <Form.Item label="链接" name="href">
+      <Form.Item
+        label="链接"
+        name="href"
+        rules={[
+          {
+            required: true,
+            pattern: /^(http|https)?:\/\//g,
+            message: '请输入正确的链接'
+          }
+        ]}>
         <Space.Compact className="w-full">
-          {/* <Select
-            style={{ width: '24%' }}
-            defaultValue={prefix}
-            options={[
-              { label: 'https://', value: 'https://' },
-              { label: 'http://', value: 'http://' }
-            ]}
-            onChange={(value) => setPrefix(value)}
-          /> */}
           <Input
             defaultValue={state.href || ''}
-            placeholder="例如：www.baidu.com"
+            placeholder="例如：https://www.baidu.com"
             style={{ width: '100%' }}
             onChange={(e) => {
               setState({ ...state, href: e.target.value })
@@ -463,9 +509,7 @@ const IconContent = (props: {
       </Form.Item>
       <Form.Item label=" ">
         <div className="flex">
-          <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
-            保存
-          </Button>
+          <SubmitButton form={form}>保存</SubmitButton>
         </div>
       </Form.Item>
     </Form>
@@ -475,6 +519,7 @@ function WidgetModal(props: {
   visible: boolean
   onCancel: () => void
   onUpdate: (item: ItemType) => void
+  afterOpenChange: (arg: boolean) => void
   data: ItemType
 }) {
   const [containerId, setContainerId] = useState(
@@ -515,8 +560,8 @@ function WidgetModal(props: {
     {
       id: 'TimeWidget',
       ctype: 'common',
-      name: '时间',
-      size: ['small', 'large'],
+      name: '时钟',
+      size: ['small', 'middle', 'large'],
       component: 'TimeWidget'
     },
     {
@@ -525,6 +570,22 @@ function WidgetModal(props: {
       size: ['mini', 'middle', 'large'],
       name: '天气',
       component: 'WeatherWidget'
+    },
+    // WallpaperWidget
+    {
+      id: 'WallpaperWidget',
+      ctype: 'recommend',
+      size: ['middle', 'large'],
+      name: '壁纸',
+      component: 'WallpaperWidget'
+    },
+    // NewsWidget
+    {
+      id: 'NewsWidget',
+      ctype: 'recommend',
+      size: ['middle', 'large'],
+      name: '新闻动态',
+      component: 'NewsWidget'
     }
   ])
   const onAdd = (
@@ -626,15 +687,16 @@ function WidgetModal(props: {
   })
   const [websiteType, setWebsiteType] = useState<string>(websites[0]?.key || '')
   useEffect(() => {
-    if (!data) {
+    if (defaultActiveKey !== 'website') {
       return
     }
     let newData = [...websites]
-    newData.map((item) => {
-      if (item.key == data.key) {
-        item.children = data.children
-      }
-    })
+    data &&
+      newData.map((item) => {
+        if (item.key == data.key) {
+          item.children = data.children
+        }
+      })
     setWebsites(newData)
   }, [data])
   useEffect(() => {
@@ -664,11 +726,12 @@ function WidgetModal(props: {
           content: '!overflow-hidden !rounded-xl !p-3 !bg-black/30',
           body: '!p-0'
         }}
-        width={1200}
+        width={1300}
         footer={null}
         forceRender={true}
         open={props.visible}
         closeIcon={<CloseOutlined className="!text-white" />}
+        afterOpenChange={props.afterOpenChange}
         onCancel={() => props.onCancel()}>
         <div className="h-[70vh]">
           <Tabs
@@ -738,7 +801,9 @@ function WidgetModal(props: {
                   <Tabs
                     defaultActiveKey="all"
                     animated
-                    tabBarExtraContent={<TabBarExtraContent />}
+                    tabBarExtraContent={
+                      !props.data.editable && <TabBarExtraContent />
+                    }
                     items={[
                       {
                         label: '图标',
@@ -748,7 +813,10 @@ function WidgetModal(props: {
                             <IconContent
                               data={props.data}
                               onAdd={(item) => onAdd(null, item)}
-                              onUpdate={(item) => props.onUpdate(item)}
+                              onUpdate={(item) => {
+                                props.onCancel()
+                                props.onUpdate(item)
+                              }}
                             />
                           </div>
                         )
@@ -761,7 +829,10 @@ function WidgetModal(props: {
                 )
               }
             ]}
-            onChange={(key) => key == 'websites' && run()}
+            onChange={(key) => {
+              setDefaultActiveKey(key)
+              key == 'website' && run()
+            }}
           />
         </div>
       </Modal>

@@ -24,7 +24,7 @@ function flipclock(props?: {
           css: css({
             width: '1em',
             height: '1.8em',
-            fontSize: '4rem',
+            fontSize: '4.3rem',
             ...(props?.theme?.css || {})
           })
         })
@@ -34,7 +34,7 @@ function flipclock(props?: {
     <ThemeProvider>
       <div
         ref={(el) => (parent.current = el)}
-        className={`${props?.className || 'text-[100px] w-full flex fle-col items-center justify-center text-white min-h-[200px]'}`}></div>
+        className={`${props?.className || 'text-[100px] w-full h-full flex fle-col items-center justify-center text-white min-h-[200px]'}`}></div>
     </ThemeProvider>
   )
 }

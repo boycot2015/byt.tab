@@ -6,33 +6,12 @@ import React, { useEffect, useState } from 'react'
 import tabConfig from '~tabConfig'
 import type { Config, ItemType } from '~types'
 
-export const seoList = [
-  {
-    name: '百度',
-    url: 'https://www.baidu.com/s?wd='
-  },
-  {
-    name: 'Google',
-    url: 'https://www.google.com/search?q='
-  },
-  {
-    name: '必应',
-    url: 'https://www.bing.com/search?q='
-  },
-  {
-    name: '搜狗',
-    url: 'https://www.sogou.com/web?query='
-  },
-  {
-    name: '360搜索',
-    url: 'https://www.so.com/s?q='
-  }
-]
 const Search = () => {
   const [config, setConfig] = useLocalStorageState<Config>('config', {
     defaultValue: tabConfig,
     listenStorageChange: true
   })
+  const seoList = tabConfig?.search?.seoList || []
   const [data, setData] = useState('')
   const [url, setUrl] = useState(
     seoList.find((item) => item.name === config.seo)?.url || ''
@@ -65,6 +44,9 @@ const Search = () => {
           style={{ width: 'calc(100% - 120px)' }}
           onChange={(e) => setData(e.target.value)}
           value={data}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') window.open(`${url}${data}`)
+          }}
           size="large"
           placeholder="请输入搜索内容..."
           prefix={<SearchOutlined />}

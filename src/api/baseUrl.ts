@@ -1,6 +1,7 @@
 let baseUrl = 'https://api.boycot.top/api';
 let apiUrl = 'https://api-v2.boycot.top/v2';
 let codelifeUrl = 'https://api.codelife.cc';
+let randomImageApi = 'https://bing.img.run/rand.php';
 switch (process.env.NODE_ENV) {
     case 'development':
         apiUrl = 'https://api-v2.boycot.top/v2';
@@ -10,4 +11,4 @@ switch (process.env.NODE_ENV) {
         apiUrl = 'https://api-v2.boycot.top/v2';
         break;
 }
-export { baseUrl, apiUrl, codelifeUrl };
+export { baseUrl, apiUrl, codelifeUrl, randomImageApi };

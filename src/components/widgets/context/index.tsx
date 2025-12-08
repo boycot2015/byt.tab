@@ -1,12 +1,13 @@
 import {
   DeleteOutlined,
   EditOutlined,
+  FileImageOutlined,
   LinkOutlined,
   PlusOutlined,
   SettingOutlined
 } from '@ant-design/icons'
 import { useLocalStorageState } from 'ahooks'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Item, Menu, Separator, Submenu } from 'react-contexify'
 
 import { renderComponent } from '~components'
@@ -15,6 +16,8 @@ import { ThemeProvider } from '~layouts'
 import tabConfig from '~tabConfig'
 import type { Config, ItemType } from '~types'
 
+import Wallpaper from '../wallpaper/config'
+
 export const MENU_ID = 'blahblah'
 function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
   const data = props.data || ({} as ItemType)
@@ -22,6 +25,7 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
     defaultValue: tabConfig,
     listenStorageChange: true
   })
+  const [wallpaperVisible, setWallpaperVisible] = useState<boolean>(false)
   const [app, setApp] = useLocalStorageState<ItemType[]>('app', {
     defaultValue: appBase,
     listenStorageChange: true
@@ -46,6 +50,9 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
       case 'add':
         addComponent && addComponent(items)
         break
+      case 'wallpaper':
+        setWallpaperVisible(true)
+        break
       case 'edit':
         console.log(id, props)
         editComponent && editComponent(items)
@@ -67,8 +74,8 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
         openSetting && openSetting()
         break
       case 'move-to':
-        console.log(id, props)
-        moveComponent && moveComponent(items)
+        console.log(props, data)
+        moveComponent && moveComponent(items, data.targetData)
         break
     }
   }
@@ -84,6 +91,11 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
         <Item id="add" onClick={handleItemClick}>
           <div className="w-full flex justify-between items-center">
             新增组件 <PlusOutlined />
+          </div>
+        </Item>
+        <Item id="wallpaper" onClick={handleItemClick}>
+          <div className="w-full flex justify-between items-center">
+            更换壁纸 <FileImageOutlined />
           </div>
         </Item>
         {data.href ? (
@@ -106,13 +118,21 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
           label="移动到"
           hidden={!data.id}
           disabled={!data.closable || data.id == data.pid}>
-          {app.map((item) => (
-            <Item key={item.id} id={'move-to'} onClick={handleItemClick}>
-              <div className="w-full flex justify-between items-center">
-                {item.name} {renderComponent(item.icon)}
-              </div>
-            </Item>
-          ))}
+          {app
+            .filter((item) => item.id != data.pid)
+            .map((item) => (
+              <Item
+                key={item.id}
+                data={item}
+                id={'move-to'}
+                onClick={(arg) =>
+                  handleItemClick({ ...arg, targetData: item })
+                }>
+                <div className="w-full flex justify-between items-center">
+                  {item.name} {renderComponent(item.icon)}
+                </div>
+              </Item>
+            ))}
         </Submenu>
         <Item
           id="delete"
@@ -144,6 +164,10 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
           </div>
         </Item>
       </Menu>
+      <Wallpaper
+        visible={wallpaperVisible}
+        onCancel={() => setWallpaperVisible(false)}
+      />
     </ThemeProvider>
   )
 }

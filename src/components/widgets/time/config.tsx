@@ -27,7 +27,9 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
         closeIcon={<CloseOutlined className="!text-white" />}
         onCancel={() => props.onCancel()}
         footer={null}>
-        <FlipClock />
+        <div className="text-white text-center">
+          <FlipClock />
+        </div>
       </Modal>
     </ThemeProvider>
   )

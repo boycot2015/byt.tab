@@ -1,21 +1,30 @@
-import {
-  Button,
-  Card,
-  ColorPicker,
-  ConfigProvider,
-  Input,
-  message,
-  Tabs
-} from 'antd'
+import { useInterval } from 'ahooks'
+import { Button } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 
-import { useStorage } from '@plasmohq/storage/hook'
-
 import tabConfig from '~tabConfig'
+import type { Hitokoto } from '~types'
 
 export default function Header() {
-  return (
-    <div className="flex w-full flex-col md:flex-row items-center justify-center md:gap-2 mb-1 text-white text-shadow">
+  const [hitokoto, setHitokoto] = useState<Hitokoto>()
+  const getHitokoto = async () => {
+    let res = await fetch(tabConfig.hitokotoApi).then((res) => res.json())
+    setHitokoto(res)
+  }
+  useInterval(() => getHitokoto(), 6000)
+  useEffect(() => {
+    getHitokoto()
+  }, [])
+  return [
+    tabConfig.hitokotoApi && hitokoto && hitokoto?.hitokoto && (
+      <div className="text-white text-shadow flex gap-5" key={'hitokoto'}>
+        <span className="flex-1 min-w-10">{hitokoto?.hitokoto}</span> - [
+        {hitokoto.from}]
+      </div>
+    ),
+    <div
+      key={'footer'}
+      className="flex w-full flex-col md:flex-row items-center justify-center md:gap-2 mb-1 text-white text-shadow">
       {tabConfig.footer?.power && (
         <div className="power flex items-center justify-center text-center">
           <h1 className="text-md">Powered by</h1>
@@ -30,7 +39,7 @@ export default function Header() {
           </Button>
         </div>
       )}
-      {tabConfig.footer?.beian && tabConfig.footer?.copyright && (
+      {(tabConfig.footer?.beian || tabConfig.footer?.copyright) && (
         <div className="copyright flex flex-col items-center md:flex-row gap-2">
           {tabConfig.footer?.copyright && (
             <span className="text-sm font-bold">
@@ -111,5 +120,5 @@ export default function Header() {
         </div>
       )}
     </div>
-  )
+  ]
 }

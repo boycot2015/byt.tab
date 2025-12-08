@@ -49,6 +49,7 @@ const getWebsites = (params: { key: string }) => {
                             id: item._id,
                             name: item.name,
                             icon: item.imgSrc || item.src,
+                            iconType: 'image',
                             backgroundColor: item.backgroundColor,
                             description: item.description,
                             target: '_blank',
