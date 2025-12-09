@@ -35,12 +35,14 @@ export interface News {
     icon?: string
   }[]
 }
-function Widget(props: {
+type WidgetProp = {
   withComponents?: boolean
-  source?: string // 壁纸源
-  id?: string // 壁纸分类id
-  size?: 'mini' | 'small' | 'middle' | 'large'
-}) {
+  cateId?: string // 源
+  id?: string // id
+  update?: (args: { id: WidgetProp['id']; props: WidgetProp }) => void
+  size?: 'middle' | 'large'
+}
+function Widget(props: WidgetProp) {
   const [visible, setVisible] = useState(false)
   const [show, setShow] = useState(false)
   const { data, loading } = useRequest(getNews, {
@@ -56,24 +58,28 @@ function Widget(props: {
     }
   }, [data])
   useAsyncEffect(async () => {
-    if (news.cates?.length) return
-    const cates = await getNewsCate()
-    const list = await getNews(cates[0]?.id || '')
-    setNews({ cates, list: list || [] })
+    if (news.cates?.length && !props.cateId) return
+    let cates = news?.cates || []
+    if (!news.cates?.length) {
+      cates = await getNewsCate()
+      setNews({ ...news, cates })
+    }
+    const list = await getNews({ id: props.cateId || '' })
+    setNews({ ...news, cates, list: list || [] })
   }, [])
   return (
     <ThemeProvider token={{}}>
       <Card
         className={`!rounded-xl mx-auto overflow-hidden ${props.withComponents ? sizeMap[props.size || 'mini'] : 'h-full'} !border-none !bg-transparent`}
         classNames={{
-          body: `!overflow-hidden w-full h-full !bg-black/50 !p-4 !rounded-xl mx-auto backdrop-blur-md`
+          body: `!overflow-hidden w-full h-full !bg-black/50 !backdrop-blur-md !p-0 !rounded-xl mx-auto`
         }}
         onClick={(e) => {
           !props.withComponents && setVisible(true)
           !props.withComponents && setShow(true)
         }}>
         <Spin spinning={loading} wrapperClassName={`w-full h-full`}>
-          <div className="h-full flex flex-col text-white gap-2 justify-center">
+          <div className="h-full w-full !p-4 flex flex-col text-white gap-2 justify-center">
             {news &&
               news.list?.slice(0, 4)?.map((item, index) => (
                 <div
@@ -91,13 +97,17 @@ function Widget(props: {
       {show && (
         <WidgetModal
           visible={visible}
-          source={props.source || 'birdpaper'}
+          cateId={props.cateId || ''}
           id={props.id || ''}
           afterOpenChange={(visible) => {
             setShow(visible)
           }}
-          onCancel={() => {
+          onCancel={(cateId) => {
             setVisible(false)
+            props.update({
+              id: props.id,
+              props: { size: props.size, cateId: cateId }
+            })
           }}
         />
       )}

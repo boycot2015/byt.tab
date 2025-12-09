@@ -1,5 +1,9 @@
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
-import { useAsyncEffect, useLocalStorageState } from 'ahooks'
+import {
+  MinusCircleOutlined,
+  PlusOutlined,
+  SkinFilled
+} from '@ant-design/icons'
+import { useAsyncEffect, useLocalStorageState, useResponsive } from 'ahooks'
 import {
   App,
   Button,
@@ -15,13 +19,13 @@ import { Component, useEffect, useRef, useState } from 'react'
 import { useContextMenu } from 'react-contexify'
 import { ReactSortable } from 'react-sortablejs'
 
-import { useStorage } from '@plasmohq/storage/hook'
-
 import { renderComponent } from '~components'
 import Search from '~components/Search'
 import WidgetsModal from '~components/widgets'
 import ContextMenu, { MENU_ID } from '~components/widgets/context'
 import SettingModal from '~components/widgets/setting/config'
+import type { Wallpaper } from '~components/widgets/wallpaper'
+import { wallpaperSources } from '~components/widgets/wallpaper/config'
 import { addProps, getAppBase } from '~data/apps'
 import { sizeMap, ThemeProvider } from '~layouts'
 import Footer from '~layouts/footer'
@@ -41,7 +45,7 @@ export const config: PlasmoCSConfig = {
   all_frames: true
 }
 function IndexTab() {
-  const [config] = useLocalStorageState<Config>('config', {
+  const [config, setConfig] = useLocalStorageState<Config>('config', {
     defaultValue: tabConfig,
     listenStorageChange: true
   })
@@ -54,6 +58,29 @@ function IndexTab() {
     defaultValue: [],
     listenStorageChange: true
   })
+  const [wallpaper] = useLocalStorageState<Wallpaper>('wallpaper', {
+    defaultValue: {
+      source: wallpaperSources,
+      list: []
+    },
+    listenStorageChange: true
+  })
+  const setWallpaper = () => {
+    const source =
+      wallpaper.list[Math.floor(Math.random() * wallpaper.list.length)]
+    if (source?.url == config.theme.background) {
+      setWallpaper()
+      return
+    }
+    setConfig({
+      ...config,
+      theme: {
+        ...config.theme,
+        background: source?.url || ''
+      }
+    })
+  }
+  const { md } = useResponsive()
   const [visible, setVisible] = useState(false)
   const [settingVisible, setSettingVisible] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
@@ -373,13 +400,26 @@ function IndexTab() {
     setApps([...appBase])
   }, [])
   useEffect(() => {
-    config.theme.background &&
-      document.documentElement.style.setProperty(
-        '--byt-bg-image',
-        config.theme.background?.includes('http')
-          ? `url(${config.theme.background}) center/cover no-repeat fixed`
-          : config.theme.background
-      )
+    md && document.body.classList.add('scale-in')
+    let image = new Image()
+    image.src = config.theme.background || ''
+    let timer = null
+    image.onload = () => {
+      clearTimeout(timer)
+      config.theme.background &&
+        document.documentElement.style.setProperty(
+          '--byt-bg-image',
+          config.theme.background?.includes('http')
+            ? `url(${config.theme.background}) center/100% no-repeat fixed`
+            : config.theme.background
+        )
+      document.body.classList.remove('scale-in')
+      document.body.classList.add('scale-out')
+      timer = setTimeout(() => {
+        document.body.classList.remove('scale-out')
+      }, 500)
+    }
+    return () => {}
   }, [config.theme.background])
   return (
     <ThemeProvider
@@ -401,7 +441,10 @@ function IndexTab() {
         </div>
         <div className="!px-2 flex-2 w-full max-w-[1200px] relative">
           <Tabs
-            animated
+            animated={{
+              inkBar: true,
+              tabPane: true
+            }}
             defaultActiveKey="1"
             activeKey={activeKey}
             tabBarExtraContent={
@@ -436,11 +479,15 @@ function IndexTab() {
           />
         </div>
         <Footer />
-        {/* <div className="bg absolute top-0 left-0 w-full h-full z-[-1]">
-          <img src={config.theme?.background || ''} alt="" />
-        </div> */}
       </div>
-      {/* <Gridstack /> */}
+      <div className="fixed top-[-10px] right-10" title="更换壁纸">
+        <div className="flex flex-col items-center">
+          <div className="line w-[2px] h-[40px] bg-white shadow-[0px_5px_10px_rgba(0,0,0,0.5)]"></div>
+          <Button type="primary" variant="text" onClick={() => setWallpaper()}>
+            <SkinFilled />
+          </Button>
+        </div>
+      </div>
       <ContextMenu data={currentItem} isEdit={isEdit} />
       {showAdd && (
         <WidgetsModal
@@ -471,15 +518,7 @@ export default () => {
     listenStorageChange: true
   })
   return (
-    <ThemeProvider
-      token={{
-        colorPrimary: config.theme.primary,
-        Tabs: { itemColor: 'rgba(255, 255, 255, 0.8)', zIndexPopup: 10000 },
-        Button: {
-          primaryBg: config.theme.primary
-        },
-        Input: { hoverBorderColor: config.theme.primary }
-      }}>
+    <ThemeProvider>
       <App message={{ maxCount: 1 }} notification={{ placement: 'bottomLeft' }}>
         <IndexTab />
       </App>

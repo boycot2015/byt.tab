@@ -7,12 +7,14 @@ import {
   SettingOutlined
 } from '@ant-design/icons'
 import { useLocalStorageState } from 'ahooks'
+import { Tag } from 'antd'
 import { useEffect, useState } from 'react'
 import { Item, Menu, Separator, Submenu } from 'react-contexify'
 
 import { renderComponent } from '~components'
+import { widgets } from '~components/widgets'
 import appBase from '~data/apps.json'
-import { ThemeProvider } from '~layouts'
+import { sizeMap, ThemeProvider } from '~layouts'
 import tabConfig from '~tabConfig'
 import type { Config, ItemType } from '~types'
 
@@ -111,9 +113,30 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
           disabled={!data.editable}
           onClick={handleItemClick}>
           <div className="w-full flex justify-between items-center">
-            编辑 <EditOutlined />
+            编辑图标 <EditOutlined />
           </div>
         </Item>
+        <Submenu
+          label="调整布局"
+          hidden={!widgets.find((item) => item.component == data.component)}
+          disabled={!data.closable || data.id == data.pid}>
+          {widgets
+            .find((item) => item.component == data.component)
+            ?.size?.map((item) => (
+              <Item
+                key={item}
+                data={item}
+                id={'size'}
+                onClick={(arg) =>
+                  handleItemClick({ ...arg, targetData: item })
+                }>
+                <div className="w-full flex justify-between items-center">
+                  <span>{item}</span>
+                  {sizeMap[item].replace(/icon-size-/g, '')}
+                </div>
+              </Item>
+            ))}
+        </Submenu>
         <Submenu
           label="移动到"
           hidden={!data.id}

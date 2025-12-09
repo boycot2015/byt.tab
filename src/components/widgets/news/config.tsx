@@ -32,9 +32,9 @@ let scrollTop = 0
 
 function WidgetModal(props: {
   visible: boolean
-  source?: string
+  cateId?: string
   id?: string
-  onCancel: () => void
+  onCancel: (cateId: string) => void
   afterOpenChange: (visible: boolean) => void
 }) {
   const tabWrapRef = useRef<HTMLDivElement>(null)
@@ -42,7 +42,9 @@ function WidgetModal(props: {
     defaultValue: { cates: [], list: [] },
     listenStorageChange: true
   })
-  const [cateId, setCateId] = useState<string>(news?.cates?.[0]?.id || '')
+  const [cateId, setCateId] = useState<string>(
+    props.cateId || news?.cates?.[0]?.id || ''
+  )
   const TabContent = (props) => {
     const scrollRef = useRef<HTMLDivElement>(null)
     useEffect(() => {
@@ -53,14 +55,11 @@ function WidgetModal(props: {
         ref={(el) => el && (scrollRef.current = el)}
         id={`scrollable_${props.id || 'main'}`}
         className="h-[50vh] overflow-auto">
-        <Row gutter={[50, 10]} className="w-full">
+        <Row gutter={[20, 10]} className="w-full">
           {news?.list
             ?.filter((item) => item.title)
             ?.map((item, index) => (
-              <Col
-                key={item.id || item.index || index}
-                span={24}
-                md={news?.list?.length >= 50 ? 12 : 24}>
+              <Col key={item.id || item.index || index} span={24} md={12}>
                 <a
                   href={item.link || item.href || item.url || ''}
                   target="_blank"
@@ -97,10 +96,11 @@ function WidgetModal(props: {
       }}>
       <Modal
         // title={<span className=" !text-white">新闻动态</span>}
+        wrapClassName="!bg-black/30 backdrop-blur-md"
         classNames={{
-          content: `!bg-black/50 !overflow-hidden backdrop-blur-md`,
-          body: '!p-0',
-          header: `!bg-transparent`
+          header: '!bg-transparent !text-white',
+          content: '!overflow-hidden !rounded-xl !p-0 !bg-black/50',
+          body: '!p-5'
         }}
         getContainer={() => document.body}
         width={1000}
@@ -108,18 +108,22 @@ function WidgetModal(props: {
         open={props.visible}
         closeIcon={<CloseOutlined className="!text-white" />}
         afterOpenChange={props.afterOpenChange}
-        onCancel={() => props.onCancel()}>
+        onCancel={() => props.onCancel(cateId)}>
         <div
           className="flex h-[60vh] w-full overflow-hidden"
           ref={(el) => (tabWrapRef.current = el)}>
           <div className="flex-1 overflow-hidden rounded-xl">
             <Spin
-              spinning={loading}
+              spinning={!news?.cates?.length}
               rootClassName="!h-full"
               wrapperClassName="!h-full">
               {news?.cates?.length ? (
                 <Tabs
                   defaultActiveKey={cateId}
+                  indicator={{
+                    align: 'start',
+                    size: (origin) => origin * 1.5
+                  }}
                   more={{
                     trigger: 'click',
                     getPopupContainer: () => tabWrapRef.current,
@@ -128,8 +132,7 @@ function WidgetModal(props: {
                     },
                     icon: <MoreOutlined className="!text-white" />
                   }}
-                  onTabClick={(key) => {
-                    console.log(key, 'onTabClick')
+                  onChange={(key) => {
                     setCateId(key)
                   }}
                   className="text-shadow"
@@ -147,12 +150,14 @@ function WidgetModal(props: {
                       />
                     ),
                     disabled: loading,
-                    children: <TabContent id={item.id || index} />
+                    children: (
+                      <Spin spinning={loading}>
+                        <TabContent id={item.id || index} />
+                      </Spin>
+                    )
                   }))}
                 />
-              ) : (
-                <TabContent />
-              )}
+              ) : null}
             </Spin>
           </div>
         </div>

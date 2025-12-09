@@ -126,7 +126,7 @@ function WidgetModal(props: {
         title=""
         classNames={{
           content: `${getWeatherBg(currentWeather?.weather?.condition)} !overflow-hidden !p-0 backdrop-blur-md`,
-          body: '!p-0'
+          body: '!p-1'
         }}
         width={860}
         footer={null}
@@ -134,7 +134,7 @@ function WidgetModal(props: {
         closeIcon={<CloseOutlined className="!text-white" />}
         onCancel={() => props.onCancel(currentWeather)}>
         <Spin spinning={loading}>
-          <div className="flex !p-4 !pt-9 !pr-0">
+          <div className="flex !p-3 !pt-9 !pr-0">
             <div
               className="flex-1 max-h-[60vh] pr-1 overflow-y-auto relative"
               ref={(el) => (scrollRef.current = el)}>
@@ -146,7 +146,7 @@ function WidgetModal(props: {
                   setMenuShow(false)
                 }}>
                 <div
-                  className="absolute top-2 cursor-pointer right-1 text-white"
+                  className="absolute top-1 cursor-pointer right-1 text-white"
                   onClick={(e) => {
                     e.stopPropagation()
                     setMenuShow(!menuShow)
@@ -154,13 +154,13 @@ function WidgetModal(props: {
                   <MenuOutlined />
                 </div>
                 {/* top */}
-                <div className="flex w-full gap-5">
-                  <div>
+                <div className="flex flex-col sm:flex-row w-full gap-5">
+                  <div className="flex gap-2 order-1">
                     {currentWeather?.location?.province}·
                     {currentWeather?.location?.city}
+                    <div>{currentWeather?.weather?.condition}</div>
                   </div>
-                  <div>{currentWeather?.weather?.condition}</div>
-                  <div>
+                  <div className="sm:order-2 md:order-1">
                     更新于：
                     {new Date(
                       currentWeather?.weather?.updated_at
@@ -379,7 +379,7 @@ function WidgetModal(props: {
               </div>
             </div>
             <div
-              className={`right transition-[width] max-h-[60vh] overflow-y-auto ease-in-out duration-3000 ${!menuShow ? 'w-0 opacity-0' : 'w-[200px] p-2 pr-3 opacity-1'}`}>
+              className={`right transition-[width] max-h-[60vh] overflow-hidden overflow-y-auto ease-in-out duration-3000 ${!menuShow ? 'w-0 opacity-0' : 'w-[200px] !px-2 opacity-1'}`}>
               <AutoComplete
                 placeholder="请输入城市"
                 onSelect={addWeather}

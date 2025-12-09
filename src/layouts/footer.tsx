@@ -11,16 +11,21 @@ export default function Header() {
     let res = await fetch(tabConfig.hitokotoApi).then((res) => res.json())
     setHitokoto(res)
   }
-  useInterval(() => getHitokoto(), 6000)
+  useInterval(() => getHitokoto(), 60000)
   useEffect(() => {
     getHitokoto()
   }, [])
   return [
-    tabConfig.hitokotoApi && hitokoto && hitokoto?.hitokoto && (
-      <div className="text-white text-shadow flex gap-5" key={'hitokoto'}>
-        <span className="flex-1 min-w-10">{hitokoto?.hitokoto}</span> - [
-        {hitokoto.from}]
+    tabConfig.hitokotoApi && hitokoto && hitokoto?.hitokoto ? (
+      <div
+        onClick={() => getHitokoto()}
+        className="text-white text-center sm:text-left text-shadow w-full sm:w-auto md:flex flex-row gap-3 cursor-pointer"
+        key={'hitokoto'}>
+        <span>{hitokoto?.hitokoto}</span>
+        <span>-摘自 [{hitokoto.from}]</span>
       </div>
+    ) : (
+      <div className="h-[22px]" key={'hitokoto-empty'}></div>
     ),
     <div
       key={'footer'}

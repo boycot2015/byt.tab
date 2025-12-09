@@ -31,7 +31,28 @@ import tabConfig from '~tabConfig'
 import type { Config } from '~types.d'
 
 let scrollTop = 0
-
+export const wallpaperSources = [
+  {
+    value: 'birdpaper',
+    label: '小鸟壁纸',
+    sort: 0
+  },
+  {
+    value: 'default',
+    label: '精选壁纸',
+    sort: 1
+  },
+  {
+    value: '360',
+    label: '360壁纸',
+    sort: 2
+  },
+  {
+    value: 'bing',
+    label: 'bing壁纸',
+    sort: 3
+  }
+]
 function WidgetModal(props: {
   visible: boolean
   source?: string
@@ -49,29 +70,9 @@ function WidgetModal(props: {
     'wallpaper',
     {
       defaultValue: {
-        source: [
-          {
-            value: 'birdpaper',
-            label: '小鸟壁纸',
-            sort: 0
-          },
-          {
-            value: 'default',
-            label: '精选壁纸',
-            sort: 1
-          },
-          {
-            value: '360',
-            label: '360壁纸',
-            sort: 2
-          },
-          {
-            value: 'bing',
-            label: 'bing壁纸',
-            sort: 3
-          }
-        ]
-      } as Wallpaper,
+        source: wallpaperSources,
+        list: []
+      },
       listenStorageChange: true
     }
   )

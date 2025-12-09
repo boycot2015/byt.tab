@@ -72,13 +72,50 @@
 
 html,
 body {
-  --byt-font-family: hwb(147 4% 38%);
   --byt-font-family: 'CangErYuYang', 'OPPOSans', sans-serif;
   --byt-bg-color: rgba(0, 0, 0, .5);
   scrollbar-width: thin;
   /* background-color: #ccc; */
   scrollbar-color: #eaeaea transparent;
   background: var(--byt-bg-image);
+  font-family: var(--byt-font-family) !important;
+  background-size: 100% 100%;
+
+  @media screen and (max-width: 768px) {
+    background-size: cover !important;
+  }
+}
+
+body.mobile {
+  background-size: cover;
+}
+
+body.scale-in {
+  animation: scale-in .5s ease;
+}
+
+body.scale-out {
+  animation: scale-out .5s ease;
+}
+
+@keyframes scale-in {
+  0% {
+    background-size: 100% 100%;
+  }
+
+  100% {
+    background-size: 120% 120%;
+  }
+}
+
+@keyframes scale-out {
+  0% {
+    background-size: 120% 120%;
+  }
+
+  100% {
+    background-size: 100% 100%;
+  }
 }
 
 .blur-bg {

@@ -1,5 +1,5 @@
 import {
-  AppleOutlined,
+  AppstoreOutlined,
   CloseOutlined,
   PlusOutlined,
   SettingOutlined,
@@ -42,7 +42,7 @@ import { ThemeProvider } from '~layouts'
 import type { ItemType } from '~types'
 import { mouseOverEffect } from '~utils'
 
-interface Component {
+interface Widget {
   id: string
   ctype: 'hot' | 'common' | 'recommend'
   name: string
@@ -58,7 +58,43 @@ interface Website {
   backgroundColor?: string
 }
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0]
-
+export const widgets: Widget[] = [
+  {
+    id: 'DateWidget',
+    ctype: 'hot',
+    name: '日历',
+    size: ['mini', 'middle', 'large'],
+    component: 'DateWidget'
+  },
+  {
+    id: 'TimeWidget',
+    ctype: 'common',
+    name: '时钟',
+    size: ['small', 'middle', 'large'],
+    component: 'TimeWidget'
+  },
+  {
+    id: 'WeatherWidget',
+    ctype: 'recommend',
+    size: ['mini', 'middle', 'large'],
+    name: '天气',
+    component: 'WeatherWidget'
+  },
+  {
+    id: 'WallpaperWidget',
+    ctype: 'recommend',
+    size: ['middle', 'large'],
+    name: '壁纸',
+    component: 'WallpaperWidget'
+  },
+  {
+    id: 'NewsWidget',
+    ctype: 'recommend',
+    size: ['middle', 'large'],
+    name: '新闻动态',
+    component: 'NewsWidget'
+  }
+]
 const getBase64 = (file: FileType): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -66,10 +102,9 @@ const getBase64 = (file: FileType): Promise<string> =>
     reader.onload = () => resolve(reader.result as string)
     reader.onerror = (error) => reject(error)
   })
-// import { data } from '~data/weather'
 const ComponentContent = (props: {
   key: string
-  components: Component[]
+  widgets: Widget[]
   onAdd: (e: React.MouseEvent, item: ItemType) => void
 }) => {
   const [parentRefs] = useState<
@@ -102,7 +137,7 @@ const ComponentContent = (props: {
   return (
     <div className="max-h-[60vh] overflow-hidden overflow-y-auto">
       <Row gutter={6}>
-        {props.components.map((component) => (
+        {props.widgets.map((component) => (
           <Col span={24} sm={12} lg={8} xxl={6} key={component.id}>
             <Carousel
               arrows={true}
@@ -549,45 +584,6 @@ function WidgetModal(props: {
       />
     </div>
   )
-  const [components, setComponents] = useState<Component[]>([
-    {
-      id: 'DateWidget',
-      ctype: 'hot',
-      name: '日历',
-      size: ['mini', 'middle', 'large'],
-      component: 'DateWidget'
-    },
-    {
-      id: 'TimeWidget',
-      ctype: 'common',
-      name: '时钟',
-      size: ['small', 'middle', 'large'],
-      component: 'TimeWidget'
-    },
-    {
-      id: 'WeatherWidget',
-      ctype: 'recommend',
-      size: ['mini', 'middle', 'large'],
-      name: '天气',
-      component: 'WeatherWidget'
-    },
-    // WallpaperWidget
-    {
-      id: 'WallpaperWidget',
-      ctype: 'recommend',
-      size: ['middle', 'large'],
-      name: '壁纸',
-      component: 'WallpaperWidget'
-    },
-    // NewsWidget
-    {
-      id: 'NewsWidget',
-      ctype: 'recommend',
-      size: ['middle', 'large'],
-      name: '新闻动态',
-      component: 'NewsWidget'
-    }
-  ])
   const onAdd = (
     e,
     {
@@ -637,7 +633,7 @@ function WidgetModal(props: {
       forceRender: true,
       children: ComponentContent({
         key: 'all',
-        components,
+        widgets,
         onAdd
       })
     },
@@ -647,7 +643,7 @@ function WidgetModal(props: {
       forceRender: true,
       children: ComponentContent({
         key: 'recommend',
-        components: components.filter((item) => item.ctype == 'recommend'),
+        widgets: widgets.filter((item) => item.ctype == 'recommend'),
         onAdd
       })
     },
@@ -657,7 +653,7 @@ function WidgetModal(props: {
       forceRender: true,
       children: ComponentContent({
         key: 'common',
-        components: components.filter((item) => item.ctype == 'common'),
+        widgets: widgets.filter((item) => item.ctype == 'common'),
         onAdd
       })
     },
@@ -667,7 +663,7 @@ function WidgetModal(props: {
       forceRender: true,
       children: ComponentContent({
         key: 'hot',
-        components: components.filter((item) => item.ctype == 'hot'),
+        widgets: widgets.filter((item) => item.ctype == 'hot'),
         onAdd
       })
     }
@@ -723,12 +719,11 @@ function WidgetModal(props: {
         wrapClassName="!bg-black/30 backdrop-blur-md"
         classNames={{
           header: '!bg-transparent !text-white',
-          content: '!overflow-hidden !rounded-xl !p-3 !bg-black/30',
-          body: '!p-0'
+          content: '!overflow-hidden !p-0 !rounded-xl !bg-black/30',
+          body: '!p-3 !pl-0'
         }}
         width={1300}
         footer={null}
-        forceRender={true}
         open={props.visible}
         closeIcon={<CloseOutlined className="!text-white" />}
         afterOpenChange={props.afterOpenChange}
@@ -759,7 +754,7 @@ function WidgetModal(props: {
                 label: '网站链接',
                 key: 'website',
                 forceRender: true,
-                icon: <AppleOutlined />,
+                icon: <AppstoreOutlined />,
                 children: (
                   <Tabs
                     defaultActiveKey="all"
