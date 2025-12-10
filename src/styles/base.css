@@ -22,6 +22,8 @@
   --icon-nameColor: #fff;
   --sidebar-width: 240px;
   --icon-bg-color: #222;
+  --wall-mask: 0;
+  --wall-blur: 10px;
   /* --contexify-activeItem-bgColor: var(--byt-color-primary); */
 }
 
@@ -77,45 +79,8 @@ body {
   scrollbar-width: thin;
   /* background-color: #ccc; */
   scrollbar-color: #eaeaea transparent;
-  background: var(--byt-bg-image);
+  /* background: var(--byt-bg-image); */
   font-family: var(--byt-font-family) !important;
-  background-size: 100% 100%;
-
-  @media screen and (max-width: 768px) {
-    background-size: cover !important;
-  }
-}
-
-body.mobile {
-  background-size: cover;
-}
-
-body.scale-in {
-  animation: scale-in .5s ease;
-}
-
-body.scale-out {
-  animation: scale-out .5s ease;
-}
-
-@keyframes scale-in {
-  0% {
-    background-size: 100% 100%;
-  }
-
-  100% {
-    background-size: 120% 120%;
-  }
-}
-
-@keyframes scale-out {
-  0% {
-    background-size: 120% 120%;
-  }
-
-  100% {
-    background-size: 100% 100%;
-  }
 }
 
 .blur-bg {
@@ -187,12 +152,47 @@ html[theme='dark'] {
   background-image: linear-gradient(45deg, #6c7682 20%, #535d69)
 }
 
+.weather-rain_d,
+.weather-rain_n {
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  overflow: hidden;
+
+}
+
 .weather-rain_d {
+  background-image: linear-gradient(45deg, #789fb8 20%, #6386a3);
   /* background-image: url(/weather/rain_d.webp) */
 }
 
 .weather-rain_n {
+  background-repeat: no-repeat;
   /* background-image: url(/weather/rain_d.webp) */
+}
+
+.weather-rain_d::after,
+.weather-rain_n::after {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 5px;
+  height: 15px;
+  background: radial-gradient(#8fd4fc, #52b1f2, #0599fc);
+  border-radius: 50%;
+  transform: rotateY(45deg);
+  animation: raindrop-fall 0.8s infinite linear;
+}
+
+@keyframes raindrop-fall {
+  0% {
+    top: -10%;
+    opacity: 1;
+  }
+
+  100% {
+    top: 110%;
+    opacity: 0;
+  }
 }
 
 .weather-snow_d {
@@ -220,4 +220,46 @@ html[theme='dark'] {
 .text-shadow {
   filter: drop-shadow(0px 2px 7px rgba(0, 0, 0, .8))
     /* text-shadow: 0 3px 7px rgba(255, 255, 255, .8); */
+}
+
+
+.wallpaper {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  transition: all .5s;
+  background-size: cover;
+  background-position: 100%;
+  z-index: 0;
+  opacity: 1;
+}
+
+.wallpaper.change {
+  transform: scale(1.1);
+  opacity: .8
+}
+
+.wallpaper::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(var(--wall-blur));
+  -webkit-backdrop-filter: blur(var(--wall-blur));
+  background-color: rgba(0, 0, 0, var(--wall-mask));
+}
+
+.wallpaper .wallpaper-video {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  transition: .5s;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
 }

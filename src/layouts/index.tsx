@@ -49,11 +49,11 @@ export const ThemeProvider = ({
         token: {
           fontFamily:
             'CangErYuYang, OPPOSans, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji',
-          ...token,
           colorPrimary: token.colorPrimary || config.theme.primary || '#ff9900',
-          colorBorderSecondary: 'rgba(255, 255, 255, 0.3)',
-          colorBorder: 'rgba(255, 255, 255, 0.3)',
-          paddingLG: 16
+          colorBorderSecondary: 'rgba(114, 114, 114, 0.5)',
+          colorBorder: 'rgba(114, 114, 114, 0.5)',
+          paddingLG: 16,
+          ...token
         }
       }}>
       {children}

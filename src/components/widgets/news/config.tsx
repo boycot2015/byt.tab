@@ -33,14 +33,15 @@ let scrollTop = 0
 function WidgetModal(props: {
   visible: boolean
   cateId?: string
+  cates?: News['cates']
   id?: string
-  onCancel: (cateId: string) => void
+  onCancel: (cateId: string, cates: News['list']) => void
   afterOpenChange: (visible: boolean) => void
 }) {
   const tabWrapRef = useRef<HTMLDivElement>(null)
-  const [news, setNews] = useLocalStorageState<News>('news', {
-    defaultValue: { cates: [], list: [] },
-    listenStorageChange: true
+  const [news, setNews] = useState<News>({
+    cates: props.cates || [],
+    list: []
   })
   const [cateId, setCateId] = useState<string>(
     props.cateId || news?.cates?.[0]?.id || ''
@@ -108,7 +109,7 @@ function WidgetModal(props: {
         open={props.visible}
         closeIcon={<CloseOutlined className="!text-white" />}
         afterOpenChange={props.afterOpenChange}
-        onCancel={() => props.onCancel(cateId)}>
+        onCancel={() => props.onCancel(cateId, news.list)}>
         <div
           className="flex h-[60vh] w-full overflow-hidden"
           ref={(el) => (tabWrapRef.current = el)}>

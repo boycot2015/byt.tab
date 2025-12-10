@@ -48,24 +48,25 @@ function Widget(props: WidgetProp) {
   const { data, loading } = useRequest(getNews, {
     cacheKey: 'news'
   })
-  const [news, setNews] = useLocalStorageState<News>('news', {
-    defaultValue: { cates: [], list: [] },
+  const [cates, setCates] = useLocalStorageState<News['cates']>('newsCates', {
+    defaultValue: [],
     listenStorageChange: true
   })
+  const [list, setList] = useState<News['list']>([])
   useEffect(() => {
     if (data) {
-      setNews({ ...news, list: data })
+      setList(data)
     }
   }, [data])
   useAsyncEffect(async () => {
-    if (news.cates?.length && !props.cateId) return
-    let cates = news?.cates || []
-    if (!news.cates?.length) {
-      cates = await getNewsCate()
-      setNews({ ...news, cates })
+    if (cates?.length && !props.cateId) return
+    let res = []
+    if (!cates?.length) {
+      res = await getNewsCate()
+      setCates(res || [])
     }
-    const list = await getNews({ id: props.cateId || '' })
-    setNews({ ...news, cates, list: list || [] })
+    res = await getNews({ id: props.cateId || '' })
+    setList(res || [])
   }, [])
   return (
     <ThemeProvider token={{}}>
@@ -80,17 +81,18 @@ function Widget(props: WidgetProp) {
         }}>
         <Spin spinning={loading} wrapperClassName={`w-full h-full`}>
           <div className="h-full w-full !p-4 flex flex-col text-white gap-2 justify-center">
-            {news &&
-              news.list?.slice(0, 4)?.map((item, index) => (
-                <div
-                  className="flex justify-between gap-2"
-                  key={item.id || index}>
-                  <span className="line-clamp-1 flex-1">
-                    {index + 1}. {item.title}
-                  </span>
-                  {props.size === 'large' && <span>{item.hotValue || 0}</span>}
-                </div>
-              ))}
+            {list?.slice(0, 4)?.map((item, index) => (
+              <div
+                className="flex justify-between gap-2"
+                title={item.title}
+                key={item.id || index}>
+                <span
+                  className={`line-clamp-1 ${props.size === 'large' ? 'flex-1' : ''}`}>
+                  {index + 1}. {item.title}
+                </span>
+                {props.size === 'large' && <span>{item.hotValue || 0}</span>}
+              </div>
+            ))}
           </div>
         </Spin>
       </Card>
@@ -99,11 +101,13 @@ function Widget(props: WidgetProp) {
           visible={visible}
           cateId={props.cateId || ''}
           id={props.id || ''}
+          cates={cates}
           afterOpenChange={(visible) => {
             setShow(visible)
           }}
-          onCancel={(cateId) => {
+          onCancel={(cateId, list) => {
             setVisible(false)
+            setList(list)
             props.update({
               id: props.id,
               props: { size: props.size, cateId: cateId }

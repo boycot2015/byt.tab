@@ -27,9 +27,9 @@ function Widget(props: {
   return (
     <ThemeProvider>
       <Card
-        className={`!overflow-hidden !border-none mx-auto ${sizeMap[props.size || 'small']} ${props.size === 'middle' || props.size === 'large' ? '!bg-black' : ''}`}
+        className={`!overflow-hidden !rounded-xl !border-none mx-auto ${sizeMap[props.size || 'small']} ${props.size === 'middle' || props.size === 'large' ? '!bg-black' : ''}`}
         classNames={{
-          body: `flex !rounded-xl items-center !p-2 w-full h-full !overflow-hidden justify-center`
+          body: `flex items-center !p-2 w-full h-full !overflow-hidden justify-center`
         }}
         onClick={() => {
           !props.withComponents && setVisible(true)

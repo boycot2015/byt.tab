@@ -66,8 +66,10 @@ function IndexTab() {
     listenStorageChange: true
   })
   const setWallpaper = () => {
-    const source =
-      wallpaper.list[Math.floor(Math.random() * wallpaper.list.length)]
+    const list = wallpaper.list.filter(
+      (source) => source?.url != config.theme.background
+    )
+    const source = list[Math.floor(Math.random() * list.length)]
     if (source?.url == config.theme.background) {
       setWallpaper()
       return
@@ -82,6 +84,7 @@ function IndexTab() {
   }
   const { md } = useResponsive()
   const [visible, setVisible] = useState(false)
+  const [bgChange, setBgChange] = useState(false)
   const [settingVisible, setSettingVisible] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
   const { show, hideAll } = useContextMenu({
@@ -90,7 +93,7 @@ function IndexTab() {
   const TabConents = (item: ItemType) => {
     return (
       <div
-        className="md:blur-bg app-main md:h-[48vh] pb-3"
+        className="md:blur-bg app-main md:h-[60vh] mb-1"
         onContextMenu={(event) =>
           handleContextMenu(event, {
             id: item.id,
@@ -212,18 +215,25 @@ function IndexTab() {
     setApp: (app: ItemType) => void
   }) => {
     let tabName: string = ''
+    const inputRef = useRef(null)
+    const [addVisible, setAddVisible] = useState(false)
     const setData = (data: string) => {
       tabName = data
     }
+    useEffect(() => {
+      if (addVisible && inputRef.current) {
+        inputRef.current.focus()
+      }
+    }, [addVisible])
     return (
       <ThemeProvider
         token={{
-          colorPrimary: primary,
           Button: {
             textTextColor: primary,
             textTextHoverColor: primary,
             textTextActiveColor: primary
-          }
+          },
+          colorBorder: 'rgba(0, 0, 0, 0.3)'
         }}>
         <Button
           className="text-shadow"
@@ -248,6 +258,7 @@ function IndexTab() {
                   color: primary
                 }
               },
+              maskClosable: true,
               closable: true,
               okType: 'primary',
               forceRender: true,
@@ -260,6 +271,7 @@ function IndexTab() {
                   }}>
                   <div className="py-2">
                     <Input
+                      ref={inputRef}
                       style={{ width: '100%' }}
                       onChange={(e) => {
                         setData(e.target.value)
@@ -269,6 +281,9 @@ function IndexTab() {
                   </div>
                 </ThemeProvider>
               ),
+              afterOpenChange(open) {
+                setAddVisible(open)
+              },
               onOk: () => {
                 if (!tabName) {
                   message.error('请输入页签名称')
@@ -284,7 +299,9 @@ function IndexTab() {
                 })
                 message.success('添加成功!')
               },
-              onCancel: () => {}
+              onCancel: () => {
+                setAddVisible(false)
+              }
             })
           }}
           icon={<PlusOutlined />}>
@@ -395,31 +412,28 @@ function IndexTab() {
     })
   }, [activeKey])
   useAsyncEffect(async () => {
+    setConfig({
+      ...config
+    })
     if (apps.length) return
     const appBase = await getAppBase()
     setApps([...appBase])
   }, [])
   useEffect(() => {
-    md && document.body.classList.add('scale-in')
     let image = new Image()
+    const wallpaper = document.querySelector('.wallpaper') as HTMLDivElement
     image.src = config.theme.background || ''
+    setBgChange(true)
     let timer = null
     image.onload = () => {
-      clearTimeout(timer)
-      config.theme.background &&
-        document.documentElement.style.setProperty(
-          '--byt-bg-image',
-          config.theme.background?.includes('http')
-            ? `url(${config.theme.background}) center/100% no-repeat fixed`
-            : config.theme.background
-        )
-      document.body.classList.remove('scale-in')
-      document.body.classList.add('scale-out')
       timer = setTimeout(() => {
-        document.body.classList.remove('scale-out')
-      }, 500)
+        wallpaper.style.backgroundImage = `url(${config.theme.background})`
+        setBgChange(false)
+      }, 250)
     }
-    return () => {}
+    return () => {
+      clearTimeout(timer)
+    }
   }, [config.theme.background])
   return (
     <ThemeProvider
@@ -427,66 +441,72 @@ function IndexTab() {
         colorPrimary: primary,
         Tabs: { itemColor: 'rgba(255, 255, 255, 0.8)' }
       }}>
-      <div
-        onContextMenu={(event) =>
-          handleContextMenu(event, { id: '', closable: false })
-        }
-        onDoubleClick={() => {
-          setEdit(false)
-        }}
-        className={`md:h-[100vh] lg:overflow-hidden p-5 flex flex-col items-center justify-between`}>
-        <div className="flex-1 flex flex-col items-center justify-center w-full">
-          <Header />
-          <Search />
-        </div>
-        <div className="!px-2 flex-2 w-full max-w-[1200px] relative">
-          <Tabs
-            animated={{
-              inkBar: true,
-              tabPane: true
-            }}
-            defaultActiveKey="1"
-            activeKey={activeKey}
-            tabBarExtraContent={
-              <AddComponent
-                apps={apps}
-                setApp={(app) => {
-                  let newApps = [...apps]
-                  newApps.push({ ...app })
-                  setActiveKey(app.id as string)
-                  setCurrentItem({ ...app, pid: app.id })
-                  setApps(newApps)
-                }}
-              />
-            }
-            items={apps.map((item) => {
-              const id = String(item.id)
-              return {
-                key: id,
-                label: <span className="text-shadow">{item.name}</span>,
-                icon: (
-                  <span className="text-shadow">
-                    {renderComponent(item.icon, {
-                      ...item.props,
-                      id: item.id
-                    })}
-                  </span>
-                ),
-                children: TabConents(item)
+      <div className="md:h-[100vh] md:overflow-hidden relative">
+        <div
+          onContextMenu={(event) =>
+            handleContextMenu(event, { id: '', closable: false })
+          }
+          onDoubleClick={() => {
+            setEdit(false)
+          }}
+          className={`relative z-[2] h-full p-5 flex flex-col items-center justify-between`}>
+          <div className="flex flex-col items-center justify-center w-full">
+            <Header />
+            <Search />
+          </div>
+          <div className="!px-2 flex-1 w-full max-w-[1200px] relative">
+            <Tabs
+              animated={{
+                inkBar: true,
+                tabPane: true
+              }}
+              defaultActiveKey="1"
+              activeKey={activeKey}
+              tabBarExtraContent={
+                <AddComponent
+                  apps={apps}
+                  setApp={(app) => {
+                    let newApps = [...apps]
+                    newApps.push({ ...app })
+                    setActiveKey(app.id as string)
+                    setCurrentItem({ ...app, pid: app.id })
+                    setApps(newApps)
+                  }}
+                />
               }
-            })}
-            onChange={setActiveKey}
-          />
+              items={apps.map((item) => {
+                const id = String(item.id)
+                return {
+                  key: id,
+                  label: <span className="text-shadow">{item.name}</span>,
+                  icon: (
+                    <span className="text-shadow">
+                      {renderComponent(item.icon, {
+                        ...item.props,
+                        id: item.id
+                      })}
+                    </span>
+                  ),
+                  children: TabConents(item)
+                }
+              })}
+              onChange={setActiveKey}
+            />
+          </div>
+          <Footer />
+          <div className="fixed top-[-10px] right-10 z-[999]" title="更换壁纸">
+            <div className="flex flex-col items-center">
+              <div className="line w-[2px] h-[40px] bg-white shadow-[0px_5px_10px_rgba(0,0,0,0.5)]"></div>
+              <Button
+                type="primary"
+                variant="text"
+                onClick={() => setWallpaper()}>
+                <SkinFilled />
+              </Button>
+            </div>
+          </div>
         </div>
-        <Footer />
-      </div>
-      <div className="fixed top-[-10px] right-10" title="更换壁纸">
-        <div className="flex flex-col items-center">
-          <div className="line w-[2px] h-[40px] bg-white shadow-[0px_5px_10px_rgba(0,0,0,0.5)]"></div>
-          <Button type="primary" variant="text" onClick={() => setWallpaper()}>
-            <SkinFilled />
-          </Button>
-        </div>
+        <div className={`wallpaper ${md && bgChange ? 'change' : ''}`}></div>
       </div>
       <ContextMenu data={currentItem} isEdit={isEdit} />
       {showAdd && (
