@@ -7,14 +7,13 @@ import {
   SettingOutlined
 } from '@ant-design/icons'
 import { useLocalStorageState } from 'ahooks'
-import { Tag } from 'antd'
 import { useEffect, useState } from 'react'
 import { Item, Menu, Separator, Submenu } from 'react-contexify'
 
 import { renderComponent } from '~components'
 import { widgets } from '~components/widgets'
 import appBase from '~data/apps.json'
-import { sizeMap, ThemeProvider } from '~layouts'
+import { sizeMap, sizeMapCn, ThemeProvider } from '~layouts'
 import tabConfig from '~tabConfig'
 import type { Config, ItemType } from '~types'
 
@@ -41,6 +40,7 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
       editAllComponent,
       deleteAllComponent,
       moveComponent,
+      resizeComponent,
       openSetting,
       ...items
     } = props
@@ -78,6 +78,10 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
       case 'move-to':
         console.log(props, data)
         moveComponent && moveComponent(items, data.targetData)
+        break
+      case 'change-size':
+        console.log(props, data)
+        resizeComponent && resizeComponent(items, data.size)
         break
     }
   }
@@ -122,16 +126,15 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
           disabled={!data.closable || data.id == data.pid}>
           {widgets
             .find((item) => item.component == data.component)
-            ?.size?.map((item) => (
+            ?.size.filter((item) => item !== data.props.size)
+            ?.map((item) => (
               <Item
                 key={item}
                 data={item}
-                id={'size'}
-                onClick={(arg) =>
-                  handleItemClick({ ...arg, targetData: item })
-                }>
+                id={'change-size'}
+                onClick={(arg) => handleItemClick({ ...arg, size: item })}>
                 <div className="w-full flex justify-between items-center">
-                  <span>{item}</span>
+                  <span>{sizeMapCn[item]}</span>
                   {sizeMap[item].replace(/icon-size-/g, '')}
                 </div>
               </Item>

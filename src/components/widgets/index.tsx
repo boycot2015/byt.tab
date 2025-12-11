@@ -6,8 +6,9 @@ import {
   ToolOutlined
 } from '@ant-design/icons'
 import * as icons from '@ant-design/icons/lib/icons/index'
-import { useLocalStorageState, useRequest } from 'ahooks'
+import { useGetState, useLocalStorageState, useRequest } from 'ahooks'
 import {
+  App,
   Button,
   Card,
   Carousel,
@@ -16,9 +17,7 @@ import {
   Form,
   Image,
   Input,
-  message,
   Modal,
-  Radio,
   Row,
   Select,
   Space,
@@ -103,7 +102,7 @@ const getBase64 = (file: FileType): Promise<string> =>
     reader.onerror = (error) => reject(error)
   })
 const ComponentContent = (props: {
-  key: string
+  ctype: 'all' | 'hot' | 'common' | 'recommend'
   widgets: Widget[]
   onAdd: (e: React.MouseEvent, item: ItemType) => void
 }) => {
@@ -130,18 +129,14 @@ const ComponentContent = (props: {
       })
     }
   }, [parentRefs])
-  const onCellClick = (e: React.MouseEvent, item: ItemType) => {
-    e.preventDefault()
-    props.onAdd(e, item)
-  }
   return (
     <div className="max-h-[60vh] overflow-hidden overflow-y-auto">
       <Row gutter={6}>
         {props.widgets.map((component) => (
-          <Col span={24} sm={12} lg={8} xxl={6} key={component.id}>
+          <Col span={24} lg={12} xl={8} key={component.id}>
             <Carousel
               arrows={true}
-              key={props.key + '_' + component.id}
+              key={props.ctype + '_' + component.id}
               style={{
                 perspective: 500,
                 transformStyle: 'preserve-3d'
@@ -149,7 +144,7 @@ const ComponentContent = (props: {
               draggable={true}
               className="p-5">
               {component.size.map((size, index) => (
-                <div key={props.key + '_' + component.id + '_' + size}>
+                <div key={props.ctype + '_' + component.id + '_' + size}>
                   <div
                     style={{
                       perspective: 500,
@@ -160,7 +155,7 @@ const ComponentContent = (props: {
                     className="cursor-pointer"
                     ref={(ref) => parentRefs?.push({ ref })}
                     onClick={(e) =>
-                      onCellClick(e, {
+                      props.onAdd(e, {
                         ...component,
                         props: { size }
                       })
@@ -557,8 +552,9 @@ function WidgetModal(props: {
   afterOpenChange: (arg: boolean) => void
   data: ItemType
 }) {
-  const [containerId, setContainerId] = useState(
-    props.data?.pid ? props.data?.pid.toString() : '1'
+  const { message } = App.useApp()
+  const [containerId, setContainerId, getContainerId] = useGetState<string>(
+    props.data?.pid ? props.data?.pid.toString() : '999'
   )
   const [defaultActiveKey, setDefaultActiveKey] = useState(
     props.data?.icon && props.data?.editable ? 'icon' : 'component'
@@ -577,8 +573,9 @@ function WidgetModal(props: {
           label: item.name,
           value: item.id.toString()
         }))}
-        value={containerId}
+        defaultValue={containerId}
         onChange={(value) => {
+          console.log('containerId', value)
           setContainerId(value)
         }}
       />
@@ -600,7 +597,7 @@ function WidgetModal(props: {
     e && e.stopPropagation()
     let newApps = [...apps]
     newApps.map((item) => {
-      if (item.id == containerId) {
+      if (item.id == getContainerId()) {
         item.children?.push({
           id:
             containerId +
@@ -631,46 +628,45 @@ function WidgetModal(props: {
       key: 'all',
       label: '全部',
       forceRender: true,
-      children: ComponentContent({
-        key: 'all',
-        widgets,
-        onAdd
-      })
+      children: <ComponentContent ctype="all" widgets={widgets} onAdd={onAdd} />
     },
     {
       key: 'recommend',
       label: '推荐',
       forceRender: true,
-      children: ComponentContent({
-        key: 'recommend',
-        widgets: widgets.filter((item) => item.ctype == 'recommend'),
-        onAdd
-      })
+      children: (
+        <ComponentContent
+          ctype="recommend"
+          widgets={widgets.filter((item) => item.ctype == 'recommend')}
+          onAdd={onAdd}
+        />
+      )
     },
     {
       key: 'common',
       label: '常用',
       forceRender: true,
-      children: ComponentContent({
-        key: 'common',
-        widgets: widgets.filter((item) => item.ctype == 'common'),
-        onAdd
-      })
+      children: (
+        <ComponentContent
+          ctype="common"
+          widgets={widgets.filter((item) => item.ctype == 'common')}
+          onAdd={onAdd}
+        />
+      )
     },
     {
       key: 'hot',
       label: '热门',
       forceRender: true,
-      children: ComponentContent({
-        key: 'hot',
-        widgets: widgets.filter((item) => item.ctype == 'hot'),
-        onAdd
-      })
+      children: (
+        <ComponentContent
+          ctype="hot"
+          widgets={widgets.filter((item) => item.ctype == 'hot')}
+          onAdd={onAdd}
+        />
+      )
     }
   ])
-  const onTabsChange = (key: string) => {
-    console.log(key)
-  }
   const [websites, setWebsites] = useState<
     { label: string; key: string; children?: Website[] }[]
   >(websitesBase || [])
@@ -700,138 +696,143 @@ function WidgetModal(props: {
   }, [websiteType])
   // setWebsites(data || [])
   return (
-    <ThemeProvider
-      token={{
-        colorTextDisabled: 'rgba(255, 255, 255, 0.5)',
-        colorBgContainerDisabled: 'rgba(255, 255, 255, 0.5)',
-        colorBgBase: 'rgba(255, 255, 255, 0.9)',
-        Modal: {
-          contentBg: 'rgba(0, 0, 0, 0.8)'
-        },
-        Upload: {
-          actionsColor: 'rgba(255, 255, 255, 0.5)'
-        },
-        Form: { labelColor: '#fff' },
-        Tabs: { itemColor: '#fff' }
-      }}>
-      <Modal
-        title={null}
-        wrapClassName="!bg-black/30 backdrop-blur-md"
-        classNames={{
-          header: '!bg-transparent !text-white',
-          content: '!overflow-hidden !p-0 !rounded-xl !bg-black/30',
-          body: '!p-3 !pl-0'
-        }}
-        width={1300}
-        footer={null}
-        open={props.visible}
-        closeIcon={<CloseOutlined className="!text-white" />}
-        afterOpenChange={props.afterOpenChange}
-        onCancel={() => props.onCancel()}>
-        <div className="h-[70vh]">
-          <Tabs
-            defaultActiveKey={defaultActiveKey}
-            tabPosition="left"
-            style={{ height: '100%' }}
-            animated
-            items={[
-              {
-                label: '组件工具',
-                key: 'component',
-                icon: <ToolOutlined />,
-                forceRender: true,
-                children: (
-                  <Tabs
-                    defaultActiveKey="all"
-                    animated
-                    items={tabs}
-                    tabBarExtraContent={<TabBarExtraContent />}
-                    onChange={onTabsChange}
-                  />
-                )
-              },
-              {
-                label: '网站链接',
-                key: 'website',
-                forceRender: true,
-                icon: <AppstoreOutlined />,
-                children: (
-                  <Tabs
-                    defaultActiveKey="all"
-                    animated
-                    tabBarExtraContent={<TabBarExtraContent />}
-                    items={
-                      websites.map((item) => ({
-                        ...item,
-                        forceRender: true,
-                        children: (
-                          <Spin
-                            spinning={websiteLoading}
-                            wrapperClassName="h-[62vh] overflow-hidden overflow-y-auto">
-                            <WebsiteContent
-                              key={item.key}
-                              onAdd={(e, data) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                onAdd(e, { ...data })
-                              }}
-                              children={item.children || []}
-                            />
-                          </Spin>
-                        )
-                      })) || []
-                    }
-                    onChange={(key) => {
-                      setWebsiteType(key)
-                    }}
-                  />
-                )
-              },
-              {
-                label: '图标设置',
-                key: 'icon',
-                forceRender: true,
-                icon: <SettingOutlined />,
-                children: (
-                  <Tabs
-                    defaultActiveKey="all"
-                    animated
-                    tabBarExtraContent={
-                      !props.data.editable && <TabBarExtraContent />
-                    }
-                    items={[
-                      {
-                        label: '图标',
-                        key: 'icon',
-                        children: (
-                          <div className="h-[62vh] overflow-hidden overflow-y-auto">
-                            <IconContent
-                              data={props.data}
-                              onAdd={(item) => onAdd(null, item)}
-                              onUpdate={(item) => {
-                                props.onCancel()
-                                props.onUpdate(item)
-                              }}
-                            />
-                          </div>
-                        )
+    <App>
+      <ThemeProvider
+        token={{
+          colorTextDisabled: 'rgba(255, 255, 255, 0.5)',
+          colorBgContainerDisabled: 'rgba(255, 255, 255, 0.5)',
+          colorBgBase: 'rgba(255, 255, 255, 0.9)',
+          Modal: {
+            contentBg: 'rgba(0, 0, 0, 0.8)'
+          },
+          Upload: {
+            actionsColor: 'rgba(255, 255, 255, 0.5)'
+          },
+          Form: { labelColor: '#fff' },
+          Tabs: { itemColor: '#fff' }
+        }}>
+        <Modal
+          title={null}
+          wrapClassName="!bg-black/30 backdrop-blur-md"
+          classNames={{
+            header: '!bg-transparent !text-white',
+            content: '!overflow-hidden !p-0 !rounded-xl !bg-black/30',
+            body: '!p-3 !pl-0'
+          }}
+          width={{
+            xl: 1300,
+            lg: 1000,
+            md: 800
+          }}
+          footer={null}
+          open={props.visible}
+          closeIcon={<CloseOutlined className="!text-white" />}
+          afterOpenChange={props.afterOpenChange}
+          onCancel={() => props.onCancel()}>
+          <div className="h-[70vh]">
+            <Tabs
+              defaultActiveKey={defaultActiveKey}
+              tabPosition="left"
+              style={{ height: '100%' }}
+              animated
+              items={[
+                {
+                  label: '组件工具',
+                  key: 'component',
+                  icon: <ToolOutlined />,
+                  forceRender: true,
+                  children: (
+                    <Tabs
+                      defaultActiveKey="all"
+                      animated
+                      items={tabs}
+                      tabBarExtraContent={<TabBarExtraContent />}
+                    />
+                  )
+                },
+                {
+                  label: '网站链接',
+                  key: 'website',
+                  forceRender: true,
+                  icon: <AppstoreOutlined />,
+                  children: (
+                    <Tabs
+                      defaultActiveKey="all"
+                      animated
+                      tabBarExtraContent={<TabBarExtraContent />}
+                      items={
+                        websites.map((item) => ({
+                          ...item,
+                          forceRender: true,
+                          children: (
+                            <Spin
+                              spinning={websiteLoading}
+                              wrapperClassName="h-[62vh] overflow-hidden overflow-y-auto">
+                              <WebsiteContent
+                                key={item.key}
+                                onAdd={(e, data) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  onAdd(e, { ...data })
+                                }}
+                                children={item.children || []}
+                              />
+                            </Spin>
+                          )
+                        })) || []
                       }
-                    ]}
-                    onChange={(key) => {
-                      setWebsiteType(key)
-                    }}
-                  />
-                )
-              }
-            ]}
-            onChange={(key) => {
-              setDefaultActiveKey(key)
-              key == 'website' && run()
-            }}
-          />
-        </div>
-      </Modal>
-    </ThemeProvider>
+                      onChange={(key) => {
+                        setWebsiteType(key)
+                      }}
+                    />
+                  )
+                },
+                {
+                  label: '图标设置',
+                  key: 'icon',
+                  forceRender: true,
+                  icon: <SettingOutlined />,
+                  children: (
+                    <Tabs
+                      defaultActiveKey="all"
+                      animated
+                      tabBarExtraContent={
+                        !props.data.editable && <TabBarExtraContent />
+                      }
+                      items={[
+                        {
+                          label: '图标',
+                          key: 'icon',
+                          children: (
+                            <div className="h-[62vh] overflow-hidden overflow-y-auto">
+                              <IconContent
+                                data={props.data}
+                                onAdd={(item) => onAdd(null, item)}
+                                onUpdate={(item) => {
+                                  props.onCancel()
+                                  props.onUpdate(item)
+                                }}
+                              />
+                            </div>
+                          )
+                        }
+                      ]}
+                      onChange={(key) => {
+                        setWebsiteType(key)
+                      }}
+                    />
+                  )
+                }
+              ]}
+              onChange={(key) => {
+                setDefaultActiveKey(key)
+                key == 'website' && run()
+              }}
+            />
+          </div>
+        </Modal>
+      </ThemeProvider>
+    </App>
   )
 }
 

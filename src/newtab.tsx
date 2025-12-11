@@ -3,19 +3,10 @@ import {
   PlusOutlined,
   SkinFilled
 } from '@ant-design/icons'
-import { useAsyncEffect, useLocalStorageState, useResponsive } from 'ahooks'
-import {
-  App,
-  Button,
-  Card,
-  ConfigProvider,
-  Input,
-  message,
-  Modal,
-  Tabs
-} from 'antd'
+import { useAsyncEffect, useLocalStorageState } from 'ahooks'
+import { App, Button, Card, ConfigProvider, Input, Tabs } from 'antd'
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
-import { Component, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useContextMenu } from 'react-contexify'
 import { ReactSortable } from 'react-sortablejs'
 
@@ -78,22 +69,20 @@ function IndexTab() {
       ...config,
       theme: {
         ...config.theme,
-        background: source?.url || ''
+        background: source?.url || list[0]?.url
       }
     })
   }
-  const { md } = useResponsive()
   const [visible, setVisible] = useState(false)
-  const [bgChange, setBgChange] = useState(false)
   const [settingVisible, setSettingVisible] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
   const { show, hideAll } = useContextMenu({
     id: MENU_ID
   })
-  const TabConents = (item: ItemType) => {
+  const AppContent = (item: ItemType) => {
     return (
       <div
-        className="md:blur-bg app-main md:h-[60vh] mb-1"
+        className="md:blur-bg app-main lg:overflow-hidden sm:h-[60vh] lg:overflow-y-auto mb-1"
         onContextMenu={(event) =>
           handleContextMenu(event, {
             id: item.id,
@@ -122,6 +111,8 @@ function IndexTab() {
               )
             )
           }}
+          swapThreshold={1}
+          invertSwap={true}
           animation={200}>
           {item.children
             .filter((_) => _)
@@ -130,6 +121,7 @@ function IndexTab() {
                 href={isEdit ? '#' : child.href || '#'}
                 target={isEdit ? undefined : child.target}
                 key={child.id}
+                data-id={child.id}
                 onContextMenu={(event) =>
                   handleContextMenu(event, { ...child, pid: item.id })
                 }
@@ -310,14 +302,84 @@ function IndexTab() {
       </ThemeProvider>
     )
   }
+
+  /**
+   * 执行元素动画效果
+   *
+   * 该函数根据指定方向对目标元素及其右侧元素应用缩放和平移动画，
+   * 动画完成后重置样式
+   *
+   * @param {Object} options - 动画配置选项
+   * @param {ItemType} options.item - 目标元素对应的数据项
+   * @param {string} [options.selector='.app-item'] - 要动画的元素选择器
+   * @param {number} [options.duration=300] - 动画持续时间（毫秒）
+   * @param {'left'|'right'} [options.direction='left'] - 动画方向
+   * @param {Function} [callback] - 动画完成后的回调函数
+   */
+  const animationFN = (
+    options: {
+      item: ItemType
+      selector?: string
+      duration?: number
+      scale?: number
+      direction?: 'left' | 'right'
+    },
+    callback?: () => void
+  ) => {
+    const directionMap = {
+      left: '-',
+      right: ''
+    }
+    let timer = null
+    let timer1 = null
+    const {
+      selector = '.app-item',
+      direction = 'left',
+      duration = 150,
+      scale = 0,
+      item
+    } = options
+    let elements = document.querySelectorAll(
+      selector
+    ) as unknown as HTMLElement[]
+    let currentIndex = 0
+    let offsetWidth = 0
+    elements.entries().forEach(([index, element]) => {
+      element.style.transition = `all ${duration / 1000}s linear`
+      if (element.getAttribute('data-id') == item.id) {
+        offsetWidth = element.offsetWidth
+        if (scale !== 1) element.style.transform = `scale(${scale})`
+        currentIndex = index
+      }
+    })
+    elements.entries().forEach(([index, element]) => {
+      if (index > currentIndex) {
+        element.style.transition = `all ${duration / 1000}s ${duration / 1000}s linear`
+        element.style.transform = `translate3d(${directionMap[direction]}${offsetWidth}px, 0, 0)`
+      }
+    })
+    timer = setTimeout(() => {
+      elements = document.querySelectorAll(selector) as unknown as HTMLElement[]
+      elements.entries().forEach(([index, element]) => {
+        if (index >= currentIndex) {
+          element.style.transition = 'none'
+          element.style.transform = ''
+        }
+      })
+      callback?.()
+      clearTimeout(timer) // 与CSS过渡时间匹配
+    }, duration * 2)
+  }
   const deleteComponent = (item: ItemType) => {
-    setApps(
-      apps.map((app) => ({
-        ...app,
-        children: app.children?.filter((_) => _?.id !== item.id)
-      }))
-    )
-    message.success('删除成功')
+    // 添加删除动画效果
+    animationFN({ item, direction: 'left' }, () => {
+      setApps(
+        apps.map((app) => ({
+          ...app,
+          children: app.children?.filter((_) => _?.id !== item.id)
+        }))
+      )
+    })
   }
   const deleteAllComponent = (item: ItemType) => {
     const newApps = [...apps].filter((app) => app.id != item.pid)
@@ -366,29 +428,33 @@ function IndexTab() {
         },
         moveComponent: (item, targetData) => {
           // console.log(item, targetData, 'moveComponent')
-          let newApps = [...apps]
-          newApps.map((el) => {
-            if (el.id === item.pid) {
-              el.children = el.children.filter((child) => child.id !== item.id)
-            }
-            if (el.id === targetData.id) {
-              el.children = [
-                ...el.children,
-                {
-                  ...item,
-                  id:
-                    targetData.id +
-                    '_' +
-                    Date.now().toString() +
-                    '_' +
-                    el.children.length +
-                    1
-                }
-              ]
-            }
+          animationFN({ item, direction: 'left' }, () => {
+            let newApps = [...apps]
+            newApps.map((el) => {
+              if (el.id === item.pid) {
+                el.children = el.children.filter(
+                  (child) => child.id !== item.id
+                )
+              }
+              if (el.id === targetData.id) {
+                el.children = [
+                  ...el.children,
+                  {
+                    ...item,
+                    id:
+                      targetData.id +
+                      '_' +
+                      Date.now().toString() +
+                      '_' +
+                      el.children.length +
+                      1
+                  }
+                ]
+              }
+            })
+            setApps(newApps)
+            message.success('操作成功')
           })
-          setApps(newApps)
-          message.success('操作成功')
         },
         editAllComponent: (data) => {
           // console.log(data, 'editAllComponent')
@@ -397,6 +463,46 @@ function IndexTab() {
         deleteAllComponent,
         openSetting: () => {
           setSettingVisible(true)
+        },
+        resizeComponent: (data, size) => {
+          let currentSize = data.props?.size
+          let direction: 'left' | 'right' = 'left'
+          if (currentSize == 'large') {
+            direction = 'left'
+          } else if (currentSize == 'mini') {
+            direction = 'right'
+          } else if (
+            currentSize == 'small' &&
+            (size == 'large' || size == 'middle')
+          ) {
+            direction = 'right'
+          } else if (currentSize == 'small' && size == 'mini') {
+            direction = 'left'
+          } else if (
+            currentSize == 'middle' &&
+            (size == 'small' || size == 'mini')
+          ) {
+            direction = 'left'
+          } else if (currentSize == 'middle' && size == 'large') {
+            direction = 'right'
+          }
+          animationFN({ item: data, direction, scale: 1 }, () => {
+            let newApp = [...apps]
+            setApps(
+              newApp.map((item) => {
+                item.children = item.children?.map((child) => {
+                  if (child.id == data.id) {
+                    return {
+                      ...child,
+                      props: { ...(child.props || {}), size }
+                    }
+                  }
+                  return child
+                })
+                return item
+              })
+            )
+          })
         }
       }
     })
@@ -421,14 +527,14 @@ function IndexTab() {
   }, [])
   useEffect(() => {
     let image = new Image()
-    const wallpaper = document.querySelector('.wallpaper') as HTMLDivElement
+    const wallpaper = document.querySelector('body') as HTMLBodyElement
     image.src = config.theme.background || ''
-    setBgChange(true)
     let timer = null
+    wallpaper.classList.add('change')
     image.onload = () => {
       timer = setTimeout(() => {
         wallpaper.style.backgroundImage = `url(${config.theme.background})`
-        setBgChange(false)
+        wallpaper.classList.remove('change')
       }, 250)
     }
     return () => {
@@ -441,7 +547,7 @@ function IndexTab() {
         colorPrimary: primary,
         Tabs: { itemColor: 'rgba(255, 255, 255, 0.8)' }
       }}>
-      <div className="md:h-[100vh] md:overflow-hidden relative">
+      <div className="sm:h-[100vh] lg:overflow-hidden relative">
         <div
           onContextMenu={(event) =>
             handleContextMenu(event, { id: '', closable: false })
@@ -449,12 +555,12 @@ function IndexTab() {
           onDoubleClick={() => {
             setEdit(false)
           }}
-          className={`relative z-[2] h-full p-5 flex flex-col items-center justify-between`}>
+          className={`relative z-[2] h-full p-5 pb-0 flex flex-col items-center justify-between`}>
           <div className="flex flex-col items-center justify-center w-full">
             <Header />
             <Search />
           </div>
-          <div className="!px-2 flex-1 w-full max-w-[1200px] relative">
+          <div className="flex-1 w-full max-w-[1200px] relative">
             <Tabs
               animated={{
                 inkBar: true,
@@ -487,7 +593,7 @@ function IndexTab() {
                       })}
                     </span>
                   ),
-                  children: TabConents(item)
+                  children: AppContent(item)
                 }
               })}
               onChange={setActiveKey}
@@ -506,7 +612,8 @@ function IndexTab() {
             </div>
           </div>
         </div>
-        <div className={`wallpaper ${md && bgChange ? 'change' : ''}`}></div>
+        {/* <div
+          className={`wallpaper ${lg && bgChange ? 'change' : ''}`}></div> */}
       </div>
       <ContextMenu data={currentItem} isEdit={isEdit} />
       {showAdd && (

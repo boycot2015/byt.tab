@@ -266,6 +266,6 @@ const DailyChart = (props: Record<string, any>) => {
       dailyEcharts?.resize()
     })
   }, [props.data])
-  return <div id={id} className="!h-[120px] w-[780px]"></div>
+  return <div id={id} className="!h-[120px] w-full min-w-[780px]"></div>
 }
 export { HoursChart, DailyChart }

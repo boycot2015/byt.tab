@@ -16,7 +16,7 @@ const components = {
     WallpaperWidget,
     NewsWidget
 }
-export const renderComponent = (componentName, props?: Record<string, any>) => {
+export const renderComponent = (componentName, props: Record<string, any> = {}) => {
     const Component = components[componentName]
-    return Component ? React.createElement(Component, { ...(props || {}) }) : null
+    return Component ? React.createElement(Component, { ...props }) : null
 };

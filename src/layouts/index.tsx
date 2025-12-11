@@ -1,6 +1,5 @@
-import { useLocalStorageState } from 'ahooks'
-import { ConfigProvider } from 'antd'
-import { useResponsive } from 'antd-style'
+import { useLocalStorageState, useResponsive, useTheme } from 'ahooks'
+import { ConfigProvider, theme } from 'antd'
 import zhCN from 'antd/es/locale/zh_CN'
 import cssText from 'data-text:~styles/index.css'
 import ContexifyCss from 'data-text:react-contexify/ReactContexify.css'
@@ -31,7 +30,10 @@ export const ThemeProvider = ({
   token = {},
   cssVar = {}
 }: ThemeProviderProps) => {
-  const { xxl, xl } = useResponsive()
+  const { themeMode, setThemeMode } = useTheme({
+    localStorageKey: 'theme'
+  })
+  // const { xxl, xl } = useResponsive()
   const [config] = useLocalStorageState<Config>('config', {
     defaultValue: tabConfig,
     listenStorageChange: true
@@ -54,7 +56,8 @@ export const ThemeProvider = ({
           colorBorder: 'rgba(114, 114, 114, 0.5)',
           paddingLG: 16,
           ...token
-        }
+        },
+        algorithm: themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
       }}>
       {children}
     </ConfigProvider>
@@ -66,4 +69,10 @@ export const sizeMap = {
   small: 'icon-size-1x2',
   middle: 'icon-size-2x2',
   large: 'icon-size-2x4'
+}
+export const sizeMapCn = {
+  mini: '最小',
+  small: '小',
+  middle: '中',
+  large: '大'
 }

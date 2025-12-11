@@ -44,15 +44,23 @@
   /* background-color: #ccc; */
 }
 
-.contexify,
-.contexify_submenu-isOpen,
-.contexify_submenu-isOpen>.contexify_itemContent,
-.contexify.contexify_submenu.contexify_submenu-right {
+@media (prefers-color-scheme: dark) {
+  :root {
+    --byt-primary-color: #40a9ff;
+    --byt-bg-color: #141414;
+  }
+}
+
+.contexify {
   --tw-backdrop-blur: blur(12px) !important;
   background-color: var(--byt-bg-color) !important;
   font-size: 14px !important;
   z-index: 9999999 !important;
   backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia) !important;
+}
+
+.contexify .contexify_submenu {
+  background-color: #222 !important;
 }
 
 .flip-clock-card .flip-clock-card-item-inner .top,
@@ -223,25 +231,16 @@ html[theme='dark'] {
 }
 
 
-.wallpaper {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  transition: all .5s;
+body {
+  transition: background .5s;
   background-size: cover;
   background-position: 100%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   z-index: 0;
-  opacity: 1;
 }
 
-.wallpaper.change {
-  transform: scale(1.1);
-  opacity: .8
-}
-
-.wallpaper::after {
+body.change::after {
   content: '';
   position: absolute;
   left: 0;
@@ -253,7 +252,7 @@ html[theme='dark'] {
   background-color: rgba(0, 0, 0, var(--wall-mask));
 }
 
-.wallpaper .wallpaper-video {
+body .wallpaper-video {
   position: relative;
   height: 100%;
   width: 100%;

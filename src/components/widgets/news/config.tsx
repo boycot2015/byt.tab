@@ -8,7 +8,7 @@ import {
   SearchOutlined,
   SkinOutlined
 } from '@ant-design/icons'
-import { useAsyncEffect, useLocalStorageState, useRequest } from 'ahooks'
+import { useLocalStorageState, useRequest } from 'ahooks'
 import {
   AutoComplete,
   Card,
@@ -104,14 +104,19 @@ function WidgetModal(props: {
           body: '!p-5'
         }}
         getContainer={() => document.body}
-        width={1000}
+        width={{
+          xxl: 1200,
+          xl: 1000,
+          lg: 800,
+          md: 600
+        }}
         footer={null}
         open={props.visible}
         closeIcon={<CloseOutlined className="!text-white" />}
         afterOpenChange={props.afterOpenChange}
         onCancel={() => props.onCancel(cateId, news.list)}>
         <div
-          className="flex h-[60vh] w-full overflow-hidden"
+          className="flex w-full overflow-hidden"
           ref={(el) => (tabWrapRef.current = el)}>
           <div className="flex-1 overflow-hidden rounded-xl">
             <Spin

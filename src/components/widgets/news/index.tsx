@@ -46,7 +46,8 @@ function Widget(props: WidgetProp) {
   const [visible, setVisible] = useState(false)
   const [show, setShow] = useState(false)
   const { data, loading } = useRequest(getNews, {
-    cacheKey: 'news'
+    cacheKey: 'news',
+    manual: true
   })
   const [cates, setCates] = useLocalStorageState<News['cates']>('newsCates', {
     defaultValue: [],
@@ -59,17 +60,16 @@ function Widget(props: WidgetProp) {
     }
   }, [data])
   useAsyncEffect(async () => {
-    if (cates?.length && !props.cateId) return
-    let res = []
+    let res = cates || []
     if (!cates?.length) {
       res = await getNewsCate()
       setCates(res || [])
     }
-    res = await getNews({ id: props.cateId || '' })
+    res = await getNews({ id: props.cateId || res?.[0]?.id || '' })
     setList(res || [])
   }, [])
   return (
-    <ThemeProvider token={{}}>
+    <ThemeProvider>
       <Card
         className={`!rounded-xl mx-auto overflow-hidden ${props.withComponents ? sizeMap[props.size || 'mini'] : 'h-full'} !border-none !bg-transparent`}
         classNames={{

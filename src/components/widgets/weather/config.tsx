@@ -128,7 +128,11 @@ function WidgetModal(props: {
           content: `${getWeatherBg(currentWeather?.weather?.condition)} !overflow-hidden !p-0 backdrop-blur-md`,
           body: '!p-1'
         }}
-        width={860}
+        width={{
+          xxl: 1200,
+          xl: 1000,
+          lg: 860
+        }}
         footer={null}
         open={props.visible}
         closeIcon={<CloseOutlined className="!text-white" />}
@@ -276,7 +280,7 @@ function WidgetModal(props: {
                     <CalendarOutlined />
                     <span className="ml-2">7天天气预报</span>
                   </div>
-                  <div className="flex flex-nowrap text-white overflow-x-auto gap-[32px] relative">
+                  <div className="flex flex-nowrap justify-around w-full text-white overflow-x-auto gap-[32px] relative">
                     {currentWeather?.daily_forecast?.map((el) => (
                       <div key={el.date} className="flex flex-col gap-2">
                         <div className="flex flex-col items-center justify-center gap-2 hover:bg-white/30 p-2 hover:!rounded-xl">
@@ -351,7 +355,7 @@ function WidgetModal(props: {
                     {currentWeather?.life_indices
                       ?.filter((item) => item?.name?.length < 5)
                       .map((item) => (
-                        <Col span={6} key={item.key}>
+                        <Col span={12} sm={8} md={6} key={item.key}>
                           <Card
                             className="!border-none !bg-white/10"
                             classNames={{

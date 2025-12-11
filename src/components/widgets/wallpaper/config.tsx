@@ -220,7 +220,12 @@ function WidgetModal(props: {
           header: `!bg-transparent`
         }}
         getContainer={() => document.body}
-        width={1000}
+        width={{
+          xxl: 1200,
+          xl: 1000,
+          lg: 800,
+          md: 600
+        }}
         footer={null}
         open={props.visible}
         closeIcon={<CloseOutlined className="!text-white" />}

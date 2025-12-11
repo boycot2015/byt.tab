@@ -30,15 +30,19 @@ export function throttle<T>(fn: T, wait?: number): () => void {
     }
 }
 
-export const mouseOverEffect = (target: HTMLDivElement, element: HTMLElement, options?: { multiple?: number }) => {
+export const mouseOverEffect = (target: HTMLDivElement, element: HTMLElement, options?: { multiple?: number, max?: number }) => {
     const multiple = options?.multiple || 6;
+    const max = options?.max || 15;
     const mouseOverContainer = target
 
     function transformElement(x, y) {
         let box = element.getBoundingClientRect();
         let calcX = -(y - box.y - (box.height / 2)) / multiple;
         let calcY = (x - box.x - (box.width / 2)) / multiple;
-
+        if (calcX > max) calcX = max;
+        if (calcX < -max) calcX = -max;
+        if (calcY > max) calcY = max;
+        if (calcY < -max) calcY = -max;
         element.style.transform = "rotateX(" + calcX + "deg) "
             + "rotateY(" + calcY + "deg)";
     }
