@@ -335,7 +335,7 @@ function IndexTab() {
     const {
       selector = '.app-item',
       direction = 'left',
-      duration = 150,
+      duration = 300,
       scale = 0,
       item
     } = options
@@ -345,7 +345,7 @@ function IndexTab() {
     let currentIndex = 0
     let offsetWidth = 0
     elements.entries().forEach(([index, element]) => {
-      element.style.transition = `all ${duration / 1000}s linear`
+      element.style.transition = `all ${duration / 1000}s ease`
       if (element.getAttribute('data-id') == item.id) {
         offsetWidth = element.offsetWidth
         if (scale !== 1) element.style.transform = `scale(${scale})`
@@ -354,7 +354,7 @@ function IndexTab() {
     })
     elements.entries().forEach(([index, element]) => {
       if (index > currentIndex) {
-        element.style.transition = `all ${duration / 1000}s ${duration / 1000}s linear`
+        element.style.transition = `all ${duration / 2 / 1000}s ${duration / 1000}s ease`
         element.style.transform = `translate3d(${directionMap[direction]}${offsetWidth}px, 0, 0)`
       }
     })
@@ -368,7 +368,7 @@ function IndexTab() {
       })
       callback?.()
       clearTimeout(timer) // 与CSS过渡时间匹配
-    }, duration * 2)
+    }, duration)
   }
   const deleteComponent = (item: ItemType) => {
     // 添加删除动画效果
@@ -555,12 +555,12 @@ function IndexTab() {
           onDoubleClick={() => {
             setEdit(false)
           }}
-          className={`relative z-[2] h-full p-5 pb-0 flex flex-col items-center justify-between`}>
-          <div className="flex flex-col items-center justify-center w-full">
+          className={`relative z-[2] h-full p-5 pb-0 flex flex-col items-center justify-center`}>
+          <div className="flex flex-1 flex-col items-center justify-center w-full">
             <Header />
             <Search />
           </div>
-          <div className="flex-1 w-full max-w-[1200px] relative">
+          <div className="flex-2 w-full max-w-[1200px] relative">
             <Tabs
               animated={{
                 inkBar: true,

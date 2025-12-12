@@ -166,9 +166,7 @@ function WidgetModal(props: {
                   </div>
                   <div className="sm:order-2 md:order-1">
                     更新于：
-                    {new Date(
-                      currentWeather?.weather?.updated_at
-                    ).toLocaleString()}
+                    {currentWeather?.weather?.updated}
                   </div>
                 </div>
                 {/* temp */}
@@ -332,7 +330,7 @@ function WidgetModal(props: {
                         <DailyChart
                           id={`${currentWeather?.location?.city}-daily-forecast`}
                           data={currentWeather?.daily_forecast?.map((item) => ({
-                            datetime: item.date?.split('-')[2],
+                            datetime: new Date(item.date).getMonth() + 1 + '-' + new Date(item.date).getDate(),
                             day_condition: item.day_condition,
                             night_condition: item.night_condition,
                             min_temperature: item.min_temperature,

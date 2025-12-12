@@ -21,7 +21,7 @@ import {
   Tabs
 } from 'antd'
 import type { AutoCompleteProps } from 'antd'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import InfiniteScroll from 'react-infinite-scroll-component'
 
 import type { Wallpaper } from '~components/widgets/wallpaper'
@@ -65,6 +65,7 @@ function WidgetModal(props: {
     defaultValue: tabConfig,
     listenStorageChange: true
   })
+  const pageSize = 20
   const tabWrapRef = useRef<HTMLDivElement>(null)
   const [wallpaper, setWallpaper] = useLocalStorageState<Wallpaper>(
     'wallpaper',
@@ -77,80 +78,66 @@ function WidgetModal(props: {
     }
   )
   const [loading, setLoading] = useState(true)
-  const [currentWallpaper, setCurrentWallpaper] = useState<
-    Wallpaper['list'][0]
-  >({ url: config?.theme?.background || '' })
   const TabContent = (props) => {
-    const scrollRef = useRef<HTMLDivElement>(null)
-    useEffect(() => {
-      if (scrollRef.current) scrollRef.current.scrollTop = scrollTop
-    }, [])
     return (
-      <div
-        ref={(el) => el && (scrollRef.current = el)}
-        id={`scrollable_${props.id || 'main'}`}
-        className="h-[50vh] overflow-auto">
-        <InfiniteScroll
-          dataLength={wallpaper?.list?.length || 0}
-          next={() => {
-            run({
-              source: wallpaper?.cate || 'birdpaper',
-              id: wallpaper?.id,
-              page: page + 1
-            })
-            scrollTop = scrollRef.current.scrollTop || 0
-          }}
-          key={props.id}
-          hasMore={wallpaper?.list?.length >= wallpaper?.pageSize}
-          loader={
-            <span className="w-full h-[50px] gap-2 flex items-center justify-center">
-              <LoadingOutlined />
-              加载中...
-            </span>
-          }
-          endMessage={
-            wallpaper?.list?.length >= 20 && (
-              <Divider plain>没有更多了～</Divider>
-            )
-          }
-          scrollableTarget={`scrollable_${props.id || 'main'}`}>
-          <Row gutter={[10, 10]} className="w-full">
-            {wallpaper?.list
-              ?.filter((item) => item.img || item.url)
-              ?.map((item) => (
-                <Col key={item.id || item.url} span={12} md={8} lg={6}>
-                  <div className="flex flex-col rounded-xl overflow-hidden max-h-[160px] lg:max-h-[120px]">
-                    <Image
-                      src={item.img || item.url}
-                      alt={item.category}
-                      placeholder={
-                        <Image
-                          preview={false}
-                          src={item.img || item.url}
-                          width={200}
-                        />
-                      }
-                      preview={{
-                        mask: (
-                          <div
-                            className="flex items-center justify-center w-[30px] h-[30px] bg-black/50 rounded-xl cursor-pointer text-white"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setCurrentWallpaper(item)
-                              setWallpaperData(item)
-                            }}>
-                            <CheckOutlined />
-                          </div>
-                        ) // 设置自定义文字
-                      }}
-                      className="!w-full !h-full object-cover"
-                    />
-                  </div>
-                </Col>
-              ))}
-          </Row>
-        </InfiniteScroll>
-      </div>
+      <InfiniteScroll
+        dataLength={wallpaper?.list?.length || 0}
+        next={() => {
+          run({
+            source: wallpaper?.cate || 'birdpaper',
+            id: wallpaper?.id,
+            page: page + 1
+          })
+        }}
+        key={props.id}
+        hasMore={wallpaper?.list?.length >= wallpaper?.pageSize}
+        loader={
+          <span className="w-full h-[50px] gap-2 flex items-center justify-center">
+            <LoadingOutlined />
+            加载中...
+          </span>
+        }
+        endMessage={
+          wallpaper?.list?.length >= pageSize && (
+            <Divider plain>没有更多了～</Divider>
+          )
+        }
+        scrollableTarget={`scrollable_${props.id || 'main'}`}>
+        <Row gutter={[10, 10]} className="w-full">
+          {wallpaper?.list
+            ?.filter((item) => item.img || item.url)
+            ?.map((item) => (
+              <Col key={item.id || item.url} span={12} md={8} lg={6}>
+                <div className="flex flex-col rounded-xl overflow-hidden max-h-[160px] lg:max-h-[120px]">
+                  <Image
+                    src={item.img || item.url}
+                    alt={item.category}
+                    placeholder={
+                      <Image
+                        preview={false}
+                        src={item.img || item.url}
+                        width={200}
+                      />
+                    }
+                    preview={{
+                      mask: (
+                        <div
+                          className="flex items-center justify-center w-[30px] h-[30px] bg-black/50 rounded-xl cursor-pointer text-white"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setWallpaperData(item)
+                          }}>
+                          <CheckOutlined />
+                        </div>
+                      ) // 设置自定义文字
+                    }}
+                    className="!w-full !h-full object-cover"
+                  />
+                </div>
+              </Col>
+            ))}
+        </Row>
+      </InfiniteScroll>
     )
   }
   const getWallpaperData = async (params?: Record<string, any>) => {
@@ -196,11 +183,14 @@ function WidgetModal(props: {
   }
   useAsyncEffect(async () => {
     if (wallpaper.list?.length > 0) {
-      setWallpaperData(currentWallpaper)
       setLoading(false)
       return
     }
-    await getWallpaperData({ page: 1, source: props.source || 'birdpaper' })
+    await getWallpaperData({
+      page: 1,
+      size: pageSize,
+      source: props.source || 'birdpaper'
+    })
   }, [])
   return (
     <ThemeProvider
@@ -213,12 +203,13 @@ function WidgetModal(props: {
         }
       }}>
       <Modal
-        title={<span className=" !text-white">设置壁纸</span>}
+        // title={<span className=" !text-white">设置壁纸</span>}
         classNames={{
-          content: `!bg-black/50 !overflow-hidden backdrop-blur-md`,
+          content: `!bg-black/50 h-[500px] !overflow-hidden backdrop-blur-md`,
           body: '!p-0',
           header: `!bg-transparent`
         }}
+        centered
         getContainer={() => document.body}
         width={{
           xxl: 1200,
@@ -232,7 +223,7 @@ function WidgetModal(props: {
         afterOpenChange={props.afterOpenChange}
         onCancel={() => props.onCancel()}>
         <div
-          className="flex h-[60vh] w-full overflow-hidden"
+          className="flex h-full w-full overflow-hidden"
           ref={(el) => (tabWrapRef.current = el)}>
           <Tabs
             defaultActiveKey={wallpaper?.cate || '0'}
@@ -240,6 +231,7 @@ function WidgetModal(props: {
             onTabClick={(key) => {
               getWallpaperData({
                 source: key as string,
+                size: pageSize,
                 page: 1
               })
               setWallpaper({
@@ -277,6 +269,7 @@ function WidgetModal(props: {
                     console.log(key, 'onTabClick')
                     getWallpaperData({
                       id: key,
+                      size: pageSize,
                       source: wallpaper?.cate || 'birdpaper',
                       page: 1
                     })
@@ -291,7 +284,13 @@ function WidgetModal(props: {
                     label: item.name,
                     key: item.id || index.toString(),
                     disabled: loading,
-                    children: <TabContent id={item.id || index} />
+                    children: (
+                      <div
+                        id={`scrollable_${item.id || 'main'}`}
+                        className="h-[400px] overflow-hidden overflow-y-auto">
+                        <TabContent id={item.id || index} />
+                      </div>
+                    )
                   }))}
                 />
               ) : (
