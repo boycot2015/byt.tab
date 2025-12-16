@@ -2,6 +2,7 @@ import {
   AppstoreOutlined,
   CloseOutlined,
   PlusOutlined,
+  SearchOutlined,
   SettingOutlined,
   ToolOutlined
 } from '@ant-design/icons'
@@ -14,6 +15,7 @@ import {
   Carousel,
   Col,
   ColorPicker,
+  Empty,
   Form,
   Image,
   Input,
@@ -131,7 +133,7 @@ const ComponentContent = (props: {
   }, [parentRefs])
   return (
     <div className="max-h-[60vh] overflow-hidden overflow-y-auto">
-      <Row gutter={6}>
+      <Row gutter={[0, 10]}>
         {props.widgets.map((component) => (
           <Col span={24} lg={12} xl={8} key={component.id}>
             <Carousel
@@ -142,13 +144,13 @@ const ComponentContent = (props: {
                 transformStyle: 'preserve-3d'
               }}
               draggable={true}
-              className="p-5">
+              className="p-2">
               {component.size.map((size, index) => (
                 <div key={props.ctype + '_' + component.id + '_' + size}>
                   <div
                     style={{
                       perspective: 500,
-                      padding: '15px',
+                      padding: '10px',
                       transition: 'all .2s',
                       transformStyle: 'preserve-3d'
                     }}
@@ -559,7 +561,7 @@ function WidgetModal(props: {
   const [defaultActiveKey, setDefaultActiveKey] = useState(
     props.data?.icon && props.data?.editable ? 'icon' : 'component'
   )
-
+  const [searchKey, setSearchKey] = useState<string>('')
   const [apps, setApps] = useLocalStorageState<ItemType[]>('apps', {
     defaultValue: appBase,
     listenStorageChange: true
@@ -623,7 +625,7 @@ function WidgetModal(props: {
     setApps([...newApps])
     message.success('添加成功')
   }
-  const [tabs, setTabs] = useState<TabsProps['items']>([
+  const [widgetTabs] = useState<TabsProps['items']>([
     {
       key: 'all',
       label: '全部',
@@ -674,7 +676,8 @@ function WidgetModal(props: {
     data,
     loading: websiteLoading,
     run
-  } = useRequest(() => getWebsites({ key: websiteType }), {
+  } = useRequest(() => getWebsites({ key: websiteType, name: searchKey }), {
+    debounceWait: 300,
     manual: true
   })
   const [websiteType, setWebsiteType] = useState<string>(websites[0]?.key || '')
@@ -693,7 +696,7 @@ function WidgetModal(props: {
   }, [data])
   useEffect(() => {
     run()
-  }, [websiteType])
+  }, [websiteType, searchKey])
   // setWebsites(data || [])
   return (
     <App>
@@ -702,6 +705,7 @@ function WidgetModal(props: {
           colorTextDisabled: 'rgba(255, 255, 255, 0.5)',
           colorBgContainerDisabled: 'rgba(255, 255, 255, 0.5)',
           colorBgBase: 'rgba(255, 255, 255, 0.9)',
+          colorTextDescription: '#fff',
           Modal: {
             contentBg: 'rgba(0, 0, 0, 0.8)'
           },
@@ -745,7 +749,7 @@ function WidgetModal(props: {
                     <Tabs
                       defaultActiveKey="all"
                       animated
-                      items={tabs}
+                      items={widgetTabs}
                       tabBarExtraContent={<TabBarExtraContent />}
                     />
                   )
@@ -759,7 +763,22 @@ function WidgetModal(props: {
                     <Tabs
                       defaultActiveKey="all"
                       animated
-                      tabBarExtraContent={<TabBarExtraContent />}
+                      tabBarExtraContent={{
+                        left: (
+                          <Input
+                            style={{
+                              width: 120,
+                              marginInlineEnd: 16
+                            }}
+                            placeholder="搜索"
+                            value={searchKey}
+                            suffix={<SearchOutlined />}
+                            onChange={(e) => setSearchKey(e.target.value)}
+                          />
+                        ),
+                        right: <TabBarExtraContent />
+                      }}
+                      prefix="website"
                       items={
                         websites.map((item) => ({
                           ...item,
@@ -768,15 +787,23 @@ function WidgetModal(props: {
                             <Spin
                               spinning={websiteLoading}
                               wrapperClassName="h-[62vh] overflow-hidden overflow-y-auto">
-                              <WebsiteContent
-                                key={item.key}
-                                onAdd={(e, data) => {
-                                  e.preventDefault()
-                                  e.stopPropagation()
-                                  onAdd(e, { ...data })
-                                }}
-                                children={item.children || []}
-                              />
+                              {!websiteLoading && item.children?.length > 0 ? (
+                                <WebsiteContent
+                                  key={item.key}
+                                  onAdd={(e, data) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    onAdd(e, { ...data })
+                                  }}
+                                  children={item.children || []}
+                                />
+                              ) : searchKey && !websiteLoading ? (
+                                <div className="flex h-[62vh] items-center justify-center">
+                                  <Empty
+                                    className="text-center !text-white"
+                                    description="暂无数据～"></Empty>
+                                </div>
+                              ) : null}
                             </Spin>
                           )
                         })) || []

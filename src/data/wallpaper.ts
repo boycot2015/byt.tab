@@ -1,4 +1,4 @@
-import { apiUrl, baseUrl } from '~api/baseUrl';
+import { apiUrl, codelifeUrl, baseUrl } from '~api/baseUrl';
 export const data = {
     "success": true,
     "message": "操作成功",
@@ -748,10 +748,83 @@ export const data = {
         ]
     }
 }
-const getWallpaper = async (params: Record<string, any> = { source: 'birdpaper', id: '0' }) => {
+const category = {
+    '0': [
+        {
+            id: '0',
+            name: '全部'
+        },
+        {
+            id: 'nature',
+            name: '自然'
+        },
+        {
+            id: 'acg',
+            name: '动漫'
+        },
+        {
+            id: 'art',
+            name: '艺术'
+        },
+        {
+            id: 'architecture',
+            name: '建筑'
+        },
+        {
+            id: 'life',
+            name: '生命'
+        },
+        {
+            id: 'geometry',
+            name: '几何'
+        },
+        {
+            id: 'other',
+            name: '其他'
+        }
+    ],
+    'wallhaven': []
+}
+const getWallpaper = async (params: Record<string, any> = { source: '', id: '0' }) => {
+    let urlMap = {
+        '0': {
+            searchKey: 'category',
+            url: '/wallpaper/list'
+        },
+        'bing': {
+            searchKey: 'category',
+            url: '/bing/list'
+        },
+        'video': {
+            searchKey: 'category',
+            url: '/wallpaper/video/list'
+        },
+        'wallhaven': {
+            searchKey: 'q',
+            url: '/wallpaper/wallhaven'
+        },
+    }
     if (params?.id === '0') params.id = ''
-    const response = await fetch(`${baseUrl}/wallpaper?source=${params?.source || 'birdpaper'}&id=${params?.id || ''}&page=${params?.page || 1}&size=${params?.size || 12}`);
+    if (params?.source === '0' || !params.source) params.source = ''
+    if (!category[params.source]?.length) {
+        let res = await getWallpaperCategory({ source: params.source || '0' })
+        category[params.source] = res
+    }
+    const response = await fetch(`${codelifeUrl}${urlMap[params.source || '0'].url}?${urlMap[params.source || '0'].searchKey}=${params?.id || ''}&page=${params?.page || 1}&size=${params?.size || 12}`);
     const data = await response.json();
-    return { ...data.data, cates: data.data?.cates.length ? [params.source === 'birdpaper' ? { id: '0', name: '全部' } : null, ...data.data?.cates].filter(Boolean) : [] };
+    return {
+        ...data,
+        cates: category[params.source || '0'],
+        list: data.data?.map(el => ({ ...el, img: el.thumb || '', url: el.raw || '' })) || []
+    };
 };
-export { getWallpaper };
+const getWallpaperCategory = async (params: Record<string, any> = { source: 'wallpaper' }) => {
+    if (params?.source === '0' || !params.source) params.source = 'wallpaper'
+    let category = await fetch(`${[codelifeUrl, params.source].join('/')}/category?lang=cn`).then((res) => res.json())
+    if (params.source === 'wallpaper') category.data?.unshift({ id: '0', name: '推荐壁纸' })
+    return [...category.data?.map(el => {
+        let id = el.id || el.source || '0'
+        return { ...el, value: id, id, label: el.name || el.label }
+    }) || []]
+};
+export { getWallpaper, getWallpaperCategory };

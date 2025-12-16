@@ -25,34 +25,11 @@ import { useRef, useState } from 'react'
 import InfiniteScroll from 'react-infinite-scroll-component'
 
 import type { Wallpaper } from '~components/widgets/wallpaper'
-import { getWallpaper } from '~data/wallpaper'
+import { getWallpaper, getWallpaperCategory } from '~data/wallpaper'
 import { ThemeProvider } from '~layouts'
 import tabConfig from '~tabConfig'
 import type { Config } from '~types.d'
 
-let scrollTop = 0
-export const wallpaperSources = [
-  {
-    value: 'birdpaper',
-    label: '小鸟壁纸',
-    sort: 0
-  },
-  {
-    value: 'default',
-    label: '精选壁纸',
-    sort: 1
-  },
-  {
-    value: '360',
-    label: '360壁纸',
-    sort: 2
-  },
-  {
-    value: 'bing',
-    label: 'bing壁纸',
-    sort: 3
-  }
-]
 function WidgetModal(props: {
   visible: boolean
   source?: string
@@ -65,13 +42,13 @@ function WidgetModal(props: {
     defaultValue: tabConfig,
     listenStorageChange: true
   })
-  const pageSize = 20
+  const pageSize = 16
   const tabWrapRef = useRef<HTMLDivElement>(null)
   const [wallpaper, setWallpaper] = useLocalStorageState<Wallpaper>(
     'wallpaper',
     {
       defaultValue: {
-        source: wallpaperSources,
+        source: [],
         list: []
       },
       listenStorageChange: true
@@ -84,25 +61,25 @@ function WidgetModal(props: {
         dataLength={wallpaper?.list?.length || 0}
         next={() => {
           run({
-            source: wallpaper?.cate || 'birdpaper',
+            source: wallpaper?.cate || '',
             id: wallpaper?.id,
             page: page + 1
           })
         }}
-        key={props.id}
-        hasMore={wallpaper?.list?.length >= wallpaper?.pageSize}
+        key={props.id || wallpaper?.id || wallpaper?.cate || ''}
+        hasMore={wallpaper?.list?.length >= pageSize}
         loader={
-          <span className="w-full h-[50px] gap-2 flex items-center justify-center">
+          <span className="w-full h-[30px] gap-2 flex items-center justify-center">
             <LoadingOutlined />
             加载中...
           </span>
         }
         endMessage={
-          wallpaper?.list?.length >= pageSize && (
+          wallpaper?.list?.length < pageSize && (
             <Divider plain>没有更多了～</Divider>
           )
         }
-        scrollableTarget={`scrollable_${props.id || 'main'}`}>
+        scrollableTarget={`scrollable_${props.id || wallpaper?.id || wallpaper?.cate || 'main'}`}>
         <Row gutter={[10, 10]} className="w-full">
           {wallpaper?.list
             ?.filter((item) => item.img || item.url)
@@ -110,7 +87,7 @@ function WidgetModal(props: {
               <Col key={item.id || item.url} span={12} md={8} lg={6}>
                 <div className="flex flex-col rounded-xl overflow-hidden max-h-[160px] lg:max-h-[120px]">
                   <Image
-                    src={item.img || item.url}
+                    src={item.url || item.img}
                     alt={item.category}
                     placeholder={
                       <Image
@@ -142,9 +119,21 @@ function WidgetModal(props: {
   }
   const getWallpaperData = async (params?: Record<string, any>) => {
     params.page === 1 && setLoading(true)
-    let res = await getWallpaper({ ...params, page: params.page })
+    let res = await getWallpaper({
+      ...params,
+      page: params.page,
+      size: pageSize
+    })
+    let source = wallpaper.source
+    if (!source || source?.length === 0) {
+      let category = await getWallpaperCategory({
+        source: 'wallpaper'
+      })
+      source = category || []
+    }
     setWallpaper({
       ...res,
+      source,
       cate: params?.source,
       id: params?.id || '0',
       list:
@@ -189,7 +178,7 @@ function WidgetModal(props: {
     await getWallpaperData({
       page: 1,
       size: pageSize,
-      source: props.source || 'birdpaper'
+      source: props.source || ''
     })
   }, [])
   return (
@@ -230,16 +219,15 @@ function WidgetModal(props: {
             tabPosition="left"
             onTabClick={(key) => {
               getWallpaperData({
-                source: key as string,
+                source: key,
                 size: pageSize,
                 page: 1
               })
               setWallpaper({
                 ...wallpaper,
-                cate: key as string,
+                cate: key,
                 id: '0'
               })
-              scrollTop = 0
             }}
             items={wallpaper?.source?.map((item) => ({
               label: item.label,
@@ -266,35 +254,37 @@ function WidgetModal(props: {
                     icon: <MoreOutlined className="!text-white" />
                   }}
                   onTabClick={(key) => {
-                    console.log(key, 'onTabClick')
                     getWallpaperData({
                       id: key,
                       size: pageSize,
-                      source: wallpaper?.cate || 'birdpaper',
+                      source: wallpaper.cate,
                       page: 1
                     })
                     setWallpaper({
                       ...wallpaper,
                       id: key
                     })
-                    scrollTop = 0
                   }}
                   className="text-shadow"
                   items={wallpaper?.cates?.map((item, index) => ({
-                    label: item.name,
-                    key: item.id || index.toString(),
+                    label: item.name || item.label,
+                    key: item.id || item.value || index.toString(),
                     disabled: loading,
                     children: (
                       <div
                         id={`scrollable_${item.id || 'main'}`}
                         className="h-[400px] overflow-hidden overflow-y-auto">
-                        <TabContent id={item.id || index} />
+                        <TabContent id={item.id || item.value || index} />
                       </div>
                     )
                   }))}
                 />
               ) : (
-                <TabContent />
+                <div
+                  id={'scrollable_main_' + wallpaper.cate}
+                  className="h-[460px] overflow-hidden overflow-y-auto">
+                  <TabContent id={wallpaper.cate} />
+                </div>
               )}
             </Spin>
           </div>

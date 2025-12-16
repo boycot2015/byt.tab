@@ -16,7 +16,6 @@ import WidgetsModal from '~components/widgets'
 import ContextMenu, { MENU_ID } from '~components/widgets/context'
 import SettingModal from '~components/widgets/setting/config'
 import type { Wallpaper } from '~components/widgets/wallpaper'
-import { wallpaperSources } from '~components/widgets/wallpaper/config'
 import { addProps, getAppBase } from '~data/apps'
 import { sizeMap, ThemeProvider } from '~layouts'
 import Footer from '~layouts/footer'
@@ -51,7 +50,7 @@ function IndexTab() {
   })
   const [wallpaper] = useLocalStorageState<Wallpaper>('wallpaper', {
     defaultValue: {
-      source: wallpaperSources,
+      source: [],
       list: []
     },
     listenStorageChange: true
@@ -239,6 +238,7 @@ function IndexTab() {
                   添加页签
                 </div>
               ),
+              centered: true,
               okButtonProps: {
                 style: {
                   backgroundColor: primary
@@ -368,7 +368,7 @@ function IndexTab() {
       })
       callback?.()
       clearTimeout(timer) // 与CSS过渡时间匹配
-    }, duration)
+    }, duration + 100)
   }
   const deleteComponent = (item: ItemType) => {
     // 添加删除动画效果
@@ -555,7 +555,7 @@ function IndexTab() {
           onDoubleClick={() => {
             setEdit(false)
           }}
-          className={`relative z-[2] h-full p-5 pb-0 flex flex-col items-center justify-center`}>
+          className={`relative z-[2] h-full p-5 pb-3 flex flex-col items-center justify-center`}>
           <div className="flex flex-1 flex-col items-center justify-center w-full">
             <Header />
             <Search />

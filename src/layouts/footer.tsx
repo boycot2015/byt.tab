@@ -16,17 +16,13 @@ export default function Header() {
     getHitokoto()
   }, [])
   return [
-    tabConfig.hitokotoApi && hitokoto && hitokoto?.hitokoto ? (
-      <div
-        onClick={() => getHitokoto()}
-        className="text-white text-center sm:text-left text-shadow w-full sm:w-auto md:flex flex-row gap-3 cursor-pointer"
-        key={'hitokoto'}>
-        <span>{hitokoto?.hitokoto}</span>
-        <span>-摘自 [{hitokoto.from}]</span>
-      </div>
-    ) : (
-      <div className="h-[22px]" key={'hitokoto-empty'}></div>
-    ),
+    <div
+      onClick={() => getHitokoto()}
+      className="text-white text-center sm:text-left text-shadow w-full sm:w-auto md:flex flex-row gap-3 cursor-pointer"
+      key={'hitokoto'}>
+      <span>{hitokoto?.hitokoto || '今昔横云有雨，挂满山涧，故人来。'}</span>
+      <span>-摘自 [{hitokoto?.from || '仙逆'}]</span>
+    </div>,
     <div
       key={'footer'}
       className="flex w-full flex-col md:flex-row items-center justify-center md:gap-2 mb-1 text-white text-shadow">

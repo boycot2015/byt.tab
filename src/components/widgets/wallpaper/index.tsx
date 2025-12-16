@@ -35,6 +35,8 @@ export interface Wallpaper {
   }[]
   cates?: {
     id: string
+    value?: string
+    label?: string
     name: string
     img?: string
     hot_tag: {

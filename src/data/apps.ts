@@ -36,8 +36,8 @@ const getAppBase = async () => {
         }
     }))
 }
-const getWebsites = (params: { key: string }) => {
-    return fetch(`${codelifeUrl}/website/list?type=${params.key}&size=64`)
+const getWebsites = (params: { key: string, name?: string }) => {
+    return fetch(`${codelifeUrl}/website/list?type=${params.key}&name=${params.name}&size=64`)
         .then((res) => res.json())
         .then((res) => {
             return {

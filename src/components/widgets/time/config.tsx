@@ -24,6 +24,7 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
             '!overflow-hidden !box-radius-md !p-0 !bg-black backdrop-blur-md',
           body: '!p-5'
         }}
+        width={520}
         closeIcon={<CloseOutlined className="!text-white" />}
         onCancel={() => props.onCancel()}
         footer={null}>
