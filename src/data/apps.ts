@@ -1,7 +1,8 @@
 
 import { codelifeUrl } from '~api/baseUrl'
+import type { ItemType } from '~/types'
 import apps from './apps.json'
-const appBase = apps
+const appBase: ItemType[] = apps.map((el, index) => ({ ...el, id: (index + 1).toString(), children: el.children?.map((child, cIndex) => ({ ...child, id: (index + 1) + '_' + (cIndex + 1).toString() })) || [] }))
 const addProps = {
     href: null,
     target: null,
@@ -16,7 +17,7 @@ const addProps = {
     icon: 'PlusOutlined'
 }
 const getAppBase = async () => {
-    return await Promise.all(appBase.map(async (item) => {
+    return await Promise.all(appBase.map(async (item, pIndex) => {
         let res = await getWebsites({ key: item.key })
         item.children = item.children.concat(res.children.slice(0, 12))
         return item
@@ -37,7 +38,7 @@ const getAppBase = async () => {
     }))
 }
 const getWebsites = (params: { key: string, name?: string }) => {
-    return fetch(`${codelifeUrl}/website/list?type=${params.key}&name=${params.name}&size=64`)
+    return fetch(`${codelifeUrl}/website/list?type=${params.key}&name=${params.name || ''}&size=64`)
         .then((res) => res.json())
         .then((res) => {
             return {

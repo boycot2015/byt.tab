@@ -392,5 +392,13 @@
 
 .app-main {
     z-index: 1;
-    filter: drop-shadow(0px 2px 7px rgba(0, 0, 0, .8))
+    opacity: 1;
+    filter: drop-shadow(0px 2px 7px rgba(0, 0, 0, .8));
+    transition: all .3s ease-in-out;
+}
+
+.app-main.simple {
+    opacity: 0;
+    height: 200px;
+    transform: translateY(999px);
 }

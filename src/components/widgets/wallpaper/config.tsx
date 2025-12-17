@@ -66,7 +66,7 @@ function WidgetModal(props: {
             page: page + 1
           })
         }}
-        key={props.id || wallpaper?.id || wallpaper?.cate || ''}
+        key={props.id || wallpaper.cate || ''}
         hasMore={wallpaper?.list?.length >= pageSize}
         loader={
           <span className="w-full h-[30px] gap-2 flex items-center justify-center">
@@ -79,7 +79,7 @@ function WidgetModal(props: {
             <Divider plain>没有更多了～</Divider>
           )
         }
-        scrollableTarget={`scrollable_${props.id || wallpaper?.id || wallpaper?.cate || 'main'}`}>
+        scrollableTarget={`scrollable_${props.id || wallpaper.cate || 'main'}`}>
         <Row gutter={[10, 10]} className="w-full">
           {wallpaper?.list
             ?.filter((item) => item.img || item.url)
@@ -87,7 +87,7 @@ function WidgetModal(props: {
               <Col key={item.id || item.url} span={12} md={8} lg={6}>
                 <div className="flex flex-col rounded-xl overflow-hidden max-h-[160px] lg:max-h-[120px]">
                   <Image
-                    src={item.url || item.img}
+                    src={item.poster || item.url || item.img}
                     alt={item.category}
                     placeholder={
                       <Image
@@ -97,6 +97,19 @@ function WidgetModal(props: {
                       />
                     }
                     preview={{
+                      destroyOnHidden: true,
+                      imageRender: () =>
+                        item.url.includes('.mp4') ? (
+                          <video
+                            muted
+                            autoPlay
+                            loop
+                            width="100%"
+                            src={item.url || item.img}
+                          />
+                        ) : (
+                          <Image preview={false} src={item.url || item.img} />
+                        ),
                       mask: (
                         <div
                           className="flex items-center justify-center w-[30px] h-[30px] bg-black/50 rounded-xl cursor-pointer text-white"
@@ -141,8 +154,7 @@ function WidgetModal(props: {
           ? [...(res?.list || [])]
           : [...(wallpaper?.list || []), ...(res?.list || [])].filter(
               (el, index, self) =>
-                self.findIndex((t) => t.id == el.id || t.url == el.url) ===
-                index
+                self.findIndex((t) => t.id && t.id == el.id) === index
             )
     } as Wallpaper)
     setLoading(false)
@@ -159,16 +171,17 @@ function WidgetModal(props: {
         ...config,
         theme: {
           ...config.theme,
+          cover: item?.url.includes('.mp4') ? item.img : undefined,
           background: item?.url || ''
         }
       })
-    item?.url &&
-      document.documentElement.style.setProperty(
-        '--byt-bg-image',
-        config.theme.background?.includes('http')
-          ? `url(${config.theme.background}) center/cover no-repeat fixed`
-          : config.theme.background
-      )
+    // item?.url &&
+    //   document.documentElement.style.setProperty(
+    //     '--byt-bg-image',
+    //     config.theme.background?.includes('http')
+    //       ? `url(${config.theme.background}) center/cover no-repeat fixed`
+    //       : config.theme.background
+    //   )
   }
   useAsyncEffect(async () => {
     if (wallpaper.list?.length > 0) {
@@ -281,8 +294,8 @@ function WidgetModal(props: {
                 />
               ) : (
                 <div
-                  id={'scrollable_main_' + wallpaper.cate}
-                  className="h-[460px] overflow-hidden overflow-y-auto">
+                  id={'scrollable_' + wallpaper.cate}
+                  className="h-[450px] overflow-hidden overflow-y-auto">
                   <TabContent id={wallpaper.cate} />
                 </div>
               )}

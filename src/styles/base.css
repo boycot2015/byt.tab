@@ -7,8 +7,9 @@
   --contexify-activeItem-color: #fff;
   --contexify-separator-color: #ccc;
   --byt-card-body-padding: 12px;
-  --byt-font-family: 'CangErYuYang', 'OPPOSans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji' !important;
-  --byt-font-family-code: 'CangErYuYang', 'OPPOSans', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace !important;
+  --font-family: 'CangErYuYang', 'OPPOSans', sans-serif;
+  /* --byt-font-family: 'OPPOSans', 'CangErYuYang', sans-serif;
+  --byt-font-family-code: 'CangErYuYang', 'OPPOSans', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace !important; */
   --byt-bg-image: url('https://bing.img.run/rand.php');
   --icon-transition-duration: 0.3s;
   --icon-radius: 12.8px;
@@ -26,17 +27,6 @@
   --wall-blur: 10px;
   /* --contexify-activeItem-bgColor: var(--byt-color-primary); */
 }
-
-.css-var-r0 {
-  --byt-font-family: 'CangErYuYang', 'OPPOSans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji' !important;
-  --byt-font-family-code: 'CangErYuYang', 'OPPOSans', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace !important;
-}
-
-/* .css-var-ra.byt-card,
-.css-var-r8.byt-card,
-.css-var-r0.byt-card {
-  --byt-card-body-padding: 12px;
-} */
 
 #__plasmo {
   z-index: 99999;
@@ -82,13 +72,12 @@
 
 html,
 body {
-  --byt-font-family: 'CangErYuYang', 'OPPOSans', sans-serif;
   --byt-bg-color: rgba(0, 0, 0, .5);
   scrollbar-width: thin;
   /* background-color: #ccc; */
   scrollbar-color: #eaeaea transparent;
   /* background: var(--byt-bg-image); */
-  font-family: var(--byt-font-family) !important;
+  font-family: var(--font-family);
 }
 
 .blur-bg {
@@ -233,11 +222,16 @@ html[theme='dark'] {
 
 body {
   transition: background .5s;
-  background-size: cover;
-  background-position: 100%;
+  background-size: 100% 100%;
+  background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
+  /* background: var(--byt-bg-image); */
   z-index: 0;
+}
+
+body.change {
+  background-size: 110% 110%;
 }
 
 body.change::after {
@@ -253,12 +247,14 @@ body.change::after {
 }
 
 body .wallpaper-video {
-  position: relative;
-  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 100%;
   object-fit: cover;
-  transition: .5s;
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
+  /* 确保视频覆盖整个容器 */
+  z-index: 1;
+  /* 将视频置于其他内容下方 */
+  transition: all .5s;
 }

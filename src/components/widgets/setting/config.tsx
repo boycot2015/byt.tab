@@ -28,6 +28,7 @@ const configDefault: Config = {
 type FieldType = {
   primary?: string
   seo?: string
+  fontFamily?: string
   background?: string
 }
 function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
@@ -47,6 +48,7 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
   const [initialValues, setInitialValues] = useState({
     primary,
     seo: config?.seo || '必应',
+    fontFamily: config.theme.fontFamily || '',
     background
   })
   const [wallpaperVisible, setWallpaperVisible] = useState<boolean>(false)
@@ -66,6 +68,7 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
     setInitialValues({
       primary,
       seo: config?.seo || '必应',
+      fontFamily: config.theme.fontFamily || '',
       background: config.theme.background || ''
     })
     setBackground(config.theme.background || '')
@@ -73,7 +76,11 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
   }, [config])
   return (
     <ThemeProvider
-      token={{ colorPrimary: primary, Form: { labelColor: '#fff' } }}>
+      token={{
+        fontFamily: config.theme.fontFamily,
+        colorPrimary: primary,
+        Form: { labelColor: '#fff' }
+      }}>
       <Drawer
         title="配置"
         open={props.visible}
@@ -108,7 +115,29 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
               }}
             />
           </Form.Item>
-
+          <Form.Item<FieldType>
+            label="字体"
+            name="fontFamily"
+            rules={[{ required: true, message: '请选择字体' }]}>
+            <Select
+              showSearch
+              filterOption={true}
+              optionFilterProp="label"
+              onChange={(value) => {
+                setConfig({
+                  ...config,
+                  theme: { ...config.theme, fontFamily: value }
+                })
+              }}
+              options={[
+                { label: '苍耳渔阳体', value: 'CangErYuYang' },
+                { label: '微软雅黑', value: 'Microsoft YaHei' },
+                { label: '楷体', value: 'KaiTi' },
+                { label: '宋体', value: 'Song' },
+                { label: 'OPPO 字体', value: 'OPPOSans' }
+              ]}
+            />
+          </Form.Item>
           <Form.Item<FieldType>
             label="搜索引擎"
             name="seo"

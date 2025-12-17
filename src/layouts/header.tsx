@@ -1,17 +1,11 @@
-import {
-  Button,
-  Card,
-  ColorPicker,
-  ConfigProvider,
-  Input,
-  message,
-  Tabs
-} from 'antd'
+import { useLocalStorageState } from 'ahooks'
+import { Typography } from 'antd'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
-import { HolidayUtil, Lunar } from 'lunar-typescript'
-import React, { useEffect, useRef, useState } from 'react'
+import { Lunar } from 'lunar-typescript'
+import React, { useEffect, useState } from 'react'
 
+const { Paragraph, Title, Text } = Typography
 export default function Header() {
   const [time, setTime] = useState<any>(new Date())
   const getYearLabel = React.useCallback((year: number) => {
@@ -34,19 +28,21 @@ export default function Header() {
     }
   }, [])
   return (
-    <div className="flex flex-col items-center justify-center mb-2">
-      <h1 className="text-[60px] font-bold text-center text-white text-shadow">
-        {time.toLocaleTimeString()}
-      </h1>
-      <p className="w-full flex font-bold justify-center text-center text-white text-shadow gap-2">
-        <span>
-          {time.getFullYear()}年{time.getMonth() + 1}月{time.getDate()}日
-        </span>
-        <span>
-          {getYearLabel(time.getFullYear())}
-          {getLunarLabel(time.getMonth(), dayjs(time))}
-        </span>
-      </p>
+    <div>
+      <Paragraph className="flex flex-col items-center justify-center mb-2">
+        <Title className="!text-[60px] !mb-0 font-bold text-center !text-white text-shadow">
+          {time.toLocaleTimeString()}
+        </Title>
+        <Paragraph className="w-full flex font-bold justify-center text-center  text-shadow gap-2">
+          <Text className="!text-[18px] !text-white">
+            {time.getFullYear()}年{time.getMonth() + 1}月{time.getDate()}日
+          </Text>
+          <Text className="!text-[18px] !text-white">
+            {getYearLabel(time.getFullYear())}
+            {getLunarLabel(time.getMonth(), dayjs(time))}
+          </Text>
+        </Paragraph>
+      </Paragraph>
     </div>
   )
 }

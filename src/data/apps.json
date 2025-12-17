@@ -1,12 +1,10 @@
 [
     {
-        "id": 1,
         "name": "常用",
         "key": "hot",
         "icon": "AndroidOutlined",
         "children": [
             {
-                "id": 11,
                 "name": "天气",
                 "closable": true,
                 "props": {
@@ -16,7 +14,6 @@
                 "component": "WeatherWidget"
             },
             {
-                "id": 12,
                 "name": "日历",
                 "closable": true,
                 "props": {
@@ -25,17 +22,15 @@
                 "component": "DateWidget"
             },
             {
-                "id": 13,
-                "name": "天气",
+                "name": "新闻动态",
                 "closable": true,
                 "props": {
-                    "location": "上海市",
+                    "source": "toutiao",
                     "size": "middle"
                 },
-                "component": "WeatherWidget"
+                "component": "NewsWidget"
             },
             {
-                "id": 14,
                 "name": "日历",
                 "closable": true,
                 "props": {
@@ -44,7 +39,14 @@
                 "component": "DateWidget"
             },
             {
-                "id": 15,
+                "name": "壁纸",
+                "closable": false,
+                "props": {
+                    "size": "mini"
+                },
+                "component": "WallpaperWidget"
+            },
+            {
                 "icon": "BaiduOutlined",
                 "iconType": "font",
                 "editable": true,
@@ -54,7 +56,6 @@
                 "name": "百度一下"
             },
             {
-                "id": 16,
                 "name": "天气",
                 "closable": true,
                 "props": {
@@ -64,7 +65,6 @@
                 "component": "WeatherWidget"
             },
             {
-                "id": 17,
                 "name": "时钟",
                 "closable": true,
                 "props": {
@@ -73,20 +73,17 @@
                 "component": "TimeWidget"
             },
             {
-                "id": 18,
                 "name": "设置",
                 "component": "SettingWidget"
             }
         ]
     },
     {
-        "id": 2,
         "name": "娱乐",
         "key": "game",
         "icon": "AppleOutlined",
         "children": [
             {
-                "id": 21,
                 "name": "天气",
                 "closable": true,
                 "props": {
@@ -96,7 +93,6 @@
                 "component": "WeatherWidget"
             },
             {
-                "id": 22,
                 "name": "日历",
                 "closable": true,
                 "props": {
@@ -107,13 +103,11 @@
         ]
     },
     {
-        "id": 3,
         "name": "办公",
         "key": "education",
         "icon": "WindowsOutlined",
         "children": [
             {
-                "id": 32,
                 "name": "时钟",
                 "closable": true,
                 "props": {
@@ -122,7 +116,6 @@
                 "component": "TimeWidget"
             },
             {
-                "id": 31,
                 "name": "日历",
                 "closable": true,
                 "props": {
@@ -131,7 +124,6 @@
                 "component": "DateWidget"
             },
             {
-                "id": 33,
                 "name": "设置",
                 "component": "SettingWidget"
             }

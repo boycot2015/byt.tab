@@ -50,6 +50,7 @@ export const ThemeProvider = ({
         },
         token: {
           fontFamily:
+            config.theme.fontFamily ||
             'CangErYuYang, OPPOSans, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji',
           colorPrimary: token.colorPrimary || config.theme.primary || '#ff9900',
           colorBorderSecondary: 'rgba(114, 114, 114, 0.5)',
@@ -57,7 +58,8 @@ export const ThemeProvider = ({
           paddingLG: 16,
           ...token
         },
-        algorithm: themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
+        algorithm:
+          themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm
       }}>
       {children}
     </ConfigProvider>

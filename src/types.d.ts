@@ -7,6 +7,7 @@ export interface ItemType {
     row?: number
     col?: number
     icon?: string
+    key?: string
     iconType?: string | 'text' | 'font' | 'image'
     backgroundColor?: string
     component?: React.ReactNode
@@ -37,6 +38,8 @@ export interface Config {
     randomImage?: string
     theme: {
         background?: string
+        cover?: string
+        fontFamily?: string
         primary: string
     },
     hitokotoApi?: string

@@ -3,8 +3,18 @@ import {
   PlusOutlined,
   SkinFilled
 } from '@ant-design/icons'
+import * as icons from '@ant-design/icons/lib/icons/index'
 import { useAsyncEffect, useLocalStorageState } from 'ahooks'
-import { App, Button, Card, ConfigProvider, Input, Tabs } from 'antd'
+import {
+  App,
+  Button,
+  Card,
+  ConfigProvider,
+  Input,
+  Select,
+  Space,
+  Tabs
+} from 'antd'
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
 import { useEffect, useRef, useState } from 'react'
 import { useContextMenu } from 'react-contexify'
@@ -43,6 +53,7 @@ function IndexTab() {
   const [primary, setPrimary] = useState(config.theme.primary)
   const [currentItem, setCurrentItem] = useState<ItemType>()
   const [activeKey, setActiveKey] = useState('1')
+  const [toggleClass, setToggleClass] = useState('')
   const [isEdit, setEdit] = useState(false)
   const [apps, setApps] = useLocalStorageState<ItemType[]>('apps', {
     defaultValue: [],
@@ -68,6 +79,9 @@ function IndexTab() {
       ...config,
       theme: {
         ...config.theme,
+        cover: source?.url.includes('.mp4')
+          ? source.img || source.poster
+          : undefined,
         background: source?.url || list[0]?.url
       }
     })
@@ -81,7 +95,7 @@ function IndexTab() {
   const AppContent = (item: ItemType) => {
     return (
       <div
-        className="md:blur-bg app-main lg:overflow-hidden sm:h-[60vh] lg:overflow-y-auto mb-1"
+        className={`md:blur-bg app-main lg:overflow-hidden sm:h-[56vh] lg:overflow-y-auto mb-1 ${toggleClass}`}
         onContextMenu={(event) =>
           handleContextMenu(event, {
             id: item.id,
@@ -203,13 +217,16 @@ function IndexTab() {
   }
   const AddComponent = (props: {
     apps: ItemType[]
+    disabled?: boolean
     setApp: (app: ItemType) => void
   }) => {
     let tabName: string = ''
+    let tabIcon: string = ''
     const inputRef = useRef(null)
     const [addVisible, setAddVisible] = useState(false)
-    const setData = (data: string) => {
-      tabName = data
+    const setData = (data: Record<string, any>) => {
+      tabName = data.name || tabName
+      tabIcon = data.icon || tabIcon
     }
     useEffect(() => {
       if (addVisible && inputRef.current) {
@@ -230,6 +247,7 @@ function IndexTab() {
           className="text-shadow"
           type="text"
           size="small"
+          disabled={props.disabled}
           onClick={() => {
             modal.confirm({
               title: (
@@ -261,16 +279,39 @@ function IndexTab() {
                     colorPrimary: primary,
                     Input: { hoverBorderColor: primary }
                   }}>
-                  <div className="py-2">
+                  <Space.Compact className="py-2 w-full">
+                    <Select
+                      showSearch
+                      filterOption={(inputValue, option) =>
+                        option.value
+                          ?.toLowerCase()
+                          ?.indexOf(inputValue.toLowerCase()) >= 0
+                      }
+                      notFoundContent="暂无"
+                      style={{ width: '20%' }}
+                      placeholder="图标"
+                      options={Object.keys(icons).map((key) => ({
+                        label: (
+                          <div className="flex items-center gap-2 justify-center">
+                            {/* <span className="line-clamp-1">{key}</span> */}
+                            <span className="text-2xl">
+                              {renderComponent(key)}
+                            </span>
+                          </div>
+                        ),
+                        value: key
+                      }))}
+                      onChange={(value) => setData({ icon: value })}
+                    />
                     <Input
                       ref={inputRef}
-                      style={{ width: '100%' }}
+                      style={{ width: '80%' }}
                       onChange={(e) => {
-                        setData(e.target.value)
+                        setData({ name: e.target.value })
                       }}
                       placeholder="请输入页签名称"
                     />
-                  </div>
+                  </Space.Compact>
                 </ThemeProvider>
               ),
               afterOpenChange(open) {
@@ -285,6 +326,7 @@ function IndexTab() {
                   id: Date.now().toString(),
                   closable: true,
                   name: tabName,
+                  icon: tabIcon,
                   children: [
                     { ...addProps, id: Date.now().toString() + '_add' }
                   ]
@@ -389,7 +431,6 @@ function IndexTab() {
     message.success('删除成功')
   }
   const updateComponent = (item: Record<string, any>) => {
-    console.log(item, 'updateComponent')
     setApps(
       apps.map((app) => ({
         ...app,
@@ -527,14 +568,14 @@ function IndexTab() {
   }, [])
   useEffect(() => {
     let image = new Image()
-    const wallpaper = document.querySelector('body') as HTMLBodyElement
-    image.src = config.theme.background || ''
+    const wrapper = document.querySelector('body') as HTMLBodyElement
+    image.src = config.theme.cover || config.theme.background || ''
     let timer = null
-    wallpaper.classList.add('change')
+    wrapper.classList.add('change')
     image.onload = () => {
       timer = setTimeout(() => {
-        wallpaper.style.backgroundImage = `url(${config.theme.background})`
-        wallpaper.classList.remove('change')
+        wrapper.style.backgroundImage = `url(${config.theme.cover || config.theme.background})`
+        wrapper.classList.remove('change')
       }, 250)
     }
     return () => {
@@ -547,7 +588,12 @@ function IndexTab() {
         colorPrimary: primary,
         Tabs: { itemColor: 'rgba(255, 255, 255, 0.8)' }
       }}>
-      <div className="sm:h-[100vh] lg:overflow-hidden relative">
+      <div
+        className="sm:h-[100vh] lg:overflow-hidden relative"
+        onDoubleClick={() => {
+          if (isEdit) return
+          setToggleClass(toggleClass === 'simple' ? '' : 'simple')
+        }}>
         <div
           onContextMenu={(event) =>
             handleContextMenu(event, { id: '', closable: false })
@@ -560,7 +606,7 @@ function IndexTab() {
             <Header />
             <Search />
           </div>
-          <div className="flex-2 w-full max-w-[1200px] relative">
+          <div className={`flex-2 w-full max-w-[1200px] app-tab-main relative`}>
             <Tabs
               animated={{
                 inkBar: true,
@@ -571,6 +617,7 @@ function IndexTab() {
               tabBarExtraContent={
                 <AddComponent
                   apps={apps}
+                  disabled={toggleClass === 'simple'}
                   setApp={(app) => {
                     let newApps = [...apps]
                     newApps.push({ ...app })
@@ -584,6 +631,7 @@ function IndexTab() {
                 const id = String(item.id)
                 return {
                   key: id,
+                  disabled: toggleClass === 'simple',
                   label: <span className="text-shadow">{item.name}</span>,
                   icon: (
                     <span className="text-shadow">
@@ -600,7 +648,7 @@ function IndexTab() {
             />
           </div>
           <Footer />
-          <div className="fixed top-[-10px] right-10 z-[999]" title="更换壁纸">
+          <div className="fixed top-[-10px] right-5 z-[999]" title="更换壁纸">
             <div className="flex flex-col items-center">
               <div className="line w-[2px] h-[40px] bg-white shadow-[0px_5px_10px_rgba(0,0,0,0.5)]"></div>
               <Button
@@ -612,8 +660,14 @@ function IndexTab() {
             </div>
           </div>
         </div>
-        {/* <div
-          className={`wallpaper ${lg && bgChange ? 'change' : ''}`}></div> */}
+        {config.theme.background?.includes('.mp4') && (
+          <video
+            src={config.theme.background}
+            className={`wallpaper-video wallpaper`}
+            autoPlay
+            loop
+            muted></video>
+        )}
       </div>
       <ContextMenu data={currentItem} isEdit={isEdit} />
       {showAdd && (
@@ -640,10 +694,6 @@ function IndexTab() {
 }
 
 export default () => {
-  const [config] = useLocalStorageState<Config>('config', {
-    defaultValue: tabConfig,
-    listenStorageChange: true
-  })
   return (
     <ThemeProvider>
       <App message={{ maxCount: 1 }} notification={{ placement: 'bottomLeft' }}>

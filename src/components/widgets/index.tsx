@@ -84,7 +84,7 @@ export const widgets: Widget[] = [
   {
     id: 'WallpaperWidget',
     ctype: 'recommend',
-    size: ['middle', 'large'],
+    size: ['mini', 'middle', 'large'],
     name: '壁纸',
     component: 'WallpaperWidget'
   },
@@ -266,7 +266,11 @@ const WebsiteContent = (props: {
     </Row>
   )
 }
-const UploadComponent = (props?: { icon: string; url: string }) => {
+const UploadComponent = (props?: {
+  icon: string
+  url: string | undefined
+  onSuccess?: (url: string) => void
+}) => {
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewImage, setPreviewImage] = useState('')
   const [fileList, setFileList] = useState<UploadFile[]>([
@@ -324,6 +328,10 @@ const UploadComponent = (props?: { icon: string; url: string }) => {
       }
     ])
   }, [props.icon, props.url])
+  useEffect(() => {
+    if (fileList[0]?.response)
+      props.onSuccess?.(fileList[0].response?.data || '')
+  }, [fileList])
   return (
     <ThemeProvider token={{ colorText: '#fff' }}>
       <Upload
@@ -535,7 +543,11 @@ const IconContent = (props: {
             )}
           </Space.Compact>
           {state.iconType === 'image' && (
-            <UploadComponent icon={state.icon} url={state.icon || state.href} />
+            <UploadComponent
+              icon={state.icon}
+              url={state.icon || state.href}
+              onSuccess={(url) => setState({ ...state, icon: url })}
+            />
           )}
         </div>
       </Form.Item>

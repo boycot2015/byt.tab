@@ -7,17 +7,20 @@ import {
   SettingOutlined
 } from '@ant-design/icons'
 import { useLocalStorageState } from 'ahooks'
+import { Typography } from 'antd'
 import { useEffect, useState } from 'react'
 import { Item, Menu, Separator, Submenu } from 'react-contexify'
 
 import { renderComponent } from '~components'
 import { widgets } from '~components/widgets'
-import appBase from '~data/apps.json'
+import { appBase } from '~data/apps'
 import { sizeMap, sizeMapCn, ThemeProvider } from '~layouts'
 import tabConfig from '~tabConfig'
 import type { Config, ItemType } from '~types'
 
 import Wallpaper from '../wallpaper/config'
+
+const { Text, Title, Link } = Typography
 
 export const MENU_ID = 'blahblah'
 function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
@@ -27,7 +30,7 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
     listenStorageChange: true
   })
   const [wallpaperVisible, setWallpaperVisible] = useState<boolean>(false)
-  const [app, setApp] = useLocalStorageState<ItemType[]>('app', {
+  const [apps, setApps] = useLocalStorageState<ItemType[]>('apps', {
     defaultValue: appBase,
     listenStorageChange: true
   })
@@ -92,23 +95,26 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
     )
   }, [config.theme.primary])
   return (
-    <ThemeProvider>
+    <ThemeProvider
+      token={{
+        colorText: '#fff'
+      }}>
       <Menu id={MENU_ID}>
         <Item id="add" onClick={handleItemClick}>
-          <div className="w-full flex justify-between items-center">
+          <Text className="w-full flex justify-between items-center">
             新增组件 <PlusOutlined />
-          </div>
+          </Text>
         </Item>
         <Item id="wallpaper" onClick={handleItemClick}>
-          <div className="w-full flex justify-between items-center">
+          <Text className="w-full flex justify-between items-center">
             更换壁纸 <FileImageOutlined />
-          </div>
+          </Text>
         </Item>
         {data.href ? (
           <Item id="open" onClick={handleItemClick}>
-            <div className="w-full flex justify-between items-center">
+            <Text className="w-full flex justify-between items-center">
               在新窗口打开链接 <LinkOutlined />
-            </div>
+            </Text>
           </Item>
         ) : null}
         <Item
@@ -116,9 +122,9 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
           hidden={!data.id}
           disabled={!data.editable}
           onClick={handleItemClick}>
-          <div className="w-full flex justify-between items-center">
+          <Text className="w-full flex justify-between items-center">
             编辑图标 <EditOutlined />
-          </div>
+          </Text>
         </Item>
         <Submenu
           label="调整布局"
@@ -133,10 +139,10 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
                 data={item}
                 id={'change-size'}
                 onClick={(arg) => handleItemClick({ ...arg, size: item })}>
-                <div className="w-full flex justify-between items-center">
+                <Text className="w-full flex justify-between items-center">
                   <span>{sizeMapCn[item]}</span>
                   {sizeMap[item].replace(/icon-size-/g, '')}
-                </div>
+                </Text>
               </Item>
             ))}
         </Submenu>
@@ -144,7 +150,7 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
           label="移动到"
           hidden={!data.id}
           disabled={!data.closable || data.id == data.pid}>
-          {app
+          {apps
             .filter((item) => item.id != data.pid)
             .map((item) => (
               <Item
@@ -154,9 +160,9 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
                 onClick={(arg) =>
                   handleItemClick({ ...arg, targetData: item })
                 }>
-                <div className="w-full flex justify-between items-center">
+                <Text className="w-full flex justify-between items-center">
                   {item.name} {renderComponent(item.icon)}
-                </div>
+                </Text>
               </Item>
             ))}
         </Submenu>
@@ -165,29 +171,29 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
           hidden={!data.id}
           disabled={!data.closable || data.id == data.pid}
           onClick={handleItemClick}>
-          <div className="w-full flex justify-between items-center">
+          <Text className="w-full flex justify-between items-center">
             删除 <DeleteOutlined />
-          </div>
+          </Text>
         </Item>
         <Separator />
         <Item id="edit-all" onClick={handleItemClick}>
-          <div className="w-full flex justify-between items-center">
+          <Text className="w-full flex justify-between items-center">
             {props.isEdit ? '退出编辑页签' : '编辑页签'} <EditOutlined />
-          </div>
+          </Text>
         </Item>
         <Item
           id="delete-all"
           hidden={!data.id}
           disabled={!data.closable || data.id != data.pid}
           onClick={handleItemClick}>
-          <div className="w-full flex justify-between items-center">
+          <Text className="w-full flex justify-between items-center">
             删除页签 <DeleteOutlined />
-          </div>
+          </Text>
         </Item>
         <Item id="setting" onClick={handleItemClick}>
-          <div className="w-full flex justify-between items-center">
+          <Text className="w-full flex justify-between items-center">
             设置 <SettingOutlined />
-          </div>
+          </Text>
         </Item>
       </Menu>
       <Wallpaper

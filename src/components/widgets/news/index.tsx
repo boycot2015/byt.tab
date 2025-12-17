@@ -90,7 +90,9 @@ function Widget(props: WidgetProp) {
                   className={`line-clamp-1 ${props.size === 'large' ? 'flex-1' : ''}`}>
                   {index + 1}. {item.title}
                 </span>
-                {props.size === 'large' && <span>{item.hotValue || 0}</span>}
+                {props.size === 'large' && item.hotValue && (
+                  <span>{item.hotValue}</span>
+                )}
               </div>
             ))}
           </div>

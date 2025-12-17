@@ -28,6 +28,7 @@ export interface Wallpaper {
     category?: string
     tag?: string
     url?: string
+    poster?: string
     status?: string
     live_open?: boolean
     class_id?: string

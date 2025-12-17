@@ -783,7 +783,14 @@ const category = {
             name: '其他'
         }
     ],
-    'wallhaven': []
+    video: [{
+        id: 'updateTime',
+        name: '最新'
+    }, {
+        id: 'useTotal',
+        name: '最热'
+    }],
+    wallhaven: []
 }
 const getWallpaper = async (params: Record<string, any> = { source: '', id: '0' }) => {
     let urlMap = {
@@ -796,7 +803,7 @@ const getWallpaper = async (params: Record<string, any> = { source: '', id: '0' 
             url: '/bing/list'
         },
         'video': {
-            searchKey: 'category',
+            searchKey: 'sortKey',
             url: '/wallpaper/video/list'
         },
         'wallhaven': {
@@ -815,7 +822,7 @@ const getWallpaper = async (params: Record<string, any> = { source: '', id: '0' 
     return {
         ...data,
         cates: category[params.source || '0'],
-        list: data.data?.map(el => ({ ...el, img: el.thumb || '', url: el.raw || '' })) || []
+        list: data.data?.map(el => ({ ...el, img: el.thumb || el.img || '', url: el.fullSrc || el.raw || el.url || '', id: el.id || el._id })) || []
     };
 };
 const getWallpaperCategory = async (params: Record<string, any> = { source: 'wallpaper' }) => {

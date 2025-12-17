@@ -1,10 +1,11 @@
 import { useInterval } from 'ahooks'
-import { Button } from 'antd'
+import { Button, Typography } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 
 import tabConfig from '~tabConfig'
 import type { Hitokoto } from '~types'
 
+const { Text, Title, Link } = Typography
 export default function Header() {
   const [hitokoto, setHitokoto] = useState<Hitokoto>()
   const getHitokoto = async () => {
@@ -18,17 +19,21 @@ export default function Header() {
   return [
     <div
       onClick={() => getHitokoto()}
-      className="text-white text-center sm:text-left text-shadow w-full sm:w-auto md:flex flex-row gap-3 cursor-pointer"
+      className="!text-white text-center sm:text-left text-shadow w-full sm:w-auto md:flex flex-row gap-3 cursor-pointer"
       key={'hitokoto'}>
-      <span>{hitokoto?.hitokoto || '今昔横云有雨，挂满山涧，故人来。'}</span>
-      <span>-摘自 [{hitokoto?.from || '仙逆'}]</span>
+      <Text className="!text-white">
+        {hitokoto?.hitokoto || '今昔横云有雨，挂满山涧，故人来。'}
+      </Text>
+      <Text className="!text-white">-摘自 [{hitokoto?.from || '仙逆'}]</Text>
     </div>,
     <div
       key={'footer'}
       className="flex w-full flex-col md:flex-row items-center justify-center md:gap-2 mb-1 text-white text-shadow">
       {tabConfig.footer?.power && (
         <div className="power flex items-center justify-center text-center">
-          <h1 className="text-md">Powered by</h1>
+          <Title level={5} className="text-md !text-white">
+            Powered by
+          </Title>
           <Button
             color="primary"
             type="link"
@@ -43,13 +48,13 @@ export default function Header() {
       {(tabConfig.footer?.beian || tabConfig.footer?.copyright) && (
         <div className="copyright flex flex-col items-center md:flex-row gap-2">
           {tabConfig.footer?.copyright && (
-            <span className="text-sm font-bold">
+            <Text className="text-sm font-bold text-white">
               {tabConfig.footer?.copyright}
-            </span>
+            </Text>
           )}
           {tabConfig.footer?.beian && (
-            <a
-              className="text-sm font-bold"
+            <Link
+              className="text-sm font-bold text-white"
               href={`https://beian.miit.gov.cn/`}
               target="_blank">
               <svg
@@ -116,7 +121,7 @@ export default function Header() {
                   </text>
                 </g>
               </svg>
-            </a>
+            </Link>
           )}
         </div>
       )}
