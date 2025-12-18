@@ -92,8 +92,8 @@ function WidgetModal(props: {
                     placeholder={
                       <Image
                         preview={false}
-                        src={item.img || item.url}
-                        width={200}
+                        src={item.poster || item.img || item.url}
+                        width={'100%'}
                       />
                     }
                     preview={{
@@ -230,6 +230,9 @@ function WidgetModal(props: {
           <Tabs
             defaultActiveKey={wallpaper?.cate || '0'}
             tabPosition="left"
+            tabBarExtraContent={{
+              left: <span className=" !text-white text-2xl">壁纸库</span>
+            }}
             onTabClick={(key) => {
               getWallpaperData({
                 source: key,
@@ -295,7 +298,7 @@ function WidgetModal(props: {
               ) : (
                 <div
                   id={'scrollable_' + wallpaper.cate}
-                  className="h-[450px] overflow-hidden overflow-y-auto">
+                  className="h-[462px] overflow-hidden overflow-y-auto">
                   <TabContent id={wallpaper.cate} />
                 </div>
               )}

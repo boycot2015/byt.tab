@@ -10,6 +10,7 @@ import {
   Select
 } from 'antd'
 import type { FormProps } from 'antd'
+import type { FormInstance } from 'antd/lib/form'
 import React, { useEffect, useRef, useState } from 'react'
 
 import { appBase, getAppBase } from '~data/apps'
@@ -24,7 +25,12 @@ const { seoList = [] } = tabConfig.search || {}
 const configDefault: Config = {
   ...tabConfig
 }
-
+const settingOptions = {
+  primary: configDefault.theme.primary,
+  seo: configDefault.seo,
+  fontFamily: configDefault.theme.fontFamily,
+  background: configDefault.theme.background
+}
 type FieldType = {
   primary?: string
   seo?: string
@@ -35,26 +41,24 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
   const [apps, setApps] = useLocalStorageState<ItemType[]>('apps', {
     defaultValue: appBase
   })
+  const formRef = useRef<FormInstance>()
   const [config, setConfig] = useLocalStorageState<Config>('config', {
     defaultValue: configDefault,
     listenStorageChange: true
   })
-  const [primary, setPrimary] = useState(
-    config?.theme?.primary || configDefault.theme.primary
-  )
-  const [background, setBackground] = useState(
-    config?.theme?.background || configDefault.theme.background
-  )
   const [initialValues, setInitialValues] = useState({
-    primary,
-    seo: config?.seo || '必应',
-    fontFamily: config.theme.fontFamily || '',
-    background
+    primary: config?.theme?.primary || settingOptions.primary,
+    seo: config?.seo || settingOptions.seo,
+    fontFamily: config.theme.fontFamily || settingOptions.fontFamily,
+    background:
+      config?.theme?.cover ||
+      config.theme.background ||
+      settingOptions.background
   })
   const [wallpaperVisible, setWallpaperVisible] = useState<boolean>(false)
   const { message } = App.useApp()
   const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
-    console.log('Success:', values)
+    // console.log('Success:', values)
     setConfig({ ...config })
     message.success('保存成功')
   }
@@ -66,19 +70,20 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
   }
   useEffect(() => {
     setInitialValues({
-      primary,
-      seo: config?.seo || '必应',
-      fontFamily: config.theme.fontFamily || '',
-      background: config.theme.background || ''
+      primary: config?.theme?.primary || settingOptions.primary,
+      seo: config?.seo || settingOptions.seo,
+      fontFamily: config.theme.fontFamily || settingOptions.fontFamily,
+      background:
+        config?.theme?.cover ||
+        config.theme.background ||
+        settingOptions.background
     })
-    setBackground(config.theme.background || '')
-    setPrimary(config.theme.primary || '')
   }, [config])
   return (
     <ThemeProvider
       token={{
         fontFamily: config.theme.fontFamily,
-        colorPrimary: primary,
+        colorPrimary: config.theme.primary,
         Form: { labelColor: '#fff' }
       }}>
       <Drawer
@@ -93,6 +98,7 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
         </h2> */}
         <Form
           name="config"
+          ref={formRef}
           labelCol={{ span: 6 }}
           wrapperCol={{ span: 18 }}
           style={{ maxWidth: '100%' }}
@@ -133,6 +139,7 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
                 { label: '苍耳渔阳体', value: 'CangErYuYang' },
                 { label: '微软雅黑', value: 'Microsoft YaHei' },
                 { label: '楷体', value: 'KaiTi' },
+                { label: '黑体', value: 'Black' },
                 { label: '宋体', value: 'Song' },
                 { label: 'OPPO 字体', value: 'OPPOSans' }
               ]}
@@ -160,12 +167,13 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
           </Form.Item>
 
           <Form.Item<FieldType> label="主题背景" name="background">
-            {background && background.includes('http') ? (
+            {initialValues.background &&
+            initialValues.background.includes('http') ? (
               <div
                 className="img rounded-xl flex flex-col overflow-hidden cursor-pointer"
                 onClick={() => setWallpaperVisible(true)}>
                 <Image
-                  src={background}
+                  src={initialValues.background}
                   alt="背景"
                   preview={false}
                   style={{
@@ -218,6 +226,7 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
                     const appBase = await getAppBase()
                     setApps(appBase)
                     setConfig(configDefault)
+                    formRef.current?.setFieldsValue(settingOptions)
                     message.success('重置成功')
                   }
                 }}>

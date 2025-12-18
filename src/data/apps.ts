@@ -2,7 +2,6 @@
 import { codelifeUrl } from '~api/baseUrl'
 import type { ItemType } from '~/types'
 import apps from './apps.json'
-const appBase: ItemType[] = apps.map((el, index) => ({ ...el, id: (index + 1).toString(), children: el.children?.map((child, cIndex) => ({ ...child, id: (index + 1) + '_' + (cIndex + 1).toString() })) || [] }))
 const addProps = {
     href: null,
     target: null,
@@ -16,8 +15,11 @@ const addProps = {
     name: '添加小组件',
     icon: 'PlusOutlined'
 }
+const initApps = (apps: ItemType[]) => {
+    return apps.map((el, index) => ({ ...el, id: (index + 1).toString(), children: el.children?.map((child, cIndex) => ({ ...child, id: (index + 1) + '_' + (cIndex + 1).toString() })) || [] }))
+}
 const getAppBase = async () => {
-    return await Promise.all(appBase.map(async (item, pIndex) => {
+    return await Promise.all(initApps(apps as ItemType[]).map(async (item) => {
         let res = await getWebsites({ key: item.key })
         item.children = item.children.concat(res.children.slice(0, 12))
         return item
@@ -67,4 +69,6 @@ const getAppIcon = async (href: string) => {
         .then((res) => res.json())
         .then((res) => res.data)
 }
+let appBase = initApps(apps as ItemType[])
+
 export { appBase, addProps, getWebsites, getAppBase, getAppIcon }
