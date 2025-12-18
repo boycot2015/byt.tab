@@ -20,8 +20,7 @@ import {
   Spin,
   Tabs
 } from 'antd'
-import type { AutoCompleteProps } from 'antd'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import InfiniteScroll from 'react-infinite-scroll-component'
 
 import type { Wallpaper } from '~components/widgets/wallpaper'
@@ -37,7 +36,6 @@ function WidgetModal(props: {
   onCancel: () => void
   afterOpenChange?: (visible: boolean) => void
 }) {
-  const [page, setPage] = useState(1)
   const [config, setConfig] = useLocalStorageState<Config>('config', {
     defaultValue: tabConfig,
     listenStorageChange: true
@@ -54,10 +52,63 @@ function WidgetModal(props: {
       listenStorageChange: true
     }
   )
+  const [page, setPage] = useState(wallpaper?.currentPage || 1)
   const [loading, setLoading] = useState(true)
+  const LazyImage = ({ src, alt }) => {
+    const imgRef = useRef()
+
+    useEffect(() => {
+      const imgElement = imgRef.current
+
+      const handleIntersection = (entries, observer) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const lazyImage = entry.target
+            lazyImage.src = lazyImage.dataset.src
+            lazyImage.classList.remove('lazy')
+            observer.unobserve(lazyImage)
+          }
+        })
+      }
+
+      const observer = new IntersectionObserver(handleIntersection, {
+        root: null, // 使用视口作为根
+        rootMargin: '0px',
+        threshold: 0.1 // 当至少 10% 的图片进入视口时触发
+      })
+
+      if (imgElement) {
+        observer.observe(imgElement)
+      }
+
+      return () => {
+        if (imgElement) {
+          observer.unobserve(imgElement)
+        }
+      }
+    }, [])
+
+    return (
+      <img
+        ref={imgRef}
+        data-src={src}
+        alt={alt}
+        className="lazy flex items-center justify-center w-full h-full bg-black/30"
+      />
+    )
+  }
   const TabContent = (props) => {
     return (
       <InfiniteScroll
+        scrollThreshold={0.9}
+        pullDownToRefresh
+        refreshFunction={() => {
+          run({
+            source: wallpaper?.cate || '',
+            id: wallpaper?.id,
+            page: 1
+          })
+        }}
         dataLength={wallpaper?.list?.length || 0}
         next={() => {
           run({
@@ -75,25 +126,24 @@ function WidgetModal(props: {
           </span>
         }
         endMessage={
-          wallpaper?.list?.length < pageSize && (
+          wallpaper?.list?.length < pageSize && wallpaper?.list?.length > 12 ? (
             <Divider plain>没有更多了～</Divider>
-          )
+          ) : null
         }
         scrollableTarget={`scrollable_${props.id || wallpaper.cate || 'main'}`}>
         <Row gutter={[10, 10]} className="w-full">
           {wallpaper?.list
             ?.filter((item) => item.img || item.url)
             ?.map((item) => (
-              <Col key={item.id || item.url} span={12} md={8} lg={6}>
+              <Col key={item.id || item.url} sm={12} md={8} lg={6}>
                 <div className="flex flex-col rounded-xl overflow-hidden max-h-[160px] lg:max-h-[120px]">
                   <Image
                     src={item.poster || item.url || item.img}
                     alt={item.category}
                     placeholder={
-                      <Image
-                        preview={false}
+                      <LazyImage
                         src={item.poster || item.img || item.url}
-                        width={'100%'}
+                        alt={item.category}
                       />
                     }
                     preview={{
@@ -147,6 +197,7 @@ function WidgetModal(props: {
     setWallpaper({
       ...res,
       source,
+      currentPage: params?.page || 1,
       cate: params?.source,
       id: params?.id || '0',
       list:
@@ -162,7 +213,7 @@ function WidgetModal(props: {
     return res
   }
   const { run } = useRequest(getWallpaperData, {
-    debounceWait: 3000,
+    debounceWait: 1000,
     manual: true
   })
   const setWallpaperData = (item) => {
@@ -184,12 +235,13 @@ function WidgetModal(props: {
     //   )
   }
   useAsyncEffect(async () => {
+    setPage(wallpaper?.currentPage || 1)
     if (wallpaper.list?.length > 0) {
       setLoading(false)
       return
     }
     await getWallpaperData({
-      page: 1,
+      page: wallpaper?.currentPage || 1,
       size: pageSize,
       source: props.source || ''
     })
@@ -242,6 +294,7 @@ function WidgetModal(props: {
               setWallpaper({
                 ...wallpaper,
                 cate: key,
+                currentPage: 1,
                 id: '0'
               })
             }}
@@ -278,6 +331,7 @@ function WidgetModal(props: {
                     })
                     setWallpaper({
                       ...wallpaper,
+                      currentPage: 1,
                       id: key
                     })
                   }}

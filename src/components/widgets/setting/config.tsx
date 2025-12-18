@@ -112,6 +112,22 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
             rules={[{ required: true, message: '请选择主题色！' }]}>
             <ColorPicker
               showText
+              allowClear
+              presets={[
+                {
+                  label: '推荐',
+                  colors: [
+                    config.theme.primary,
+                    '#f43f5e',
+                    '#2563eb',
+                    '#10b981',
+                    '#059669',
+                    '#06b6d4',
+                    '#0ea5e9',
+                    '#0284c7'
+                  ]
+                }
+              ]}
               onChange={(value) => {
                 value &&
                   setConfig({

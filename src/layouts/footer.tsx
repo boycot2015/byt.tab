@@ -10,7 +10,7 @@ export default function Header() {
   const [hitokoto, setHitokoto] = useState<Hitokoto>()
   const getHitokoto = async () => {
     let res = await fetch(tabConfig.hitokotoApi).then((res) => res.json())
-    setHitokoto(res)
+    setHitokoto(res?.data || res)
   }
   useInterval(() => getHitokoto(), 60000)
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function Header() {
     </div>,
     <div
       key={'footer'}
-      className="flex w-full flex-col md:flex-row items-center justify-center md:gap-2 mb-1 text-white text-shadow">
+      className="flex w-full flex-col md:flex-row items-center justify-center md:gap-2 text-white text-shadow">
       {tabConfig.footer?.power && (
         <div className="power flex items-center justify-center text-center">
           <Title level={5} className="text-md !text-white">

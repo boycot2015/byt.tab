@@ -56,7 +56,7 @@ function IndexPopup() {
           disabled={!data?.url}
           style={{ width: '100%' }}
           onClick={() => handleSubmit()}>
-          提交
+          添加
         </Button>
         <div style={{ marginTop: '12px' }}>
           <a

@@ -44,6 +44,71 @@ export const config: PlasmoCSConfig = {
   matches: ['<all_urls>'],
   all_frames: true
 }
+
+/**
+ * 执行元素动画效果
+ *
+ * 该函数根据指定方向对目标元素及其右侧元素应用缩放和平移动画，
+ * 动画完成后重置样式
+ *
+ * @param {Object} options - 动画配置选项
+ * @param {ItemType} options.item - 目标元素对应的数据项
+ * @param {string} [options.selector='.app-item'] - 要动画的元素选择器
+ * @param {number} [options.duration=300] - 动画持续时间（毫秒）
+ * @param {'left'|'right'} [options.direction='left'] - 动画方向
+ * @param {Function} [callback] - 动画完成后的回调函数
+ */
+const animationFN = (
+  options: {
+    item: ItemType
+    selector?: string
+    duration?: number
+    scale?: number
+    direction?: 'left' | 'right'
+  },
+  callback?: () => void
+) => {
+  const directionMap = {
+    left: '-',
+    right: ''
+  }
+  let timer = null
+  const {
+    selector = '.app-item',
+    direction = 'left',
+    duration = 300,
+    scale = 0,
+    item
+  } = options
+  let elements = document.querySelectorAll(selector) as unknown as HTMLElement[]
+  let currentIndex = 0
+  let offsetWidth = 0
+  elements.entries().forEach(([index, element]) => {
+    element.style.transition = `all ${duration / 1000}s ease`
+    if (element.getAttribute('data-id') == item.id) {
+      offsetWidth = element.offsetWidth
+      if (scale !== 1) element.style.transform = `scale(${scale})`
+      currentIndex = index
+    }
+  })
+  elements.entries().forEach(([index, element]) => {
+    if (index > currentIndex) {
+      element.style.transition = `all ${duration / 2 / 1000}s ${duration / 1000}s ease`
+      element.style.transform = `translate3d(${directionMap[direction]}${offsetWidth}px, 0, 0)`
+    }
+  })
+  timer = setTimeout(() => {
+    elements = document.querySelectorAll(selector) as unknown as HTMLElement[]
+    elements.entries().forEach(([index, element]) => {
+      if (index >= currentIndex) {
+        element.style.transition = 'none'
+        element.style.transform = ''
+      }
+    })
+    callback?.()
+    clearTimeout(timer) // 与CSS过渡时间匹配
+  }, duration + 100)
+}
 function IndexTab() {
   const [config, setConfig] = useLocalStorageState<Config>('config', {
     defaultValue: tabConfig,
@@ -95,7 +160,7 @@ function IndexTab() {
   const AppContent = (item: ItemType) => {
     return (
       <div
-        className={`md:blur-bg app-main lg:overflow-hidden sm:h-[56vh] lg:overflow-y-auto mb-1 ${toggleClass}`}
+        className={`md:blur-bg app-main sm:h-[56vh] overflow-hidden sm:overflow-y-auto ${toggleClass}`}
         onContextMenu={(event) =>
           handleContextMenu(event, {
             id: item.id,
@@ -344,74 +409,6 @@ function IndexTab() {
       </ThemeProvider>
     )
   }
-
-  /**
-   * 执行元素动画效果
-   *
-   * 该函数根据指定方向对目标元素及其右侧元素应用缩放和平移动画，
-   * 动画完成后重置样式
-   *
-   * @param {Object} options - 动画配置选项
-   * @param {ItemType} options.item - 目标元素对应的数据项
-   * @param {string} [options.selector='.app-item'] - 要动画的元素选择器
-   * @param {number} [options.duration=300] - 动画持续时间（毫秒）
-   * @param {'left'|'right'} [options.direction='left'] - 动画方向
-   * @param {Function} [callback] - 动画完成后的回调函数
-   */
-  const animationFN = (
-    options: {
-      item: ItemType
-      selector?: string
-      duration?: number
-      scale?: number
-      direction?: 'left' | 'right'
-    },
-    callback?: () => void
-  ) => {
-    const directionMap = {
-      left: '-',
-      right: ''
-    }
-    let timer = null
-    let timer1 = null
-    const {
-      selector = '.app-item',
-      direction = 'left',
-      duration = 300,
-      scale = 0,
-      item
-    } = options
-    let elements = document.querySelectorAll(
-      selector
-    ) as unknown as HTMLElement[]
-    let currentIndex = 0
-    let offsetWidth = 0
-    elements.entries().forEach(([index, element]) => {
-      element.style.transition = `all ${duration / 1000}s ease`
-      if (element.getAttribute('data-id') == item.id) {
-        offsetWidth = element.offsetWidth
-        if (scale !== 1) element.style.transform = `scale(${scale})`
-        currentIndex = index
-      }
-    })
-    elements.entries().forEach(([index, element]) => {
-      if (index > currentIndex) {
-        element.style.transition = `all ${duration / 2 / 1000}s ${duration / 1000}s ease`
-        element.style.transform = `translate3d(${directionMap[direction]}${offsetWidth}px, 0, 0)`
-      }
-    })
-    timer = setTimeout(() => {
-      elements = document.querySelectorAll(selector) as unknown as HTMLElement[]
-      elements.entries().forEach(([index, element]) => {
-        if (index >= currentIndex) {
-          element.style.transition = 'none'
-          element.style.transform = ''
-        }
-      })
-      callback?.()
-      clearTimeout(timer) // 与CSS过渡时间匹配
-    }, duration + 100)
-  }
   const deleteComponent = (item: ItemType) => {
     // 添加删除动画效果
     animationFN({ item, direction: 'left' }, () => {
@@ -549,6 +546,24 @@ function IndexTab() {
     })
     setCurrentItem(item)
   }
+  const initTheme = (delay = 300) => {
+    let image = config.theme.cover ? new Audio() : new Image()
+    const wrapper = document.querySelector('.wallpaper') as HTMLBodyElement
+    image.src = config.theme.background || ''
+    let timer = null
+    wrapper.classList.add('change')
+    image.onload = () => {
+      timer = setTimeout(() => {
+        if (!config.theme.background?.includes('.mp4')) {
+          wrapper.style.backgroundImage = `url(${config.theme.cover || config.theme.background})`
+        }
+        wrapper.classList.remove('change')
+      }, delay)
+    }
+    return () => {
+      clearTimeout(timer)
+    }
+  }
   useEffect(() => {
     setPrimary(config.theme.primary)
   }, [config])
@@ -567,21 +582,11 @@ function IndexTab() {
     setApps([...appBase])
   }, [])
   useEffect(() => {
-    let image = new Image()
-    const wrapper = document.querySelector('body') as HTMLBodyElement
-    image.src = config.theme.cover || config.theme.background || ''
-    let timer = null
-    wrapper.classList.add('change')
-    image.onload = () => {
-      timer = setTimeout(() => {
-        wrapper.style.backgroundImage = `url(${config.theme.cover || config.theme.background})`
-        wrapper.classList.remove('change')
-      }, 250)
-    }
-    return () => {
-      clearTimeout(timer)
-    }
+    return initTheme()
   }, [config.theme.background])
+  useEffect(() => {
+    return initTheme(10)
+  }, [config.theme.cover])
   return (
     <ThemeProvider
       token={{
@@ -589,7 +594,7 @@ function IndexTab() {
         Tabs: { itemColor: 'rgba(255, 255, 255, 0.8)' }
       }}>
       <div
-        className="sm:h-[100vh] lg:overflow-hidden relative"
+        className="sm:h-[100vh] overflow-hidden relative"
         onDoubleClick={() => {
           if (isEdit) return
           setToggleClass(toggleClass === 'simple' ? '' : 'simple')
@@ -601,7 +606,7 @@ function IndexTab() {
           onDoubleClick={() => {
             setEdit(false)
           }}
-          className={`relative z-[2] h-full p-5 pb-3 flex flex-col items-center justify-center`}>
+          className={`relative z-[2] h-full px-5 pb-5 sm:pb-2 pt-5 flex flex-col items-center justify-center`}>
           <div className="flex flex-1 flex-col items-center justify-center w-full">
             <Header />
             <Search />
@@ -660,13 +665,16 @@ function IndexTab() {
             </div>
           </div>
         </div>
-        {config.theme.background?.includes('.mp4') && (
+        {config.theme.background?.includes('.mp4') ? (
           <video
+            poster={config.theme.cover}
             src={config.theme.background}
             className={`wallpaper-video wallpaper`}
             autoPlay
             loop
             muted></video>
+        ) : (
+          <div className={`wallpaper`}></div>
         )}
       </div>
       <ContextMenu data={currentItem} isEdit={isEdit} />

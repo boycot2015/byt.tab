@@ -792,46 +792,66 @@ const category = {
     }],
     wallhaven: []
 }
+let urlMap = {
+    '0': {
+        searchKey: 'category',
+        url: codelifeUrl + '/wallpaper/list?'
+    },
+    'bing': {
+        searchKey: 'category',
+        url: codelifeUrl + '/bing/list?'
+    },
+    'birdpaper': {
+        searchKey: 'id',
+        url: baseUrl + '/wallpaper?source=birdpaper&'
+    },
+    360: {
+        searchKey: 'id',
+        url: baseUrl + '/wallpaper?source=360&'
+    },
+    default: {
+        searchKey: 'id',
+        url: baseUrl + '/wallpaper?source=default&'
+    },
+    'video': {
+        searchKey: 'sortKey',
+        url: codelifeUrl + '/wallpaper/video/list?'
+    },
+    'wallhaven': {
+        searchKey: 'q',
+        url: codelifeUrl + '/wallpaper/wallhaven?'
+    },
+}
 const getWallpaper = async (params: Record<string, any> = { source: '', id: '0' }) => {
-    let urlMap = {
-        '0': {
-            searchKey: 'category',
-            url: '/wallpaper/list'
-        },
-        'bing': {
-            searchKey: 'category',
-            url: '/bing/list'
-        },
-        'video': {
-            searchKey: 'sortKey',
-            url: '/wallpaper/video/list'
-        },
-        'wallhaven': {
-            searchKey: 'q',
-            url: '/wallpaper/wallhaven'
-        },
-    }
     if (params?.id === '0') params.id = ''
     if (params?.source === '0' || !params.source) params.source = ''
-    if (!category[params.source]?.length) {
+    if (!category[params.source] || !category[params.source]?.length) {
         let res = await getWallpaperCategory({ source: params.source || '0' })
         category[params.source] = res
     }
-    const response = await fetch(`${codelifeUrl}${urlMap[params.source || '0'].url}?${urlMap[params.source || '0'].searchKey}=${params?.id || ''}&page=${params?.page || 1}&size=${params?.size || 12}`);
+    const response = await fetch(`${urlMap[params.source || '0'].url}${urlMap[params.source || '0'].searchKey}=${params?.id || ''}&page=${params?.page || 1}&size=${params?.size || 12}`);
     const data = await response.json();
     return {
         ...data,
         cates: category[params.source || '0'],
-        list: data.data?.map(el => ({ ...el, img: el.thumb || el.img || '', url: el.fullSrc || el.raw || el.url || '', id: el.id || el._id })) || []
+        list: [...(data.data.list || data.data)]?.map(el => ({ ...el, img: el.thumb || el.img || '', url: el.fullSrc || el.raw || el.url || '', id: el.id || el._id })) || []
     };
 };
 const getWallpaperCategory = async (params: Record<string, any> = { source: 'wallpaper' }) => {
-    if (params?.source === '0' || !params.source) params.source = 'wallpaper'
-    let category = await fetch(`${[codelifeUrl, params.source].join('/')}/category?lang=cn`).then((res) => res.json())
-    if (params.source === 'wallpaper') category.data?.unshift({ id: '0', name: '推荐壁纸' })
-    return [...category.data?.map(el => {
-        let id = el.id || el.source || '0'
+    let cates = []
+    if (urlMap[params.source || '0']?.url.includes(codelifeUrl)) {
+        if (params?.source === '0' || !params.source) params.source = 'wallpaper'
+        let category = await fetch(`${[codelifeUrl, params.source].join('/')}/category?lang=cn`).then((res) => res.json())
+        if (params.source === 'wallpaper') category.data?.unshift({ id: '0', name: '推荐壁纸' })
+        cates = [...(category.data || [])]
+    }
+    if (urlMap[params.source || '0']?.url.includes(baseUrl)) {
+        let category2 = await fetch(`${baseUrl}/wallpaper?lang=cn&source=${params.source || ''}`).then((res) => res.json())
+        cates = [...(params.source ? category2.data?.cates || [] : category2.data?.source || [])]
+    }
+    return cates?.map(el => {
+        let id = el.id || el.source || el.value || '0'
         return { ...el, value: id, id, label: el.name || el.label }
-    }) || []]
+    }) || []
 };
 export { getWallpaper, getWallpaperCategory };

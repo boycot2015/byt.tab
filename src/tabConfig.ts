@@ -4,7 +4,7 @@ export default {
     seo: '必应',
     title: 'byt-tab',
     randomImage: 'https://bing.img.run/rand.php',
-    hitokotoApi: 'https://v1.hitokoto.cn',
+    hitokotoApi: 'https://v1.hitokoto.cn', // https://v1.hitokoto.cn
     description: 'byt-tab is a simple extension that replaces the new tab page with a beautiful and minimalistic design.',
     theme: {
         background: 'https://bing.img.run/rand.php',
