@@ -1,12 +1,22 @@
-import { Button, message } from 'antd'
-import { useState } from 'react'
+import { useRequest } from 'ahooks'
+import { Button, Input, message } from 'antd'
+
+import { getAppIcon } from '~data/apps'
 
 import { ThemeProvider } from './layouts'
 
 function IndexPopup() {
-  const [data, setData] = useState('')
+  const getData = async (value: string) => {
+    const icon = await getAppIcon(value)
+    return icon || { name: '', src: '', url: '' }
+  }
+  const { loading, data, run } = useRequest(getData, {
+    debounceWait: 500,
+    defaultParams: [window.location.href || ''],
+    manual: true
+  })
   const handleSubmit = () => {
-    message.success('提交成功')
+    message.success('添加成功')
   }
   return (
     <ThemeProvider>
@@ -20,12 +30,11 @@ function IndexPopup() {
           boxShadow: '0 0.5rem 1rem rgba(0, 0, 0, 0.15)'
         }}>
         <h2 style={{ color: '#2563eb', marginBottom: '12px' }}>
-          🎉 欢迎使用 byt tab！
+          🎉 欢迎使用 byt tab！,输入网址以添加到 tab 中
         </h2>
-        <input
-          placeholder="在这里输入一些内容..."
-          onChange={(e) => setData(e.target.value)}
-          value={data}
+        <Input
+          placeholder="在这里输入网址..."
+          onChange={(e) => run(e.target.value)}
           style={{
             maxWidth: '100%',
             minWidth: '100%',
@@ -35,12 +44,16 @@ function IndexPopup() {
             marginBottom: '12px'
           }}
         />
-        <div style={{ fontSize: '14px', color: '#9ca3af' }}>
-          输入内容：{data || '暂无内容'}
+        <div
+          className="flex flex-col gap-2"
+          style={{ fontSize: '14px', color: '#9ca3af' }}>
+          <span>名称：{data?.name || '暂无内容'}</span>
+          <span>网址：{data?.url || '暂无内容'}</span>
         </div>
         <Button
           type="primary"
           className="mt-4"
+          disabled={!data?.url}
           style={{ width: '100%' }}
           onClick={() => handleSubmit()}>
           提交

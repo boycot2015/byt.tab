@@ -77,7 +77,7 @@ function Widget(props: {
         <div className="h-full flex flex-col text-white gap-2 justify-center">
           <img
             className="w-full h-full object-cover"
-            src={config.theme.background}
+            src={config.theme.cover || config.theme.background}
             alt="random image"
           />
         </div>
