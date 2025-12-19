@@ -56,7 +56,13 @@ function IndexPopup() {
         ...apps[0],
         children: [
           ...apps[0].children,
-          { id: apps[0].id + '_' + Date.now(), ...data }
+          {
+            id: apps[0].id + '_' + Date.now(),
+            ...data,
+            editable: true,
+            closable: true,
+            target: '_blank'
+          }
         ]
       },
       ...apps.slice(1)
