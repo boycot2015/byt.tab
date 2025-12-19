@@ -4,7 +4,8 @@ import {
   PlusOutlined,
   SearchOutlined,
   SettingOutlined,
-  ToolOutlined
+  ToolOutlined,
+  LinkOutlined
 } from '@ant-design/icons'
 import * as icons from '@ant-design/icons/lib/icons/index'
 import { useGetState, useLocalStorageState, useRequest } from 'ahooks'
@@ -248,8 +249,8 @@ const WebsiteContent = (props: {
                 {item.name}
                 <p className="line-clamp-2 h-[40px]">{item.description}</p>
                 <Space className="!flex !justify-end">
-                  <Button type="link" size="small">
-                    打开
+                  <Button type="link" size="small" icon={<LinkOutlined />}>
+                    访问
                   </Button>
                   <Button
                     type="primary"
@@ -689,7 +690,7 @@ function WidgetModal(props: {
     loading: websiteLoading,
     run
   } = useRequest(() => getWebsites({ key: websiteType, name: searchKey }), {
-    debounceWait: 300,
+    // debounceWait: 300,
     manual: true
   })
   const [websiteType, setWebsiteType] = useState<string>(websites[0]?.key || '')
@@ -751,6 +752,9 @@ function WidgetModal(props: {
               tabPosition="left"
               style={{ height: '100%' }}
               animated
+              tabBarExtraContent={{
+                left: <span className="!text-white text-2xl">组件库</span>
+              }}
               items={[
                 {
                   label: '组件工具',
@@ -799,7 +803,15 @@ function WidgetModal(props: {
                             <Spin
                               spinning={websiteLoading}
                               wrapperClassName="h-[62vh] overflow-hidden overflow-y-auto">
-                              {!websiteLoading && item.children?.length > 0 ? (
+                              {searchKey &&
+                              !websiteLoading &&
+                              item.children?.length === 0 ? (
+                                <div className="flex h-[62vh] items-center justify-center">
+                                  <Empty
+                                    className="text-center !text-white"
+                                    description="暂无数据～"></Empty>
+                                </div>
+                              ) : (
                                 <WebsiteContent
                                   key={item.key}
                                   onAdd={(e, data) => {
@@ -809,13 +821,7 @@ function WidgetModal(props: {
                                   }}
                                   children={item.children || []}
                                 />
-                              ) : searchKey && !websiteLoading ? (
-                                <div className="flex h-[62vh] items-center justify-center">
-                                  <Empty
-                                    className="text-center !text-white"
-                                    description="暂无数据～"></Empty>
-                                </div>
-                              ) : null}
+                              )}
                             </Spin>
                           )
                         })) || []
@@ -856,9 +862,6 @@ function WidgetModal(props: {
                           )
                         }
                       ]}
-                      onChange={(key) => {
-                        setWebsiteType(key)
-                      }}
                     />
                   )
                 }
