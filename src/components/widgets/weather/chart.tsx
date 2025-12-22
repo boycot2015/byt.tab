@@ -145,10 +145,13 @@ const HoursChart = (props: Record<string, any>) => {
     window.addEventListener('resize', () => {
       hourilyEcharts?.resize()
     })
+    const observer = new ResizeObserver(() => hourilyEcharts?.resize())
+    observer.observe(chartRef?.current)
+    return () => {
+      observer.disconnect()
+    }
   }, [props.data])
-  return (
-    <div id={id} ref={chartRef} className="!h-[100px] min-w-[2890px]"></div>
-  )
+  return <div id={id} ref={chartRef} className="!h-[100px] w-full"></div>
 }
 const DailyChart = (props: Record<string, any>) => {
   // console.log(props.data, 'props.data')

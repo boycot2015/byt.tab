@@ -274,33 +274,37 @@ function WidgetModal(props: {
                       <FieldTimeOutlined />
                       <span className="ml-2">24小时天气预报</span>
                     </div>
-                    <div className="flex flex-nowrap text-white overflow-x-auto gap-2 relative">
-                      {currentWeather?.hourly_forecast?.map((el) => (
-                        <div key={el.datetime} className="flex flex-col gap-2">
-                          <div className="flex flex-col items-center justify-center gap-2 hover:bg-white/30 p-2 hover:!rounded-xl">
-                            <span>{el.datetime?.split(' ')[1]}</span>
-                            <span
-                              dangerouslySetInnerHTML={{
-                                __html: weatherIcon[el.condition] || 'sunny'
-                              }}></span>
-                            <span>{el.condition}</span>
+                    <div className="overflow-x-auto">
+                      <div className="flex flex-nowrap text-white w-[3600px] justify-between gap-2 relative">
+                        {currentWeather?.hourly_forecast?.map((el) => (
+                          <div
+                            key={el.datetime}
+                            className="flex flex-col gap-2">
+                            <div className="flex flex-col items-center justify-center text-center gap-2 hover:bg-white/30 p-2 hover:!rounded-xl">
+                              <span>{el.datetime?.split(' ')[1]}</span>
+                              <span
+                                dangerouslySetInnerHTML={{
+                                  __html: weatherIcon[el.condition] || 'sunny'
+                                }}></span>
+                              <span className="w-[30px]">{el.condition}</span>
+                            </div>
+                            <span className="h-[100px]"></span>
                           </div>
-                          <span className="h-[100px]"></span>
-                        </div>
-                      ))}
-                      {currentWeather?.hourly_forecast?.length ? (
-                        <div className="absolute left-0 bottom-0 w-full">
-                          <HoursChart
-                            id={`${currentWeather?.location?.city}-hourly-forecast`}
-                            data={currentWeather?.hourly_forecast?.map(
-                              (item) => ({
-                                datetime: item.datetime?.split(' ')[1],
-                                temperature: item.temperature
-                              })
-                            )}
-                          />
-                        </div>
-                      ) : null}
+                        ))}
+                        {currentWeather?.hourly_forecast?.length ? (
+                          <div className="absolute left-0 bottom-0 w-full">
+                            <HoursChart
+                              id={`${currentWeather?.location?.city}-hourly-forecast`}
+                              data={currentWeather?.hourly_forecast?.map(
+                                (item) => ({
+                                  datetime: item.datetime?.split(' ')[1],
+                                  temperature: item.temperature
+                                })
+                              )}
+                            />
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
                   {/* dayily_forecast */}

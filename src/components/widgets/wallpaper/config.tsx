@@ -192,6 +192,8 @@ function WidgetModal(props: {
       let category = await getWallpaperCategory({
         source: 'wallpaper'
       })
+      console.log(category, 'category')
+
       source = category || []
     }
     setWallpaper({
@@ -213,7 +215,7 @@ function WidgetModal(props: {
     return res
   }
   const { run } = useRequest(getWallpaperData, {
-    debounceWait: 1000,
+    debounceWait: 500,
     manual: true
   })
   const setWallpaperData = (item) => {
@@ -236,7 +238,7 @@ function WidgetModal(props: {
   }
   useAsyncEffect(async () => {
     setPage(wallpaper?.currentPage || 1)
-    if (wallpaper.list?.length > 0) {
+    if (wallpaper.list?.length > 0 && wallpaper?.source?.length > 0) {
       setLoading(false)
       return
     }

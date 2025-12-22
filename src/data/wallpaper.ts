@@ -837,7 +837,7 @@ const getWallpaper = async (params: Record<string, any> = { source: '', id: '0' 
         list: [...(data.data.list || data.data)]?.map(el => ({ ...el, img: el.thumb || el.img || '', url: el.fullSrc || el.raw || el.url || '', id: el.id || el._id })) || []
     };
 };
-const getWallpaperCategory = async (params: Record<string, any> = { source: 'wallpaper' }) => {
+const getWallpaperCategory = async (params: Record<string, any> = { source: 'wallpaper', type: '' }) => {
     let cates = []
     if (urlMap[params.source || '0']?.url.includes(codelifeUrl)) {
         if (params?.source === '0' || !params.source) params.source = 'wallpaper'
@@ -847,7 +847,17 @@ const getWallpaperCategory = async (params: Record<string, any> = { source: 'wal
     }
     if (urlMap[params.source || '0']?.url.includes(baseUrl)) {
         let category2 = await fetch(`${baseUrl}/wallpaper?lang=cn&source=${params.source || ''}`).then((res) => res.json())
-        cates = [...(params.source ? category2.data?.cates || [] : category2.data?.source || [])]
+        cates = [...(params.source && !params.type ? category2.data?.cates || [] : category2.data?.source || [])]
+    }
+    if (cates?.length === 0 && params.source == 'wallpaper') {
+        let category = await getWallpaperCategory({ source: '0', type: 'source' })
+        let category2 = await getWallpaperCategory({ source: 'birdpaper', type: 'source' })
+        cates = [...(category || []), ...(category2 || [])].filter(
+            (el, index, self) =>
+                self.findIndex(
+                    (item) => item.id === el.id
+                ) === index
+        )
     }
     return cates?.map(el => {
         let id = el.id || el.source || el.value || '0'

@@ -10,6 +10,7 @@ export interface ItemType {
     key?: string
     iconType?: string | 'text' | 'font' | 'image'
     backgroundColor?: string
+    description?: string
     component?: React.ReactNode
     props?: Record<string, any>
     closable?: boolean
