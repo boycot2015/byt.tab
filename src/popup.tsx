@@ -7,6 +7,7 @@ import type { ItemType } from '~types'
 
 import { ThemeProvider } from './layouts'
 
+const isDev = process.env.NODE_ENV === 'development'
 function IndexPopup() {
   const [apps, setApps] = useLocalStorageState<ItemType[]>('apps', {
     defaultValue: appBase
@@ -29,13 +30,13 @@ function IndexPopup() {
     tab &&
       setData({
         ...tab,
-        name: tab?.title.split(' - ')[0] || '',
+        name: tab?.title?.split(' - ')[0] || '',
         href: tab?.url || '',
         icon: tab?.favIconUrl,
         description: tab?.title || '',
-        id: tab?.id || ''
+        id: tab?.url ? tab?.id : ''
       })
-    setHasApp(apps[0].children.some((el) => el.href === tab?.url))
+    setHasApp(apps[0].children.some((el) => tab?.url && el.href === tab?.url))
     setLoading(false)
   }, [])
   const getData = async (value: string) => {
@@ -169,7 +170,7 @@ function IndexPopup() {
           loading={loading}>
           {loading ? '获取中...' : hasApp && data?.href ? '已添加' : '添加'}
         </Button>
-        {process.env.NODE_ENV === 'development' && (
+        {isDev && (
           <div style={{ marginTop: '12px' }} className="text-center">
             <a
               href="https://docs.plasmo.com"
