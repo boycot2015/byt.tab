@@ -163,14 +163,14 @@ function WidgetModal(props: {
                 className="flex-1 max-h-[60vh] pr-1 overflow-y-auto relative"
                 ref={(el) => (scrollRef.current = el)}>
                 <div
-                  className=" !text-white"
+                  className=" !text-white weather-container"
                   onContextMenu={(event) => event.stopPropagation()}
                   onClick={(e) => {
                     e.preventDefault()
                     setMenuShow(false)
                   }}>
                   <div
-                    className="absolute top-1 cursor-pointer right-1 text-white"
+                    className="absolute top-1 weather-menu cursor-pointer right-1 text-white"
                     onClick={(e) => {
                       e.stopPropagation()
                       setMenuShow(!menuShow)
@@ -283,6 +283,7 @@ function WidgetModal(props: {
                               dangerouslySetInnerHTML={{
                                 __html: weatherIcon[el.condition] || 'sunny'
                               }}></span>
+                            <span>{el.condition}</span>
                           </div>
                           <span className="h-[100px]"></span>
                         </div>
@@ -308,7 +309,7 @@ function WidgetModal(props: {
                       <CalendarOutlined />
                       <span className="ml-2">7天天气预报</span>
                     </div>
-                    <div className="flex flex-nowrap justify-around w-full text-white overflow-x-auto gap-[32px] relative">
+                    <div className="flex flex-nowrap justify-between w-full text-white overflow-x-auto gap-[32px] relative">
                       {currentWeather?.daily_forecast?.map((el) => (
                         <div key={el.date} className="flex flex-col gap-2">
                           <div className="flex flex-col items-center justify-center gap-2 hover:bg-white/30 p-2 hover:!rounded-xl">
@@ -377,6 +378,7 @@ function WidgetModal(props: {
                                 max_temperature: item.max_temperature
                               })
                             )}
+                            menuShow={menuShow}
                           />
                         </div>
                       ) : null}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import EchartsInit from '~components/Echarts'
 
@@ -64,6 +64,7 @@ const baseOptions = {
 }
 export const weather_icon_url = 'https://d.scggqx.com/forecast/img'
 const HoursChart = (props: Record<string, any>) => {
+  const chartRef = useRef(null)
   const [weather_echarts, setWeatherEcharts] = useState({
     ...baseOptions,
     xAxis: [
@@ -138,19 +139,20 @@ const HoursChart = (props: Record<string, any>) => {
       })
       hourilyEcharts?.setOption(weather_echarts, true, true)
     } else {
-      setHourilyEcharts(
-        EchartsInit(document.getElementById(id) as HTMLElement, weather_echarts)
-      )
+      setHourilyEcharts(EchartsInit(chartRef.current, weather_echarts))
       hourilyEcharts?.resize()
     }
     window.addEventListener('resize', () => {
       hourilyEcharts?.resize()
     })
   }, [props.data])
-  return <div id={id} className="!h-[100px] !w-[2960px]"></div>
+  return (
+    <div id={id} ref={chartRef} className="!h-[100px] min-w-[2890px]"></div>
+  )
 }
 const DailyChart = (props: Record<string, any>) => {
   // console.log(props.data, 'props.data')
+  const chartRef = useRef(null)
   const [dailyEcharts, setDailyEcharts] = useState<any>(null)
   const [weather_echarts, setWeatherEcharts] = useState({
     ...baseOptions,
@@ -227,9 +229,7 @@ const DailyChart = (props: Record<string, any>) => {
   const id = props.id || 'weather-echarts-daily'
   useEffect(() => {
     if (!dailyEcharts || !document.getElementById(id)) {
-      setDailyEcharts(
-        EchartsInit(document.getElementById(id) as HTMLElement, weather_echarts)
-      )
+      setDailyEcharts(EchartsInit(chartRef.current, weather_echarts))
     } else {
       setWeatherEcharts({
         ...weather_echarts,
@@ -265,7 +265,17 @@ const DailyChart = (props: Record<string, any>) => {
     window.addEventListener('resize', () => {
       dailyEcharts?.resize()
     })
+    const observer = new ResizeObserver(() => dailyEcharts?.resize())
+    observer.observe(chartRef?.current)
+    return () => {
+      observer.disconnect()
+    }
   }, [props.data])
-  return <div id={id} className="!h-[120px] w-full min-w-[780px]"></div>
+  return (
+    <div
+      id={id}
+      ref={chartRef}
+      className="!h-[120px] w-full min-w-[800px]"></div>
+  )
 }
 export { HoursChart, DailyChart }

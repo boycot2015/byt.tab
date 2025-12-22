@@ -80,6 +80,26 @@ body {
   font-family: var(--font-family);
 }
 
+::-webkit-scrollbar {
+  width: 6px;
+  /*滚动条宽度*/
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  /*滚动条圆角*/
+  -webkit-border-radius: 3px;
+  /*兼容圆角属性*/
+  background-color: #eaeaea;
+  /*滚动条颜色*/
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+  /*滚动条的背景颜色*/
+}
+
 .blur-bg {
   box-shadow: 0px 0px 100px var(--byt-body-bg);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #fff 5%, #fff 90%, transparent 100%);

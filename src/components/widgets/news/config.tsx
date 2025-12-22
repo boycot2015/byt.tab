@@ -1,32 +1,20 @@
 import {
-  CheckOutlined,
   CloseOutlined,
-  LoadingOutlined,
-  MenuOutlined,
-  MinusCircleOutlined,
-  MoreOutlined,
-  SearchOutlined,
-  SkinOutlined
+  MoreOutlined
 } from '@ant-design/icons'
-import { useLocalStorageState, useRequest } from 'ahooks'
+import { useRequest } from 'ahooks'
 import {
-  AutoComplete,
-  Card,
   Col,
-  Divider,
-  Image,
   Modal,
   Row,
   Spin,
   Tabs
 } from 'antd'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import type { News } from '~components/widgets/news'
 import { getNews } from '~data/news'
 import { ThemeProvider } from '~layouts'
-import tabConfig from '~tabConfig'
-import type { Config } from '~types.d'
 
 let scrollTop = 0
 
@@ -65,7 +53,7 @@ function WidgetModal(props: {
                   href={item.link || item.href || item.url || ''}
                   target="_blank"
                   className="flex flex-row gap-4 rounded-xl overflow-hidden max-h-[160px] lg:max-h-[120px]">
-                  <span className="flex-1 line-clamp-1">
+                  <span className="flex-1 line-clamp-1" title={item.title}>
                     {item.index}. {item.title}
                   </span>
                   <span>{item.hotValue}</span>
