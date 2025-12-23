@@ -33,6 +33,7 @@ export interface News {
     id: string
     name: string
     icon?: string
+    list?: News['list']
   }[]
 }
 type WidgetProp = {
@@ -49,7 +50,7 @@ function Widget(props: WidgetProp) {
     cacheKey: 'news',
     manual: true
   })
-  const [cates, setCates] = useLocalStorageState<News['cates']>('newsCates', {
+  const [cates, setCates] = useLocalStorageState<News['cates']>('news', {
     defaultValue: [],
     listenStorageChange: true
   })
@@ -61,12 +62,22 @@ function Widget(props: WidgetProp) {
   }, [data])
   useAsyncEffect(async () => {
     let res = cates || []
-    if (!cates?.length) {
+    let cateId = props.cateId || res?.[0]?.id || ''
+    if (!res.length) {
       res = await getNewsCate()
-      setCates(res || [])
+      let res2 = await getNews({ id: cateId })
+      cateId = cateId || res?.[0]?.id || ''
+      setCates(
+        res.map((item) => ({
+          ...item,
+          list: cateId === item.id ? res2 : []
+        })) || []
+      )
+      setList(res2 || [])
+    } else {
+      let res2 = res.filter((item) => item.id === cateId)?.[0]?.list || []
+      setList(res2)
     }
-    res = await getNews({ id: props.cateId || res?.[0]?.id || '' })
-    setList(res || [])
   }, [])
   return (
     <ThemeProvider>
@@ -110,6 +121,12 @@ function Widget(props: WidgetProp) {
           onCancel={(cateId, list) => {
             setVisible(false)
             setList(list)
+            setCates(
+              cates.map((item) => ({
+                ...item,
+                list: cateId === item.id ? list : item.list || []
+              })) || []
+            )
             props.update({
               id: props.id,
               props: { size: props.size, cateId: cateId }

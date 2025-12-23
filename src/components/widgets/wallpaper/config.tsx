@@ -192,8 +192,6 @@ function WidgetModal(props: {
       let category = await getWallpaperCategory({
         source: 'wallpaper'
       })
-      console.log(category, 'category')
-
       source = category || []
     }
     setWallpaper({

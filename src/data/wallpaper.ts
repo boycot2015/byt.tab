@@ -822,6 +822,22 @@ let urlMap = {
         url: codelifeUrl + '/wallpaper/wallhaven?'
     },
 }
+const baseCates = [
+    {
+        "name": "必应壁纸",
+        "source": "bing"
+    },
+    {
+        "name": "动态壁纸",
+        "source": "video",
+        "type": "2"
+    },
+    {
+        "name": "Wallhaven",
+        "source": "wallhaven"
+    }
+]
+let requestTimes = 0
 const getWallpaper = async (params: Record<string, any> = { source: '', id: '0' }) => {
     if (params?.id === '0') params.id = ''
     if (params?.source === '0' || !params.source) params.source = ''
@@ -837,8 +853,13 @@ const getWallpaper = async (params: Record<string, any> = { source: '', id: '0' 
         list: [...(data.data.list || data.data)]?.map(el => ({ ...el, img: el.thumb || el.img || '', url: el.fullSrc || el.raw || el.url || '', id: el.id || el._id })) || []
     };
 };
-const getWallpaperCategory = async (params: Record<string, any> = { source: 'wallpaper', type: '' }) => {
+const getWallpaperCategory = async (params: Record<string, any> = { source: 'wallpaper', type: '', requestTimes: 0 }) => {
     let cates = []
+    requestTimes++
+    if (requestTimes > 5) {
+        requestTimes = 0
+        return []
+    }
     if (urlMap[params.source || '0']?.url.includes(codelifeUrl)) {
         if (params?.source === '0' || !params.source) params.source = 'wallpaper'
         let category = await fetch(`${[codelifeUrl, params.source].join('/')}/category?lang=cn`).then((res) => res.json())
@@ -852,7 +873,7 @@ const getWallpaperCategory = async (params: Record<string, any> = { source: 'wal
     if (cates?.length === 0 && params.source == 'wallpaper') {
         let category = await getWallpaperCategory({ source: '0', type: 'source' })
         let category2 = await getWallpaperCategory({ source: 'birdpaper', type: 'source' })
-        cates = [...(category || []), ...(category2 || [])].filter(
+        cates = [...(category || baseCates), ...(category2 || [])].filter(
             (el, index, self) =>
                 self.findIndex(
                     (item) => item.id === el.id
