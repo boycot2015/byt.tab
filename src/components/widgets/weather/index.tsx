@@ -121,6 +121,7 @@ function Widget(props: WidgetProp) {
     if (
       props.location &&
       !weathers
+        .filter((_) => _.location)
         .map((item) => item.location.city)
         .includes(props.location || '深圳市')
     ) {
@@ -130,7 +131,7 @@ function Widget(props: WidgetProp) {
           (el, index, self) =>
             self.findIndex(
               (item) => item.location?.city === el.location?.city
-            ) === index
+            ) === index && el.location
         )
       )
       setWeather(res)
@@ -150,7 +151,7 @@ function Widget(props: WidgetProp) {
             (el, index, self) =>
               self.findIndex(
                 (item) => item.location?.city === el.location?.city
-              ) === index
+              ) === index && el.location
           )
         )
         setWeather(res)

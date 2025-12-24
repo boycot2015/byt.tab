@@ -1,19 +1,24 @@
-import { Calendar, Col, Modal, Radio, Row, Select } from 'antd'
+import { CloseOutlined } from '@ant-design/icons'
+import { Badge, Calendar, Col, Modal, Radio, Row, Select, Tag } from 'antd'
 import type { CalendarProps } from 'antd'
 import { createStyles } from 'antd-style'
 import { clsx } from 'clsx'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
-import React from 'react'
+import {
+  HolidayUtil,
+  Lunar,
+  Solar,
+  SolarMonth,
+  SolarWeek
+} from 'lunar-typescript'
+import React, { useEffect, useState } from 'react'
 
 import 'dayjs/locale/zh-cn'
-
-import { HolidayUtil, Lunar } from 'lunar-typescript'
 
 import { ThemeProvider } from '~layouts'
 
 dayjs.locale('zh-cn')
-
 const useStyle = createStyles(({ token, css, cx }) => {
   const lunar = css`
     color: ${token.colorTextTertiary};
@@ -28,7 +33,7 @@ const useStyle = createStyles(({ token, css, cx }) => {
   return {
     wrapper: css`
       width: 450px;
-      border: 1px solid ${token.colorBorderSecondary};
+      border-right: 1px solid #eee;
       border-radius: ${token.borderRadiusOuter};
       padding: 5px;
     `,
@@ -98,12 +103,16 @@ const useStyle = createStyles(({ token, css, cx }) => {
         opacity: 0.8;
       }
     `,
-    weekend
+    weekend,
+    bg: css`
+      background: ${token.colorPrimary};
+    `
   }
 })
 export const WidgetCalendar: React.FC = (props: {
   fullscreen?: boolean
   className?: string
+  onDateChange?: (value: Dayjs) => void
 }) => {
   const { styles } = useStyle({ test: true })
 
@@ -121,6 +130,7 @@ export const WidgetCalendar: React.FC = (props: {
   ) => {
     if (selectInfo.source === 'date') {
       setSelectDate(value)
+      props.onDateChange(value)
     }
   }
 
@@ -136,6 +146,7 @@ export const WidgetCalendar: React.FC = (props: {
     )
     const displayHoliday =
       h?.getTarget() === h?.getDay() ? h?.getName() : undefined
+    const displayFestivals = d.getFestivals().concat(d.getOtherFestivals())
     if (info.type === 'date') {
       return React.cloneElement(info.originNode, {
         ...(info.originNode as React.ReactElement<any>).props,
@@ -154,7 +165,10 @@ export const WidgetCalendar: React.FC = (props: {
             </span>
             {info.type === 'date' && (
               <div className={styles.lunar}>
-                {displayHoliday || solarTerm || lunar}
+                {displayFestivals.join('、') ||
+                  displayHoliday ||
+                  solarTerm ||
+                  lunar}
               </div>
             )}
           </div>
@@ -190,12 +204,16 @@ export const WidgetCalendar: React.FC = (props: {
   }, [])
 
   return (
-    <div className={styles.wrapper + ' !w-full !p-8' + props.className}>
+    <div
+      className={
+        styles.wrapper + ' !w-full h-full !p-4' + (props.className || '')
+      }>
       <Calendar
         fullCellRender={cellRender}
         fullscreen={props.fullscreen || false}
         onPanelChange={onPanelChange}
         onSelect={onDateChange}
+        className="!border-none"
         headerRender={({ value, type, onChange, onTypeChange }) => {
           const monthOptions = React.useMemo(() => {
             const options = []
@@ -263,18 +281,237 @@ export const WidgetCalendar: React.FC = (props: {
     </div>
   )
 }
-function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
+export const WidgetLunar: React.FC = () => {
+  const now = Solar.fromDate(new Date())
+  const { styles } = useStyle({ test: true })
+  class Day {
+    public month: number = 0
+    public day: number = 0
+    public lunarDay: string = ''
+    public lunarMonth: string = ''
+    public yearGanZhi: string = ''
+    public yearShengXiao: string = ''
+    public monthGanZhi: string = ''
+    public dayGanZhi: string = ''
+    public ymd: string = ''
+    public desc: string = ''
+    public isToday: boolean = false
+    public isSelected: boolean = false
+    public isRest: boolean = false
+    public isHoliday: boolean = false
+    public festivals: string[] = []
+    public yi: string[] = []
+    public ji: string[] = []
+  }
+
+  class Week {
+    public days: Day[] = []
+  }
+
+  class Month {
+    public heads: string[] = []
+    public weeks: Week[] = []
+  }
+
+  class Holiday {
+    public name: string = ''
+    public month: number = 0
+  }
+
+  const [state, setState] = useState({
+    year: now.getYear(),
+    month: now.getMonth(),
+    weekStart: 1,
+    selected: new Day(),
+    data: new Month(),
+    holidays: new Array<Holiday>(),
+    holidayMonth: 0
+  })
+  function buildDay(d: Solar) {
+    const ymd = d.toYmd()
+    const lunar = d.getLunar()
+    const day = new Day()
+    day.month = d.getMonth()
+    day.day = d.getDay()
+    day.lunarMonth = lunar.getMonthInChinese()
+    day.lunarDay = lunar.getDayInChinese()
+    day.yearGanZhi = lunar.getYearInGanZhi()
+    day.yearShengXiao = lunar.getYearShengXiao()
+    day.monthGanZhi = lunar.getMonthInGanZhi()
+    day.dayGanZhi = lunar.getDayInGanZhi()
+    day.ymd = ymd
+    day.isToday = ymd == now.toYmd()
+    day.isSelected = ymd == state.selected.ymd
+    if (day.isToday && state.selected.day === 0) {
+      state.selected = day
+    }
+    const solarFestivals = d.getFestivals()
+    solarFestivals.forEach((f) => {
+      day.festivals.push(f)
+    })
+    d.getOtherFestivals().forEach((f) => {
+      day.festivals.push(f)
+    })
+    lunar.getFestivals().forEach((f) => {
+      day.festivals.push(f)
+    })
+    lunar.getOtherFestivals().forEach((f) => {
+      day.festivals.push(f)
+    })
+    let rest = false
+    if (d.getWeek() === 6 || d.getWeek() === 0) {
+      rest = true
+    }
+    const holiday = HolidayUtil.getHoliday(ymd)
+    if (holiday) {
+      rest = !holiday.isWork()
+    }
+    day.isHoliday = !!holiday
+    day.isRest = rest
+    day.yi = lunar.getDayYi()
+    day.ji = lunar.getDayJi()
+    let desc = lunar.getDayInChinese()
+    const jq = lunar.getJieQi()
+    if (jq) {
+      desc = jq
+    } else if (lunar.getDay() === 1) {
+      desc = lunar.getMonthInChinese() + '月'
+    } else if (solarFestivals.length > 0) {
+      const f = solarFestivals[0]
+      if (f.length < 4) {
+        desc = f
+      }
+    }
+    day.desc = desc
+    return day
+  }
+
+  function render() {
+    const month = new Month()
+    const weeks: SolarWeek[] = []
+    const solarWeeks = SolarMonth.fromYm(
+      parseInt(state.year + '', 10),
+      parseInt(state.month + '', 10)
+    ).getWeeks(state.weekStart)
+    solarWeeks.forEach((w) => {
+      weeks.push(w)
+    })
+    while (weeks.length < 6) {
+      weeks.push(weeks[weeks.length - 1].next(1, false))
+    }
+    weeks.forEach((w) => {
+      const week = new Week()
+      const heads: string[] = []
+      w.getDays().forEach((d) => {
+        heads.push(d.getWeekInChinese())
+        week.days.push(buildDay(d))
+      })
+      month.heads = heads
+      month.weeks.push(week)
+    })
+    setState({ ...state, data: month })
+    const holidays: Holiday[] = []
+    HolidayUtil.getHolidays(state.year).forEach((h) => {
+      const holiday = new Holiday()
+      holiday.name = h.getName()
+      holiday.month = parseInt(h.getTarget().substring(5, 7), 10)
+      const exists = holidays.some((a) => {
+        return a.name == holiday.name
+      })
+      if (!exists) {
+        holidays.push(holiday)
+      }
+    })
+    setState({ ...state, holidays })
+  }
+
+  function onSelect(day: Day) {
+    setState({ ...state, selected: day })
+  }
+
+  function onBack() {
+    setState({
+      ...state,
+      holidayMonth: 0,
+      year: now.getYear(),
+      month: now.getMonth(),
+      selected: buildDay(now)
+    })
+  }
+  useEffect(() => {
+    render()
+  }, [state.month])
+
+  useEffect(() => {
+    render()
+  }, [state.selected])
+  useEffect(() => {
+    render()
+  }, [state.holidayMonth])
+  useEffect(() => {
+    render()
+  }, [])
   return (
-    <ThemeProvider token={{}}>
+    <div
+      className={`w-full h-full flex flex-col gap-2 !p-8 side text-white ${styles.bg}`}>
+      <div className="ymd text-xl">{state.selected.ymd}</div>
+      <div className="day text-[64px]">{state.selected.day}</div>
+      <div className="lunar flex gap-4">
+        <div>
+          农历{state.selected.lunarMonth}月{state.selected.lunarDay}
+        </div>
+        <div>
+          {state.selected.yearGanZhi}年 {state.selected.yearShengXiao}
+        </div>
+      </div>
+      <div>
+        {state.selected.monthGanZhi}月 {state.selected.dayGanZhi}日
+      </div>
+      {state.selected.festivals.map((f) => (
+        <div className="festival" key={f}>
+          {f}
+        </div>
+      ))}
+      <div className="yiji flex flex-col gap-2">
+        <div className="yi flex gap-2 flex-wrap">
+          <Tag color="#87d068">宜</Tag>
+          {state.selected.yi.map((f) => (
+            <div key={f}>{f}</div>
+          ))}
+        </div>
+        <div className="divider" />
+        <div className="ji flex gap-2 flex-wrap">
+          <Tag color="#f50">忌</Tag>
+          {state.selected.ji.map((f) => (
+            <div key={f}>{f}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
+  const [state, setState] = useState({})
+  return (
+    <ThemeProvider>
       <Modal
         title=""
         classNames={{
           content: '!overflow-hidden !box-radius-md !p-0'
         }}
+        width={800}
         open={props.visible}
         footer={null}
+        closeIcon={<CloseOutlined className="text-white" />}
         onCancel={() => props.onCancel()}>
-        <WidgetCalendar />
+        <Row justify="center" gutter={[0, 8]} style={{ padding: 0 }}>
+          <Col span={24} md={16}>
+            <WidgetCalendar />
+          </Col>
+          <Col span={24} md={8}>
+            <WidgetLunar />
+          </Col>
+        </Row>
       </Modal>
     </ThemeProvider>
   )

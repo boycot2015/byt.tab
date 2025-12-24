@@ -75,7 +75,7 @@ function WidgetModal(props: {
           (el, index, self) =>
             self.findIndex(
               (item) => item.location?.city === el.location?.city
-            ) === index
+            ) === index && el.location
         )
       )
       setLoading(false)
@@ -88,7 +88,7 @@ function WidgetModal(props: {
         (el, index, self) =>
           self.findIndex(
             (item) => item.location?.city === el.location?.city
-          ) === index
+          ) === index && el.location
       )
     )
     // setCurrentWeather(tempWeather)
@@ -131,7 +131,7 @@ function WidgetModal(props: {
           (el, index, self) =>
             self.findIndex(
               (item) => item.location?.city === el.location?.city
-            ) === index
+            ) === index && el.location
         )
       )
       setCurrentWeather(res)

@@ -56,6 +56,7 @@ export const ThemeProvider = ({
           colorBorderSecondary: 'rgba(114, 114, 114, 0.5)',
           colorBorder: 'rgba(114, 114, 114, 0.5)',
           paddingLG: 16,
+          colorSplit: '#eee',
           ...token
         },
         algorithm:
