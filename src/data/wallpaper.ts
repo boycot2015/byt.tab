@@ -1,4 +1,5 @@
 import { apiUrl, codelifeUrl, baseUrl } from '~api/baseUrl';
+import { $GET } from '~utils/index';
 export const data = {
     "success": true,
     "message": "操作成功",
@@ -845,12 +846,11 @@ const getWallpaper = async (params: Record<string, any> = { source: '', id: '0' 
         let res = await getWallpaperCategory({ source: params.source || '0' })
         category[params.source] = res
     }
-    const response = await fetch(`${urlMap[params.source || '0'].url}${urlMap[params.source || '0'].searchKey}=${params?.id || ''}&page=${params?.page || 1}&size=${params?.size || 12}`);
-    const data = await response.json();
+    const response = await $GET(`${urlMap[params.source || '0'].url}${urlMap[params.source || '0'].searchKey}=${params?.id || ''}&page=${params?.page || 1}&size=${params?.size || 12}`);
+    const data = response.data;
     return {
-        ...data,
         cates: category[params.source || '0'],
-        list: [...(data.data.list || data.data)]?.map(el => ({ ...el, img: el.thumb || el.img || '', url: el.fullSrc || el.raw || el.url || '', id: el.id || el._id })) || []
+        list: [...(data?.list || data)]?.map(el => ({ ...el, img: el.thumb || el.img || '', url: el.fullSrc || el.raw || el.url || '', id: el.id || el._id })) || []
     };
 };
 const getWallpaperCategory = async (params: Record<string, any> = { source: 'wallpaper', type: '', requestTimes: 0 }) => {
@@ -862,12 +862,14 @@ const getWallpaperCategory = async (params: Record<string, any> = { source: 'wal
     }
     if (urlMap[params.source || '0']?.url.includes(codelifeUrl)) {
         if (params?.source === '0' || !params.source) params.source = 'wallpaper'
-        let category = await fetch(`${[codelifeUrl, params.source].join('/')}/category?lang=cn`).then((res) => res.json())
+        let category = await $GET(`${[codelifeUrl, params.source].join('/')}/category?lang=cn`)
         if (params.source === 'wallpaper') category.data?.unshift({ id: '0', name: '推荐壁纸' })
+        console.log(category.data, '$GET-推荐壁纸');
         cates = [...(category.data || [])]
     }
     if (urlMap[params.source || '0']?.url.includes(baseUrl)) {
-        let category2 = await fetch(`${baseUrl}/wallpaper?lang=cn&source=${params.source || ''}`).then((res) => res.json())
+        let category2 = await $GET(`${baseUrl}/wallpaper?lang=cn&source=${params.source || ''}`)
+        console.log(category2.data, '$GET-birdpaper');
         cates = [...(params.source && !params.type ? category2.data?.cates || [] : category2.data?.source || [])]
     }
     if (cates?.length === 0 && params.source == 'wallpaper') {

@@ -1,11 +1,12 @@
 
-import { apiUrl, baseUrl, codelifeUrl } from '~api/baseUrl'
+import { codelifeUrl } from '~api/baseUrl'
+import { $GET } from '~utils/index'
 const getNews = async (params?: { id: string }) => {
-    const res = await fetch(`${codelifeUrl}/api/top/list?id=${params?.id || 'KqndgxeLl9'}`).then((res) => res.json())
+    const res = await $GET(`${codelifeUrl}/api/top/list?id=${params?.id || 'KqndgxeLl9'}`)
     return res.data
 }
 const getNewsCate = async () => {
-    const res = await fetch(`${codelifeUrl}/api/top/category?lang=cn`).then((res) => res.json())
+    const res = await $GET(`${codelifeUrl}/api/top/category?lang=cn`)
     return res.data
 }
 export { getNews, getNewsCate }

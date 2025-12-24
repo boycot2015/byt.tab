@@ -1,5 +1,6 @@
 
 import { codelifeUrl } from '~api/baseUrl'
+import { $GET } from '~utils/index'
 import type { ItemType } from '~/types'
 import apps from './apps.json'
 const addProps = {
@@ -40,8 +41,7 @@ const getAppBase = async () => {
     }))
 }
 const getWebsites = (params: { key: string, name?: string }) => {
-    return fetch(`${codelifeUrl}/website/list?type=${params.key}&name=${params.name || ''}&size=64`)
-        .then((res) => res.json())
+    return $GET(`${codelifeUrl}/website/list?type=${params.key}&name=${params.name || ''}&size=64`)
         .then((res) => {
             return {
                 key: params.key,
@@ -65,8 +65,7 @@ const getWebsites = (params: { key: string, name?: string }) => {
 }
 
 const getAppIcon = async (href: string) => {
-    return await fetch(`${codelifeUrl}/website/info?url=${href}&lang=cn`)
-        .then((res) => res.json())
+    return await $GET(`${codelifeUrl}/website/info?url=${href}&lang=cn`)
         .then((res) => res.data)
 }
 let appBase = initApps(apps as ItemType[])

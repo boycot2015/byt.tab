@@ -1,3 +1,4 @@
+import { apiUrl, baseUrl, codelifeUrl } from '~api/baseUrl'
 export const getWeek = (day: number, prefix: string = '周', showToday: boolean = false) => {
     const week = ['日', '一', '二', '三', '四', '五', '六']
     if (showToday && day == new Date().getDay()) return '今天'
@@ -52,4 +53,18 @@ export const mouseOverEffect = (target: HTMLDivElement, element: HTMLElement, op
             transformElement(e.clientX, e.clientY);
         });
     });
+}
+
+export const $GET = async (url: string, options?: RequestInit) => {
+    try {
+        let path = url.startsWith(baseUrl) ? url : `${baseUrl}/cors?url=${url}`
+        const res = await fetch(path, {
+            ...options,
+            method: 'GET'
+        })
+        const data = await res.json()
+        return url.startsWith(baseUrl) ? data : data.data
+    } catch (err) {
+        console.log(err)
+    }
 }

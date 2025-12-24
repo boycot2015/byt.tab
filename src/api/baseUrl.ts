@@ -7,6 +7,7 @@ switch (process.env.NODE_ENV) {
     case 'development':
         // apiUrl = 'https://60s.viki.moe/v2';
         // baseUrl = 'https://api.bpycpt.top/api';
+        baseUrl = 'http://192.168.30.145:8090/api';
         break;
     case 'production':
         // apiUrl = 'https://60s.viki.moe/v2';
