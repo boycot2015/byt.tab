@@ -8,7 +8,13 @@ export default {
     description: 'byt-tab is a simple extension that replaces the new tab page with a beautiful and minimalistic design.',
     theme: {
         background: 'https://bing.img.run/rand.php',
-        festival: true,
+        festival: {
+            open: true,
+            title: 'Bing',
+            copyright: '必应',
+            copyrightlink: '',
+            url: ''
+        },
         fontFamily: 'CangErYuYang',
         primary: '#1677ff'
     },

@@ -200,18 +200,14 @@ export const WidgetCalendar = (props: {
     dayjs().toDate().getTime()
   )
   const onPanelChange = (value: Dayjs, mode: CalendarProps<Dayjs>['mode']) => {
-    // console.log(value.format('YYYY-MM-DD'), mode)
     setPanelDate(value)
-  }
-  function onSelect(day: Day) {
-    props.onDateChange({ selected: day })
   }
 
   function onBack() {
     setSelectDate(dayjs())
     setRenderKey(dayjs().toDate().getTime())
     props.onDateChange({
-      selected: buildDay(now)
+      selected: buildDay()
     })
   }
   const onDateChange: CalendarProps<Dayjs>['onSelect'] = (
@@ -398,24 +394,29 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
   }, [])
   return (
     <div
-      className={`w-full h-full flex flex-col gap-2 !p-8 side text-white ${styles.bg}`}>
+      className={`w-full h-full flex flex-col gap-2 !p-4 side text-white ${styles.bg}`}>
       <div className="ymd text-xl">{state.selected.ymd}</div>
       <div className="day text-[64px]">{state.selected.day}</div>
       <div className="lunar flex gap-4">
         <div>
-          农历{state.selected.lunarMonth}月{state.selected.lunarDay}
-        </div>
-        <div>
-          {state.selected.yearGanZhi}年 {state.selected.yearShengXiao}
+          农历 {state.selected.lunarMonth}月{state.selected.lunarDay}
         </div>
       </div>
-      <div>
-        {state.selected.monthGanZhi}月 {state.selected.dayGanZhi}日
+      <div className="flex gap-4">
+        <span>
+          {state.selected.yearGanZhi}年 {state.selected.yearShengXiao}
+        </span>
+        <span>
+          {state.selected.monthGanZhi}月 {state.selected.dayGanZhi}日
+        </span>
       </div>
       <div className="flex gap-2">
+        {state.selected.jieQi}
+        {state.selected.dateIcons[state.selected.jieQi]}
         {state.selected.festivals.map((f) => (
           <div className="festival" key={f}>
             {f}
+            {state.selected.dateIcons[f] || ''}
           </div>
         ))}
       </div>

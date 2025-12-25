@@ -891,10 +891,16 @@ const getWallpaperCategory = async (params: Record<string, any> = { source: 'wal
 };
 const getFestivalBackground = async () => {
     let day = buildDay(Solar.fromDate(new Date()))
-    let q = day.customFestivals[0]?.replace(/节$/g, '')
+    // let q = day.customFestivals[0]?.replace(/节$/g, '') || ''
+    // if (!q) return { hasFestival: false, url: '' }
+    // https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN
     // https://unsplash.com/napi/search/photos?orientation=landscape&page=1&per_page=20&query=%E5%9C%A3%E8%AF%9E
-    let res = await fetch(`https://unsplash.com/napi/search/photos?orientation=landscape&page=1&per_page=20&query=${q || ''}`).then(res => res.json())
-    let urls = res?.results?.map(el => el.urls.regular) || []
-    return urls[Math.floor(Math.random() * urls.length)] || ''
+    // let res = await fetch(`https://unsplash.com/napi/search/photos?orientation=landscape&page=1&per_page=20&query=${q || ''}`).then(res => res.json())
+    let res = await fetch(`https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN`).then(res => res.json())
+    return {
+        ...res?.images[0],
+        open: day.customFestivals?.length > 0,
+        url: 'https://cn.bing.com/' + res.images[0].url || '',
+    }
 }
 export { getWallpaper, getWallpaperCategory, getFestivalBackground };

@@ -9,14 +9,12 @@ import { buildDay, getWeek } from '~utils'
 
 import Config, { RenderCellCalendar, WidgetCalendar } from './config'
 
-export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
-  document.querySelector('#__plasmo')
 function Widget(props: {
   withComponents: boolean
   size?: 'mini' | 'small' | 'large' | 'middle'
 }) {
   const [visible, setVisible] = useState(false)
-  const day = buildDay(Solar.fromDate(new Date()))
+  const day = buildDay()
   return (
     <ThemeProvider>
       <ConfigProvider
@@ -43,7 +41,10 @@ function Widget(props: {
                 !props.withComponents && setVisible(true)
               }}>
               <div className="flex flex-col items-center justify-center">
-                <div>{day.customFestivals[0]}</div>
+                <div>
+                  {day.customFestivals[0]}
+                  {day.dateIcon}
+                </div>
                 <div className="text-[32px] text-[var(--byt-color-text)] font-bold">
                   {new Date().getDate()}
                 </div>

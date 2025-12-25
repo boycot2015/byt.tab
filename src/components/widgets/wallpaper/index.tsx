@@ -3,11 +3,12 @@ import { Card, message, theme } from 'antd'
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
 import React, { useState } from 'react'
 
-import { useStorage } from '@plasmohq/storage/hook'
-
+import { getFestivalBackground } from '~data/wallpaper'
 import { sizeMap, ThemeProvider } from '~layouts'
 import tabConfig from '~tabConfig'
 import type { Config } from '~types.d'
+import { buildDay } from '~utils'
+import job from '~utils/job'
 
 import WidgetModal from './config'
 
@@ -58,11 +59,40 @@ function Widget(props: {
 }) {
   const [visible, setVisible] = useState(false)
   const [show, setShow] = useState(false)
-  const [config] = useLocalStorageState<Config>('config', {
+  const [config, setConfig] = useLocalStorageState<Config>('config', {
     defaultValue: tabConfig,
     listenStorageChange: true
   })
-  useAsyncEffect(async () => {}, [])
+  useAsyncEffect(async () => {
+    if (!config.theme.festival.open || config.theme.festival.url) return
+    job('0 0 12 * * *', async function () {
+      const day = buildDay()
+      if (!day.customFestivals.length) {
+        setConfig({
+          ...config,
+          theme: {
+            ...config.theme,
+            festival: {
+              ...config.theme.festival,
+              url: ''
+            }
+          }
+        })
+        return
+      }
+      let res = await getFestivalBackground()
+      setConfig({
+        ...config,
+        theme: {
+          ...config.theme,
+          festival: {
+            ...config.theme.festival,
+            ...res
+          }
+        }
+      })
+    })
+  }, [])
   return (
     <ThemeProvider token={{}}>
       <Card
@@ -77,7 +107,11 @@ function Widget(props: {
         <div className="h-full flex flex-col text-white gap-2 justify-center">
           <img
             className="w-full h-full object-cover"
-            src={config.theme.cover || config.theme.background}
+            src={
+              (config.theme.festival.open && config.theme.festival.url) ||
+              config.theme.cover ||
+              config.theme.background
+            }
             alt="random image"
           />
         </div>

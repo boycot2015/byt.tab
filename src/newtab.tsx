@@ -27,12 +27,12 @@ import ContextMenu, { MENU_ID } from '~components/widgets/context'
 import SettingModal from '~components/widgets/setting/config'
 import type { Wallpaper } from '~components/widgets/wallpaper'
 import { addProps, getAppBase } from '~data/apps'
-import { getFestivalBackground } from '~data/wallpaper'
 import { sizeMap, ThemeProvider } from '~layouts'
 import Footer from '~layouts/footer'
 import Header from '~layouts/header'
 import tabConfig from '~tabConfig'
 import type { Config, ItemType } from '~types'
+import { buildDay } from '~utils'
 
 export type PlasmoCSUIAnchor = {
   type: 'overlay' | 'inline'
@@ -115,6 +115,7 @@ function IndexTab() {
     defaultValue: tabConfig,
     listenStorageChange: true
   })
+  const day = buildDay()
   const { message, modal } = App.useApp()
   const [primary, setPrimary] = useState(config.theme.primary)
   const [currentItem, setCurrentItem] = useState<ItemType>()
@@ -554,9 +555,9 @@ function IndexTab() {
     image.src = background || ''
     let timer = null
     wrapper.classList.add('change')
-    image.onload = async () => {
-      if (config.theme.festival) {
-        background = await getFestivalBackground()
+    image.onload = () => {
+      if (config.theme.festival && config.theme.festival.open) {
+        background = config.theme.festival?.url || background
       }
       timer = setTimeout(() => {
         if (!background?.includes('.mp4')) {
@@ -600,7 +601,8 @@ function IndexTab() {
       }}>
       <div
         className="sm:h-[100vh] overflow-hidden relative"
-        onDoubleClick={() => {
+        onDoubleClick={(e) => {
+          e.stopPropagation()
           if (isEdit) return
           setToggleClass(toggleClass === 'simple' ? '' : 'simple')
         }}>
@@ -664,8 +666,11 @@ function IndexTab() {
               <Button
                 type="primary"
                 variant="text"
-                onClick={() => setWallpaper()}>
-                <SkinFilled />
+                onClick={() =>
+                  (!day.festivals?.length || !config.theme.festival?.open) &&
+                  setWallpaper()
+                }>
+                {day.festivals?.length ? day.dateIcon : <SkinFilled />}
               </Button>
             </div>
           </div>

@@ -41,7 +41,13 @@ export interface Config {
         background?: string
         cover?: string
         fontFamily?: string
-        festival?: boolean
+        festival?: {
+            open: boolean
+            url?: string
+            title?: string
+            copyright?: string
+            copyrightlink?: string
+        }
         primary: string
     },
     hitokotoApi?: string

@@ -88,11 +88,14 @@ export class Day {
     public isRest: boolean = false
     public isHoliday: boolean = false
     public festivals: string[] = []
+    public dateIcon: string = ''
+    public jieQi: string = ''
+    public dateIcons: Record<string, string> = {}
     public customFestivals: string[] = []
     public yi: string[] = []
     public ji: string[] = []
 }
-export function buildDay(d: Solar) {
+export function buildDay(d: Solar = Solar.fromDate(new Date())) {
     const now = Solar.fromDate(new Date())
     const ymd = d.toYmd()
     const lunar = d.getLunar()
@@ -111,13 +114,13 @@ export function buildDay(d: Solar) {
     solarFestivals.forEach((f) => {
         day.festivals.push(f)
     })
-    d.getOtherFestivals().forEach((f) => {
-        day.festivals.push(f)
-    })
     lunar.getFestivals().forEach((f) => {
         day.festivals.push(f)
     })
     lunar.getOtherFestivals().forEach((f) => {
+        day.festivals.push(f)
+    })
+    d.getOtherFestivals().forEach((f) => {
         day.festivals.push(f)
     })
     day.customFestivals = [...d.getFestivals(), ...lunar.getFestivals()]
@@ -146,5 +149,54 @@ export function buildDay(d: Solar) {
         }
     }
     day.desc = desc
+    day.dateIcons = {
+        圣诞节: '🎄',
+        平安夜: '🍎',
+        元旦节: '🎈',
+        元宵节: '🏮',
+        春节: '🧧',
+        清明节: '🌸',
+        端午节: '🐲',
+        植树节: '🌳',
+        中秋节: '🥮',
+        国庆节: '🇨🇳',
+        国际老年人日: '🧓',
+        七夕节: '💖',
+        儿童节: '🧒',
+        妇女节: '🌹',
+        情人节: '💑',
+        复活节: '🔥',
+        感恩节: '🙏',
+        青年节: '👨',
+        愚人节: '🤪',
+        劳动节: '👷',
+        春分: '☘️',
+        立春: '🌱',
+        雨水: '🌧️',
+        惊蛰: '🐛',
+        谷雨: '🌾',
+        小满: '👨‍🌾',
+        清明: '🌸',
+        大满: '🌾',
+        芒种: '☀',
+        立夏: '🌻',
+        夏至: '🌞',
+        小暑: '🍉',
+        处暑: '🌾',
+        大暑: '🔥',
+        霜降: '💦',
+        寒露: '🍃',
+        白露: '💧',
+        秋分: '🌗',
+        立秋: '🍁',
+        小雪: '❄',
+        大雪: '⛄️',
+        冬至: '🥟',
+        小寒: '🎿',
+        立冬: '🐧',
+        大寒: '🥶',
+    }
+    day.jieQi = jq
+    day.dateIcon = day.festivals.concat(day.jieQi).map((f) => day.dateIcons[f]).join('') || ''
     return day
 }

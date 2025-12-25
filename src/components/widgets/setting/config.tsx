@@ -52,8 +52,10 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
   const [initialValues, setInitialValues] = useState({
     primary: config?.theme?.primary || settingOptions.primary,
     seo: config?.seo || settingOptions.seo,
+    festival: config.theme.festival || false,
     fontFamily: config.theme.fontFamily || settingOptions.fontFamily,
     background:
+      (config.theme.festival.open && config.theme.festival.url) ||
       config?.theme?.cover ||
       config.theme.background ||
       settingOptions.background
@@ -76,7 +78,9 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
       primary: config?.theme?.primary || settingOptions.primary,
       seo: config?.seo || settingOptions.seo,
       fontFamily: config.theme.fontFamily || settingOptions.fontFamily,
+      festival: config.theme.festival || false,
       background:
+        (config.theme.festival.open && config.theme.festival.url) ||
         config?.theme?.cover ||
         config.theme.background ||
         settingOptions.background
@@ -234,6 +238,18 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
             <Switch
               checkedChildren="开启"
               unCheckedChildren="关闭"
+              onChange={(value) => {
+                setConfig({
+                  ...config,
+                  theme: {
+                    ...config.theme,
+                    festival: {
+                      ...config.theme.festival,
+                      open: value
+                    }
+                  }
+                })
+              }}
               defaultChecked
             />
           </Form.Item>
