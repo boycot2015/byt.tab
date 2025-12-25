@@ -1,5 +1,7 @@
 import { apiUrl, codelifeUrl, baseUrl } from '~api/baseUrl';
+import { buildDay } from '~utils';
 import { $GET } from '~utils/index';
+import { Solar } from 'lunar-typescript';
 export const data = {
     "success": true,
     "message": "操作成功",
@@ -887,4 +889,12 @@ const getWallpaperCategory = async (params: Record<string, any> = { source: 'wal
         return { ...el, value: id, id, label: el.name || el.label }
     }) || []
 };
-export { getWallpaper, getWallpaperCategory };
+const getFestivalBackground = async () => {
+    let day = buildDay(Solar.fromDate(new Date()))
+    let q = day.customFestivals[0]?.replace(/节$/g, '')
+    // https://unsplash.com/napi/search/photos?orientation=landscape&page=1&per_page=20&query=%E5%9C%A3%E8%AF%9E
+    let res = await fetch(`https://unsplash.com/napi/search/photos?orientation=landscape&page=1&per_page=20&query=${q || ''}`).then(res => res.json())
+    let urls = res?.results?.map(el => el.urls.regular) || []
+    return urls[Math.floor(Math.random() * urls.length)] || ''
+}
+export { getWallpaper, getWallpaperCategory, getFestivalBackground };

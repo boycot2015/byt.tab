@@ -1,4 +1,8 @@
 import { apiUrl, baseUrl, codelifeUrl } from '~api/baseUrl'
+import {
+    HolidayUtil,
+    Solar
+} from 'lunar-typescript'
 export const getWeek = (day: number, prefix: string = '周', showToday: boolean = false) => {
     const week = ['日', '一', '二', '三', '四', '五', '六']
     if (showToday && day == new Date().getDay()) return '今天'
@@ -67,4 +71,80 @@ export const $GET = async (url: string, options?: RequestInit) => {
     } catch (err) {
         console.log(err)
     }
+}
+export class Day {
+    public month: number = 0
+    public day: number = 0
+    public lunarDay: string = ''
+    public lunarMonth: string = ''
+    public yearGanZhi: string = ''
+    public yearShengXiao: string = ''
+    public monthGanZhi: string = ''
+    public dayGanZhi: string = ''
+    public ymd: string = ''
+    public desc: string = ''
+    public isToday: boolean = false
+    public isSelected: boolean = false
+    public isRest: boolean = false
+    public isHoliday: boolean = false
+    public festivals: string[] = []
+    public customFestivals: string[] = []
+    public yi: string[] = []
+    public ji: string[] = []
+}
+export function buildDay(d: Solar) {
+    const now = Solar.fromDate(new Date())
+    const ymd = d.toYmd()
+    const lunar = d.getLunar()
+    const day = new Day()
+    day.month = d.getMonth()
+    day.day = d.getDay()
+    day.lunarMonth = lunar.getMonthInChinese()
+    day.lunarDay = lunar.getDayInChinese()
+    day.yearGanZhi = lunar.getYearInGanZhi()
+    day.yearShengXiao = lunar.getYearShengXiao()
+    day.monthGanZhi = lunar.getMonthInGanZhi()
+    day.dayGanZhi = lunar.getDayInGanZhi()
+    day.ymd = ymd
+    day.isToday = ymd == now.toYmd()
+    const solarFestivals = d.getFestivals()
+    solarFestivals.forEach((f) => {
+        day.festivals.push(f)
+    })
+    d.getOtherFestivals().forEach((f) => {
+        day.festivals.push(f)
+    })
+    lunar.getFestivals().forEach((f) => {
+        day.festivals.push(f)
+    })
+    lunar.getOtherFestivals().forEach((f) => {
+        day.festivals.push(f)
+    })
+    day.customFestivals = [...d.getFestivals(), ...lunar.getFestivals()]
+    let rest = false
+    if (d.getWeek() === 6 || d.getWeek() === 0) {
+        rest = true
+    }
+    const holiday = HolidayUtil.getHoliday(ymd)
+    if (holiday) {
+        rest = !holiday.isWork()
+    }
+    day.isHoliday = !!holiday
+    day.isRest = rest
+    day.yi = lunar.getDayYi()
+    day.ji = lunar.getDayJi()
+    let desc = lunar.getDayInChinese()
+    const jq = lunar.getJieQi()
+    if (jq) {
+        desc = jq
+    } else if (lunar.getDay() === 1) {
+        desc = lunar.getMonthInChinese() + '月'
+    } else if (solarFestivals.length > 0) {
+        const f = solarFestivals[0]
+        if (f.length < 4) {
+            desc = f
+        }
+    }
+    day.desc = desc
+    return day
 }

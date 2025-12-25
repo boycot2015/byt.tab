@@ -7,7 +7,8 @@ import {
   Form,
   Image,
   Popconfirm,
-  Select
+  Select,
+  Switch
 } from 'antd'
 import type { FormProps } from 'antd'
 import type { FormInstance } from 'antd/lib/form'
@@ -28,12 +29,14 @@ const configDefault: Config = {
 const settingOptions = {
   primary: configDefault.theme.primary,
   seo: configDefault.seo,
+  festival: configDefault.theme.festival,
   fontFamily: configDefault.theme.fontFamily,
   background: configDefault.theme.background
 }
 type FieldType = {
   primary?: string
   seo?: string
+  festival?: boolean
   fontFamily?: string
   background?: string
 }
@@ -227,7 +230,13 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
               </div>
             )}
           </Form.Item>
-
+          <Form.Item<FieldType> label="节日壁纸" name="festival">
+            <Switch
+              checkedChildren="开启"
+              unCheckedChildren="关闭"
+              defaultChecked
+            />
+          </Form.Item>
           <Form.Item label={null}>
             <div className="flex justify-end gap-2">
               <Button type="primary" htmlType="submit">

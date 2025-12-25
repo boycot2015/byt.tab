@@ -1,5 +1,5 @@
 import { CloseOutlined } from '@ant-design/icons'
-import { Badge, Calendar, Col, Modal, Radio, Row, Select, Tag } from 'antd'
+import { Button, Calendar, Col, Modal, Radio, Row, Select, Tag } from 'antd'
 import type { CalendarProps } from 'antd'
 import { createStyles } from 'antd-style'
 import { clsx } from 'clsx'
@@ -17,8 +17,23 @@ import React, { useEffect, useState } from 'react'
 import 'dayjs/locale/zh-cn'
 
 import { ThemeProvider } from '~layouts'
+import { buildDay, Day } from '~utils'
 
 dayjs.locale('zh-cn')
+
+class Week {
+  public days: Day[] = []
+}
+
+class Month {
+  public heads: string[] = []
+  public weeks: Week[] = []
+}
+
+class Holiday {
+  public name: string = ''
+  public month: number = 0
+}
 const useStyle = createStyles(({ token, css, cx }) => {
   const lunar = css`
     color: ${token.colorTextTertiary};
@@ -109,32 +124,12 @@ const useStyle = createStyles(({ token, css, cx }) => {
     `
   }
 })
-export const WidgetCalendar: React.FC = (props: {
-  fullscreen?: boolean
-  className?: string
-  onDateChange?: (value: Dayjs) => void
-}) => {
-  const { styles } = useStyle({ test: true })
-
-  const [selectDate, setSelectDate] = React.useState<Dayjs>(() => dayjs())
-  const [panelDateDate, setPanelDate] = React.useState<Dayjs>(() => dayjs())
-
-  const onPanelChange = (value: Dayjs, mode: CalendarProps<Dayjs>['mode']) => {
-    // console.log(value.format('YYYY-MM-DD'), mode)
-    setPanelDate(value)
-  }
-
-  const onDateChange: CalendarProps<Dayjs>['onSelect'] = (
-    value,
-    selectInfo
-  ) => {
-    if (selectInfo.source === 'date') {
-      setSelectDate(value)
-      props.onDateChange(value)
-    }
-  }
-
+export const RenderCellCalendar = (
+  selectDate: dayjs.Dayjs,
+  panelDateDate: dayjs.Dayjs
+) => {
   const cellRender: CalendarProps<Dayjs>['fullCellRender'] = (date, info) => {
+    const { styles } = useStyle({ test: true })
     const d = Lunar.fromDate(date.toDate())
     const lunar = d.getDayInChinese()
     const solarTerm = d.getJieQi()
@@ -146,7 +141,9 @@ export const WidgetCalendar: React.FC = (props: {
     )
     const displayHoliday =
       h?.getTarget() === h?.getDay() ? h?.getName() : undefined
-    const displayFestivals = d.getFestivals().concat(d.getOtherFestivals())
+    const displayFestivals = buildDay(
+      Solar.fromDate(date.toDate())
+    ).customFestivals.filter((el) => el.length < 5)
     if (info.type === 'date') {
       return React.cloneElement(info.originNode, {
         ...(info.originNode as React.ReactElement<any>).props,
@@ -164,11 +161,8 @@ export const WidgetCalendar: React.FC = (props: {
               {date.get('date')}
             </span>
             {info.type === 'date' && (
-              <div className={styles.lunar}>
-                {displayFestivals.join('、') ||
-                  displayHoliday ||
-                  solarTerm ||
-                  lunar}
+              <div className={styles.lunar + ' line-clamp-1'}>
+                {displayFestivals[0] || displayHoliday || solarTerm || lunar}
               </div>
             )}
           </div>
@@ -191,6 +185,44 @@ export const WidgetCalendar: React.FC = (props: {
       )
     }
   }
+  return cellRender
+}
+export const WidgetCalendar = (props: {
+  fullscreen?: boolean
+  className?: string
+  onDateChange?: (value: { selected: Day }) => void
+}) => {
+  const { styles } = useStyle({ test: true })
+  const now = Solar.fromDate(new Date())
+  const [selectDate, setSelectDate] = React.useState<Dayjs>(() => dayjs())
+  const [panelDateDate, setPanelDate] = React.useState<Dayjs>(() => dayjs())
+  const [renderKey, setRenderKey] = React.useState<number>(() =>
+    dayjs().toDate().getTime()
+  )
+  const onPanelChange = (value: Dayjs, mode: CalendarProps<Dayjs>['mode']) => {
+    // console.log(value.format('YYYY-MM-DD'), mode)
+    setPanelDate(value)
+  }
+  function onSelect(day: Day) {
+    props.onDateChange({ selected: day })
+  }
+
+  function onBack() {
+    setSelectDate(dayjs())
+    setRenderKey(dayjs().toDate().getTime())
+    props.onDateChange({
+      selected: buildDay(now)
+    })
+  }
+  const onDateChange: CalendarProps<Dayjs>['onSelect'] = (
+    value,
+    selectInfo
+  ) => {
+    if (selectInfo.source === 'date') {
+      setSelectDate(value)
+      props.onDateChange({ selected: buildDay(Solar.fromDate(value.toDate())) })
+    }
+  }
 
   const getYearLabel = React.useCallback((year: number) => {
     const d = Lunar.fromDate(new Date(year + 1, 0))
@@ -202,17 +234,17 @@ export const WidgetCalendar: React.FC = (props: {
     const lunar = d.getMonthInChinese()
     return `${month + 1}月（${lunar}月）`
   }, [])
-
   return (
     <div
       className={
         styles.wrapper + ' !w-full h-full !p-4' + (props.className || '')
       }>
       <Calendar
-        fullCellRender={cellRender}
+        fullCellRender={RenderCellCalendar(selectDate, panelDateDate)}
         fullscreen={props.fullscreen || false}
         onPanelChange={onPanelChange}
         onSelect={onDateChange}
+        key={renderKey}
         className="!border-none"
         headerRender={({ value, type, onChange, onTypeChange }) => {
           const monthOptions = React.useMemo(() => {
@@ -274,6 +306,16 @@ export const WidgetCalendar: React.FC = (props: {
                   <Radio.Button value="year">年</Radio.Button>
                 </Radio.Group>
               </Col>
+              <Col>
+                <Button
+                  size="small"
+                  type="primary"
+                  onClick={() => {
+                    onBack()
+                  }}>
+                  返回今日
+                </Button>
+              </Col>
             </Row>
           )
         }}
@@ -281,110 +323,18 @@ export const WidgetCalendar: React.FC = (props: {
     </div>
   )
 }
-export const WidgetLunar: React.FC = () => {
+export const WidgetLunar = ({ selected }: { selected: Day }) => {
   const now = Solar.fromDate(new Date())
   const { styles } = useStyle({ test: true })
-  class Day {
-    public month: number = 0
-    public day: number = 0
-    public lunarDay: string = ''
-    public lunarMonth: string = ''
-    public yearGanZhi: string = ''
-    public yearShengXiao: string = ''
-    public monthGanZhi: string = ''
-    public dayGanZhi: string = ''
-    public ymd: string = ''
-    public desc: string = ''
-    public isToday: boolean = false
-    public isSelected: boolean = false
-    public isRest: boolean = false
-    public isHoliday: boolean = false
-    public festivals: string[] = []
-    public yi: string[] = []
-    public ji: string[] = []
-  }
-
-  class Week {
-    public days: Day[] = []
-  }
-
-  class Month {
-    public heads: string[] = []
-    public weeks: Week[] = []
-  }
-
-  class Holiday {
-    public name: string = ''
-    public month: number = 0
-  }
-
   const [state, setState] = useState({
     year: now.getYear(),
     month: now.getMonth(),
     weekStart: 1,
-    selected: new Day(),
+    selected: selected || new Day(),
     data: new Month(),
     holidays: new Array<Holiday>(),
     holidayMonth: 0
   })
-  function buildDay(d: Solar) {
-    const ymd = d.toYmd()
-    const lunar = d.getLunar()
-    const day = new Day()
-    day.month = d.getMonth()
-    day.day = d.getDay()
-    day.lunarMonth = lunar.getMonthInChinese()
-    day.lunarDay = lunar.getDayInChinese()
-    day.yearGanZhi = lunar.getYearInGanZhi()
-    day.yearShengXiao = lunar.getYearShengXiao()
-    day.monthGanZhi = lunar.getMonthInGanZhi()
-    day.dayGanZhi = lunar.getDayInGanZhi()
-    day.ymd = ymd
-    day.isToday = ymd == now.toYmd()
-    day.isSelected = ymd == state.selected.ymd
-    if (day.isToday && state.selected.day === 0) {
-      state.selected = day
-    }
-    const solarFestivals = d.getFestivals()
-    solarFestivals.forEach((f) => {
-      day.festivals.push(f)
-    })
-    d.getOtherFestivals().forEach((f) => {
-      day.festivals.push(f)
-    })
-    lunar.getFestivals().forEach((f) => {
-      day.festivals.push(f)
-    })
-    lunar.getOtherFestivals().forEach((f) => {
-      day.festivals.push(f)
-    })
-    let rest = false
-    if (d.getWeek() === 6 || d.getWeek() === 0) {
-      rest = true
-    }
-    const holiday = HolidayUtil.getHoliday(ymd)
-    if (holiday) {
-      rest = !holiday.isWork()
-    }
-    day.isHoliday = !!holiday
-    day.isRest = rest
-    day.yi = lunar.getDayYi()
-    day.ji = lunar.getDayJi()
-    let desc = lunar.getDayInChinese()
-    const jq = lunar.getJieQi()
-    if (jq) {
-      desc = jq
-    } else if (lunar.getDay() === 1) {
-      desc = lunar.getMonthInChinese() + '月'
-    } else if (solarFestivals.length > 0) {
-      const f = solarFestivals[0]
-      if (f.length < 4) {
-        desc = f
-      }
-    }
-    day.desc = desc
-    return day
-  }
 
   function render() {
     const month = new Month()
@@ -404,7 +354,12 @@ export const WidgetLunar: React.FC = () => {
       const heads: string[] = []
       w.getDays().forEach((d) => {
         heads.push(d.getWeekInChinese())
-        week.days.push(buildDay(d))
+        let day = buildDay(d)
+        day.isSelected = d.toYmd() == state.selected.ymd
+        if (day.isToday && state.selected.day === 0) {
+          state.selected = day
+        }
+        week.days.push(day)
       })
       month.heads = heads
       month.weeks.push(week)
@@ -424,20 +379,6 @@ export const WidgetLunar: React.FC = () => {
     })
     setState({ ...state, holidays })
   }
-
-  function onSelect(day: Day) {
-    setState({ ...state, selected: day })
-  }
-
-  function onBack() {
-    setState({
-      ...state,
-      holidayMonth: 0,
-      year: now.getYear(),
-      month: now.getMonth(),
-      selected: buildDay(now)
-    })
-  }
   useEffect(() => {
     render()
   }, [state.month])
@@ -448,6 +389,10 @@ export const WidgetLunar: React.FC = () => {
   useEffect(() => {
     render()
   }, [state.holidayMonth])
+  useEffect(() => {
+    render()
+    setState({ ...state, selected })
+  }, [selected])
   useEffect(() => {
     render()
   }, [])
@@ -467,11 +412,13 @@ export const WidgetLunar: React.FC = () => {
       <div>
         {state.selected.monthGanZhi}月 {state.selected.dayGanZhi}日
       </div>
-      {state.selected.festivals.map((f) => (
-        <div className="festival" key={f}>
-          {f}
-        </div>
-      ))}
+      <div className="flex gap-2">
+        {state.selected.festivals.map((f) => (
+          <div className="festival" key={f}>
+            {f}
+          </div>
+        ))}
+      </div>
       <div className="yiji flex flex-col gap-2">
         <div className="yi flex gap-2 flex-wrap">
           <Tag color="#87d068">宜</Tag>
@@ -491,7 +438,12 @@ export const WidgetLunar: React.FC = () => {
   )
 }
 function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
-  const [state, setState] = useState({})
+  const [state, setState] = useState({
+    selected: new Day()
+  })
+  const onSelect = ({ selected }: { selected: Day }) => {
+    setState({ ...state, selected })
+  }
   return (
     <ThemeProvider>
       <Modal
@@ -506,10 +458,10 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
         onCancel={() => props.onCancel()}>
         <Row justify="center" gutter={[0, 8]} style={{ padding: 0 }}>
           <Col span={24} md={16}>
-            <WidgetCalendar />
+            <WidgetCalendar onDateChange={onSelect} />
           </Col>
           <Col span={24} md={8}>
-            <WidgetLunar />
+            <WidgetLunar selected={state.selected} />
           </Col>
         </Row>
       </Modal>

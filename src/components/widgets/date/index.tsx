@@ -1,12 +1,13 @@
 import { Calendar, Card, ConfigProvider } from 'antd'
-import { HolidayUtil, Lunar } from 'lunar-typescript'
+import dayjs from 'dayjs'
+import { Solar } from 'lunar-typescript'
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
 import { useState } from 'react'
 
 import { sizeMap, ThemeProvider } from '~layouts'
-import { getWeek } from '~utils'
+import { buildDay, getWeek } from '~utils'
 
-import Config, { WidgetCalendar } from './config'
+import Config, { RenderCellCalendar, WidgetCalendar } from './config'
 
 export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
   document.querySelector('#__plasmo')
@@ -15,9 +16,7 @@ function Widget(props: {
   size?: 'mini' | 'small' | 'large' | 'middle'
 }) {
   const [visible, setVisible] = useState(false)
-  const d2 = Lunar.fromDate(new Date())
-  const month = d2.getMonthInChinese()
-  const day = d2.getDayInChinese()
+  const day = buildDay(Solar.fromDate(new Date()))
   return (
     <ThemeProvider>
       <ConfigProvider
@@ -44,12 +43,13 @@ function Widget(props: {
                 !props.withComponents && setVisible(true)
               }}>
               <div className="flex flex-col items-center justify-center">
-                <div className="text-[42px] text-[var(--byt-color-text)] font-bold">
+                <div>{day.customFestivals[0]}</div>
+                <div className="text-[32px] text-[var(--byt-color-text)] font-bold">
                   {new Date().getDate()}
                 </div>
                 <div className="text-sm flex gap-3">
                   <span>
-                    {month}月{day}
+                    {day.lunarMonth}月{day.lunarDay}
                   </span>
                   {getWeek(new Date().getDay())}
                 </div>
@@ -80,6 +80,7 @@ function Widget(props: {
               <div className="flex-1">
                 <Calendar
                   fullscreen={false}
+                  fullCellRender={RenderCellCalendar(dayjs(), dayjs())}
                   headerRender={() => (
                     <div className="title w-full text-center">
                       {new Date().getFullYear() +

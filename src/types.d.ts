@@ -41,6 +41,7 @@ export interface Config {
         background?: string
         cover?: string
         fontFamily?: string
+        festival?: boolean
         primary: string
     },
     hitokotoApi?: string

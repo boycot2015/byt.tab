@@ -27,6 +27,7 @@ import ContextMenu, { MENU_ID } from '~components/widgets/context'
 import SettingModal from '~components/widgets/setting/config'
 import type { Wallpaper } from '~components/widgets/wallpaper'
 import { addProps, getAppBase } from '~data/apps'
+import { getFestivalBackground } from '~data/wallpaper'
 import { sizeMap, ThemeProvider } from '~layouts'
 import Footer from '~layouts/footer'
 import Header from '~layouts/header'
@@ -547,15 +548,19 @@ function IndexTab() {
     setCurrentItem(item)
   }
   const initTheme = (delay = 300) => {
+    let background = config.theme.background || ''
     let image = config.theme.cover ? new Audio() : new Image()
     const wrapper = document.querySelector('.wallpaper') as HTMLBodyElement
-    image.src = config.theme.background || ''
+    image.src = background || ''
     let timer = null
     wrapper.classList.add('change')
-    image.onload = () => {
+    image.onload = async () => {
+      if (config.theme.festival) {
+        background = await getFestivalBackground()
+      }
       timer = setTimeout(() => {
-        if (!config.theme.background?.includes('.mp4')) {
-          wrapper.style.backgroundImage = `url(${config.theme.cover || config.theme.background})`
+        if (!background?.includes('.mp4')) {
+          wrapper.style.backgroundImage = `url(${config.theme.cover || background})`
         }
         wrapper.classList.remove('change')
       }, delay)
@@ -582,10 +587,10 @@ function IndexTab() {
     setApps([...appBase])
   }, [])
   useEffect(() => {
-    return initTheme()
-  }, [config.theme.background])
+    initTheme()
+  }, [config.theme.background, config.theme.festival])
   useEffect(() => {
-    return initTheme(10)
+    initTheme(10)
   }, [config.theme.cover])
   return (
     <ThemeProvider
