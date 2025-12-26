@@ -899,7 +899,7 @@ const getFestivalBackground = async () => {
     let res = await fetch(`https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN`).then(res => res.json())
     return {
         ...res?.images[0],
-        open: day.customFestivals?.length > 0,
+        customFestivals: day.customFestivals?.length > 0,
         url: 'https://cn.bing.com/' + res.images[0].url || '',
     }
 }

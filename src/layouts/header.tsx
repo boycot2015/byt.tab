@@ -35,9 +35,11 @@ export default function Header() {
           {time.getFullYear()}年{time.getMonth() + 1}月{time.getDate()}日
         </Text>
         <Text className="!text-[18px] !text-white">
-          {state.festivals
-            .map((item) => item + ' ' + state.dateIcons[item])
-            .join('')}
+          {state.customFestivals.length
+            ? state.customFestivals
+                .map((item) => item + ' ' + state.dateIcons[item] || '')
+                .join('')
+            : null}
         </Text>
         <Text className="!text-[18px] !text-white flex justify-center gap-4">
           <span>

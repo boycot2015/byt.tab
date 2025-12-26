@@ -64,27 +64,27 @@ function Widget(props: {
     listenStorageChange: true
   })
   useAsyncEffect(async () => {
-    if (!config.theme.festival.open || config.theme.festival.url) return
-    job('0 0 12 * * *', async function () {
-      const day = buildDay()
-      if (!day.customFestivals.length) {
-        setConfig({
-          ...config,
-          theme: {
-            ...config.theme,
-            festival: {
-              ...config.theme.festival,
-              url: ''
-            }
-          }
-        })
-        return
-      }
+    job('0 0 0 * * *', async function () {
+      // const day = buildDay()
+      // if (!day.customFestivals.length) {
+      //   setConfig({
+      //     ...config,
+      //     theme: {
+      //       ...config.theme,
+      //       festival: {
+      //         ...config.theme.festival,
+      //         url: ''
+      //       }
+      //     }
+      //   })
+      //   return
+      // }
       let res = await getFestivalBackground()
       setConfig({
         ...config,
         theme: {
           ...config.theme,
+          background: res.url || config.theme.background,
           festival: {
             ...config.theme.festival,
             ...res

@@ -556,9 +556,14 @@ function IndexTab() {
     let timer = null
     wrapper.classList.add('change')
     image.onload = () => {
-      if (config.theme.festival && config.theme.festival.open) {
+      if (
+        config.theme.festival &&
+        config.theme.festival.open &&
+        day.customFestivals.length
+      ) {
         background = config.theme.festival?.url || background
       }
+      console.log(background)
       timer = setTimeout(() => {
         if (!background?.includes('.mp4')) {
           wrapper.style.backgroundImage = `url(${config.theme.cover || background})`
@@ -667,10 +672,11 @@ function IndexTab() {
                 type="primary"
                 variant="text"
                 onClick={() =>
-                  (!day.festivals?.length || !config.theme.festival?.open) &&
+                  (!day.customFestivals?.length ||
+                    !config.theme.festival?.open) &&
                   setWallpaper()
                 }>
-                {day.festivals?.length ? day.dateIcon : <SkinFilled />}
+                {day.customFestivals?.length ? day.dateIcon : <SkinFilled />}
               </Button>
             </div>
           </div>

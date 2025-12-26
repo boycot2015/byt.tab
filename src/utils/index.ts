@@ -1,8 +1,10 @@
 import { apiUrl, baseUrl, codelifeUrl } from '~api/baseUrl'
+import dateIcons from '~data/icons.json'
 import {
     HolidayUtil,
     Solar
 } from 'lunar-typescript'
+import type { Holiday } from 'lunar-typescript'
 export const getWeek = (day: number, prefix: string = '周', showToday: boolean = false) => {
     const week = ['日', '一', '二', '三', '四', '五', '六']
     if (showToday && day == new Date().getDay()) return '今天'
@@ -86,6 +88,7 @@ export class Day {
     public isToday: boolean = false
     public isSelected: boolean = false
     public isRest: boolean = false
+    public holiday: Holiday = null
     public isHoliday: boolean = false
     public festivals: string[] = []
     public dateIcon: string = ''
@@ -106,6 +109,7 @@ export function buildDay(d: Solar = Solar.fromDate(new Date())) {
     day.lunarDay = lunar.getDayInChinese()
     day.yearGanZhi = lunar.getYearInGanZhi()
     day.yearShengXiao = lunar.getYearShengXiao()
+    day.yearShengXiao += dateIcons[day.yearShengXiao] || ''
     day.monthGanZhi = lunar.getMonthInGanZhi()
     day.dayGanZhi = lunar.getDayInGanZhi()
     day.ymd = ymd
@@ -133,6 +137,7 @@ export function buildDay(d: Solar = Solar.fromDate(new Date())) {
         rest = !holiday.isWork()
     }
     day.isHoliday = !!holiday
+    day.holiday = holiday
     day.isRest = rest
     day.yi = lunar.getDayYi()
     day.ji = lunar.getDayJi()
@@ -148,55 +153,58 @@ export function buildDay(d: Solar = Solar.fromDate(new Date())) {
             desc = f
         }
     }
-    day.desc = desc
-    day.dateIcons = {
-        圣诞节: '🎄',
-        平安夜: '🍎',
-        元旦节: '🎈',
-        元宵节: '🏮',
-        春节: '🧧',
-        清明节: '🌸',
-        端午节: '🐲',
-        植树节: '🌳',
-        中秋节: '🥮',
-        国庆节: '🇨🇳',
-        国际老年人日: '🧓',
-        七夕节: '💖',
-        儿童节: '🧒',
-        妇女节: '🌹',
-        情人节: '💑',
-        复活节: '🔥',
-        感恩节: '🙏',
-        青年节: '👨',
-        愚人节: '🤪',
-        劳动节: '👷',
-        春分: '☘️',
-        立春: '🌱',
-        雨水: '🌧️',
-        惊蛰: '🐛',
-        谷雨: '🌾',
-        小满: '👨‍🌾',
-        清明: '🌸',
-        大满: '🌾',
-        芒种: '☀',
-        立夏: '🌻',
-        夏至: '🌞',
-        小暑: '🍉',
-        处暑: '🌾',
-        大暑: '🔥',
-        霜降: '💦',
-        寒露: '🍃',
-        白露: '💧',
-        秋分: '🌗',
-        立秋: '🍁',
-        小雪: '❄',
-        大雪: '⛄️',
-        冬至: '🥟',
-        小寒: '🎿',
-        立冬: '🐧',
-        大寒: '🥶',
+    if (day.customFestivals.length > 0) {
+        const f = day.customFestivals[0]
+        if (f.length < 3) {
+            desc = f
+        }
     }
+    day.desc = desc
+    day.dateIcons = dateIcons
     day.jieQi = jq
     day.dateIcon = day.festivals.concat(day.jieQi).map((f) => day.dateIcons[f]).join('') || ''
     return day
+}
+
+export const exportJson = (obj: Record<string, any>, fileName = 'data.json') => {
+    try {
+        // 转换为JSON字符串
+        let json = JSON.stringify(obj);
+        // 创建一个blob对象
+        let blob = new Blob([json], { type: 'application/json' });
+        // 创建一个链接元素
+        let link = document.createElement('a');
+        // 设置链接的href属性为blob的URL
+        link.href = URL.createObjectURL(blob);
+        // 设置下载的文件名
+        link.download = `${fileName}_${new Date().getTime()}.json`;
+        // 触发下载
+        link.click();
+    } catch (error) {
+        console.warn('导出JSON数据失败!' + error);
+    }
+}
+export function importJson(file: File | null): Promise<any> {
+    return new Promise((resolve, reject) => {
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                try {
+                    const jsonData = JSON.parse(event.target.result as string);
+                    const jsonString = JSON.stringify(jsonData);
+                    // 保存JSON数据
+                    alert('JSON数据已成功保存!');
+                    resolve(jsonData)
+                } catch (error) {
+                    console.warn('无法解析JSON文件!');
+                    reject(error)
+                }
+            };
+            // 读取文件内容
+            reader.readAsText(file);
+        } else {
+            reject(new Error('未选择文件!'));
+            console.warn('未选择文件!');
+        }
+    })
 }

@@ -15,9 +15,11 @@ import type { FormInstance } from 'antd/lib/form'
 import React, { useEffect, useRef, useState } from 'react'
 
 import { appBase, getAppBase } from '~data/apps'
+import { getFestivalBackground } from '~data/wallpaper'
 import { ThemeProvider } from '~layouts'
 import tabConfig from '~tabConfig'
 import type { Config, ItemType } from '~types'
+import { exportJson, importJson } from '~utils'
 
 import Wallpaper from '../wallpaper/config'
 
@@ -239,19 +241,38 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
               checkedChildren="开启"
               unCheckedChildren="关闭"
               onChange={(value) => {
-                setConfig({
-                  ...config,
-                  theme: {
-                    ...config.theme,
-                    festival: {
-                      ...config.theme.festival,
-                      open: value
+                getFestivalBackground().then((res) => {
+                  setConfig({
+                    ...config,
+                    theme: {
+                      ...config.theme,
+                      festival: {
+                        ...res,
+                        url: res.customFestivals ? res.url : '',
+                        open: value
+                      }
                     }
-                  }
+                  })
                 })
               }}
               defaultChecked
             />
+          </Form.Item>
+          <Form.Item label={'备份'}>
+            <div className="flex justify-start gap-2">
+              <Button type="primary" htmlType="submit">
+                导入
+              </Button>
+              <Button
+                type="primary"
+                danger
+                onClick={() => {
+                  exportJson(config, 'byt_tab_config')
+                  message.success('导出成功')
+                }}>
+                导出
+              </Button>
+            </div>
           </Form.Item>
           <Form.Item label={null}>
             <div className="flex justify-end gap-2">
