@@ -127,7 +127,7 @@ export function buildDay(d: Solar = Solar.fromDate(new Date())) {
     d.getOtherFestivals().forEach((f) => {
         day.festivals.push(f)
     })
-    day.customFestivals = [...d.getFestivals(), ...lunar.getFestivals()]
+    day.customFestivals = [...d.getFestivals(), ...lunar.getFestivals()].filter((f) => f.length < 4)
     let rest = false
     if (d.getWeek() === 6 || d.getWeek() === 0) {
         rest = true

@@ -10,6 +10,7 @@ import {
   Popconfirm,
   Row,
   Select,
+  Space,
   Tag,
   TimePicker,
   Tooltip
@@ -50,16 +51,17 @@ class Holiday {
   public day?: number = 0
   public date?: string = ''
 }
-type Job = {
+export type Job = {
   id: number
   title: string
   content: string
   date: string
   time?: [start: Dayjs, end: Dayjs]
   tag?: string
+  isLunar?: boolean
   repeat:
     | 'once'
-    | 'day'
+    | 'daily'
     | 'workday'
     | 'holiday'
     | 'weekly'
@@ -67,7 +69,6 @@ type Job = {
     | 'yearly'
 }
 const repeatMap = {
-  once: '全天',
   day: '每天',
   workday: '工作日',
   holiday: '节假日',
@@ -154,6 +155,54 @@ const useStyle = createStyles(({ token, css, cx }) => {
     `
   }
 })
+/**
+ * 根据选中的日期获取匹配的任务列表
+ *
+ * @param jobs - 任务列表
+ * @param selected - 选中的日期信息
+ * @returns 匹配的任务列表
+ */
+export const getCurrentJobs = (jobs: Job[], selected: Day): Job[] => {
+  return jobs.filter((el) => {
+    let isJob = el.date == selected.ymd
+    let sameMonth =
+      dayjs(el.date).toDate().getMonth() ==
+      dayjs(selected.ymd).toDate().getMonth()
+    let sameDate =
+      dayjs(el.date).toDate().getDate() ==
+      dayjs(selected.ymd).toDate().getDate()
+    let sameWeek =
+      dayjs(el.date).toDate().getDay() == dayjs(selected.ymd).toDate().getDay()
+    if (el.isLunar) {
+      sameMonth =
+        Solar.fromDate(new Date(el.date)).getLunar().getMonth() ===
+        Solar.fromDate(new Date(selected.ymd)).getLunar().getMonth()
+      sameDate =
+        Solar.fromDate(new Date(el.date)).getLunar().getDay() ===
+        Solar.fromDate(new Date(selected.ymd)).getLunar().getDay()
+      sameWeek =
+        Solar.fromDate(new Date(el.date)).getLunar().getWeek() ===
+        Solar.fromDate(new Date(selected.ymd)).getLunar().getWeek()
+    }
+    if (el.repeat == 'weekly') {
+      isJob = sameWeek
+    } else if (el.repeat == 'daily') {
+      isJob = true
+    } else if (el.repeat == 'monthly') {
+      isJob = sameDate
+    } else if (el.repeat == 'yearly') {
+      isJob = sameMonth && sameDate
+    } else if (el.repeat == 'workday') {
+      isJob =
+        selected.holiday?.isWork() ||
+        (!selected.holiday &&
+          ![0, 6].includes(dayjs(selected.ymd).toDate().getDay()))
+    } else if (el.repeat == 'holiday') {
+      isJob = selected.isHoliday
+    }
+    return isJob
+  })
+}
 export const RenderCellCalendar = (
   selectDate: dayjs.Dayjs,
   panelDateDate: dayjs.Dayjs
@@ -432,7 +481,8 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
     content: '',
     time: [dayjs().startOf('day'), dayjs().endOf('day')],
     repeat: 'once',
-    tag: null
+    tag: null,
+    isLunar: false
   })
   let isConfirm = false
   const [open, setOpen] = useState(false)
@@ -463,7 +513,7 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
     isWork,
     holidayMonth: 0
   })
-
+  const getJobs = useCallback(getCurrentJobs, [state.selected])
   function render() {
     const month = new Month()
     const weeks: SolarWeek[] = []
@@ -531,10 +581,8 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
             {(!state.isWork && state.dateIcon) || state.selected.dateIcon || ''}
           </span>
         )}
-        {jobs
-          .filter((el) => el.date == state.selected.ymd)
-          .slice(0, 1)
-          .map((f) => (
+        <div className="flex flex-wrap gap-2">
+          {getJobs(jobs, state.selected).map((f) => (
             <Tag
               color={'#179d17'}
               closable
@@ -543,10 +591,7 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
               onClick={() => {
                 setForm({
                   ...f,
-                  time: [
-                    dayjs(f.time[0]).startOf('day'),
-                    dayjs(f.time[1]).endOf('day')
-                  ]
+                  time: [dayjs(f.time[0]), dayjs(f.time[1])]
                 })
                 setOpen(true)
               }}
@@ -554,12 +599,16 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
                 setJobs(jobs.filter((el) => el.id !== f.id))
                 message.success('删除成功')
               }}>
-              {!f.tag && <CalendarFilled />}
-              <span>{f.title}</span>
-              {f.tag == 'birthday' && '🎂'}
-              {f.tag == 'memorial' && '🗓️'}({repeatMap[f.repeat || 'once']})
+              <span className="cursor-pointer">
+                {!f.tag && <CalendarFilled />}
+                <span>{f.title}</span>
+                {f.tag == 'birthday' && '🎂'}
+                {f.tag == 'memorial' && '🗓️'}
+                {repeatMap[f.repeat] && <span>({repeatMap[f.repeat]})</span>}
+              </span>
             </Tag>
           ))}
+        </div>
       </div>
       <div className="lunar flex gap-4">
         <div>
@@ -583,24 +632,23 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
           ))}
         </div>
       )}
-      <div className="flex gap-2 flex-nowrap items-center">
-        {jobs
-          .filter((el) => el.date == state.selected.ymd)
-          .map((f, index) => (
-            <div className={`job flex gap-2`} key={f.id} title={f.title}>
-              {(!f.tag || index === 0) && <CalendarFilled />}
-              <span>
-                {f.title}
-                {f.tag == 'birthday' && '🎂'}
-                {f.tag == 'memorial' && '🗓️'}({repeatMap[f.repeat || 'once']})
+      <div className="flex flex-col gap-2 flex-nowrap">
+        {getJobs(jobs, state.selected).map((f, index) => (
+          <div className={`job flex gap-2`} key={f.id} title={f.title}>
+            {(!f.tag || index === 0) && <CalendarFilled />}
+            <span>
+              {f.title}
+              {f.tag == 'birthday' && '🎂'}
+              {f.tag == 'memorial' && '🗓️'}{' '}
+              {repeatMap[f.repeat] && <span>({repeatMap[f.repeat]})</span>}
+            </span>
+            {f.content && (
+              <span className="line-clamp-1" title={f.content}>
+                [{f.content}]
               </span>
-              {f.content && (
-                <span className="line-clamp-1" title={f.content}>
-                  [{f.content}]
-                </span>
-              )}
-            </div>
-          ))}
+            )}
+          </div>
+        ))}
       </div>
       <div className="yiji flex flex-col gap-2">
         <div className="yi flex gap-2 flex-wrap">
@@ -672,12 +720,67 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
                       />
                     </div>
                     <div className="flex items-center">
+                      <label htmlFor="form-tag">标签：</label>
+                      <Space.Compact className="w-full flex-1">
+                        <Select
+                          defaultValue={form.isLunar}
+                          style={{ width: '40%' }}
+                          placeholder={'请选择'}
+                          options={[
+                            {
+                              value: true,
+                              label: '农历'
+                            },
+                            {
+                              value: false,
+                              label: '阳历'
+                            }
+                          ]}
+                          onChange={(value) => {
+                            setForm({
+                              ...form,
+                              isLunar: Boolean(value)
+                            })
+                          }}
+                        />
+                        <Select
+                          id="form-tag"
+                          allowClear
+                          style={{ width: '60%' }}
+                          defaultValue={form.tag}
+                          placeholder={'选择标签'}
+                          options={[
+                            {
+                              value: 'birthday',
+                              label: '生日'
+                            },
+                            {
+                              value: 'anniversary',
+                              label: '周年'
+                            },
+                            {
+                              value: 'memorial',
+                              label: '纪念日'
+                            }
+                          ]}
+                          onChange={(value) => {
+                            setForm({
+                              ...form,
+                              repeat: value ? 'yearly' : 'once',
+                              tag: value || null
+                            })
+                          }}
+                        />
+                      </Space.Compact>
+                    </div>
+                    <div className="flex items-center">
                       <label htmlFor="form-repeat">重复：</label>
                       <Select<Job['repeat']>
                         className="flex-1"
                         id="form-repeat"
                         allowClear
-                        defaultValue={form.repeat}
+                        disabled={!!form.tag}
+                        value={form.repeat}
                         placeholder={'重复类型'}
                         options={[
                           {
@@ -717,36 +820,6 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
                         }}
                       />
                     </div>
-                    <div className="flex items-center">
-                      <label htmlFor="form-tag">标签：</label>
-                      <Select
-                        className="flex-1"
-                        id="form-tag"
-                        allowClear
-                        defaultValue={form.tag}
-                        placeholder={'选择标签'}
-                        options={[
-                          {
-                            value: 'birthday',
-                            label: '生日'
-                          },
-                          {
-                            value: 'anniversary',
-                            label: '周年'
-                          },
-                          {
-                            value: 'memorial',
-                            label: '纪念日'
-                          }
-                        ]}
-                        onChange={(value) => {
-                          setForm({
-                            ...form,
-                            tag: value || ''
-                          })
-                        }}
-                      />
-                    </div>
                   </div>
                 ),
                 onConfirm: (e) => {
@@ -773,7 +846,7 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
                     setJobs([
                       {
                         ...form,
-                        date: selected.ymd || buildDay().ymd,
+                        date: selected.ymd || state.selected.ymd || buildDay().ymd,
                         id: form.id || Date.now()
                       },
                       ...jobs

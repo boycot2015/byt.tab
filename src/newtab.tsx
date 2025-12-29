@@ -24,6 +24,8 @@ import { renderComponent } from '~components'
 import Search from '~components/Search'
 import WidgetsModal from '~components/widgets'
 import ContextMenu, { MENU_ID } from '~components/widgets/context'
+import { getCurrentJobs } from '~components/widgets/date/config'
+import type { Job } from '~components/widgets/date/config'
 import SettingModal from '~components/widgets/setting/config'
 import type { Wallpaper } from '~components/widgets/wallpaper'
 import { addProps, getAppBase } from '~data/apps'
@@ -33,6 +35,7 @@ import Header from '~layouts/header'
 import tabConfig from '~tabConfig'
 import type { Config, ItemType } from '~types'
 import { buildDay } from '~utils'
+import job from '~utils/job'
 
 export type PlasmoCSUIAnchor = {
   type: 'overlay' | 'inline'
@@ -115,8 +118,12 @@ function IndexTab() {
     defaultValue: tabConfig,
     listenStorageChange: true
   })
+  const [jobs, setJobs] = useLocalStorageState<Job[]>('jobs', {
+    defaultValue: [],
+    listenStorageChange: true
+  })
   const day = buildDay()
-  const { message, modal } = App.useApp()
+  const { message, modal, notification } = App.useApp()
   const [primary, setPrimary] = useState(config.theme.primary)
   const [currentItem, setCurrentItem] = useState<ItemType>()
   const [activeKey, setActiveKey] = useState('1')
@@ -598,6 +605,24 @@ function IndexTab() {
   useEffect(() => {
     initTheme(10)
   }, [config.theme.cover])
+  useEffect(() => {
+    let dailyJobs = getCurrentJobs(jobs, buildDay())
+    dailyJobs.map((el) => {
+      let cron = `0 0 0 * * *`
+      let jobInstance = job(cron, () => {
+        notification.success({
+          placement: 'topRight',
+          closable: true,
+          message: el.title,
+          duration: 0,
+          description: el.content
+        })
+      })
+      return () => {
+        jobInstance.stop()
+      }
+    })
+  }, [])
   return (
     <ThemeProvider
       token={{
