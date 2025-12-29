@@ -8,11 +8,11 @@ import {
   Input,
   Modal,
   Popconfirm,
-  Radio,
   Row,
   Select,
   Tag,
-  TimePicker
+  TimePicker,
+  Tooltip
 } from 'antd'
 import type { CalendarProps } from 'antd'
 import { createStyles } from 'antd-style'
@@ -55,17 +55,25 @@ type Job = {
   title: string
   content: string
   date: string
-  time?: string
+  time?: [start: Dayjs, end: Dayjs]
   tag?: string
-  repeat: 'once' | 'day' | 'workday' | 'holiday' | 'week' | 'month'
+  repeat:
+    | 'once'
+    | 'day'
+    | 'workday'
+    | 'holiday'
+    | 'weekly'
+    | 'monthly'
+    | 'yearly'
 }
 const repeatMap = {
   once: '全天',
   day: '每天',
   workday: '工作日',
   holiday: '节假日',
-  week: '每周',
-  month: '每月'
+  weekly: '每周',
+  monthly: '每月',
+  yearly: '每年'
 }
 const useStyle = createStyles(({ token, css, cx }) => {
   const lunar = css`
@@ -418,13 +426,13 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
   })
   const { message } = App.useApp()
   const [form, setForm] = useState<Job>({
-    id: Date.now(),
+    id: 0,
     date: selected.ymd || buildDay().ymd,
     title: '',
     content: '',
-    time: '',
+    time: [dayjs().startOf('day'), dayjs().endOf('day')],
     repeat: 'once',
-    tag: ''
+    tag: null
   })
   let isConfirm = false
   const [open, setOpen] = useState(false)
@@ -533,7 +541,13 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
               key={f.id}
               title={f.content}
               onClick={() => {
-                setForm(f)
+                setForm({
+                  ...f,
+                  time: [
+                    dayjs(f.time[0]).startOf('day'),
+                    dayjs(f.time[1]).endOf('day')
+                  ]
+                })
                 setOpen(true)
               }}
               onClose={() => {
@@ -543,7 +557,6 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
               {!f.tag && <CalendarFilled />}
               <span>{f.title}</span>
               {f.tag == 'birthday' && '🎂'}
-              {f.tag == 'anniversary' && <CalendarFilled />}
               {f.tag == 'memorial' && '🗓️'}({repeatMap[f.repeat || 'once']})
             </Tag>
           ))}
@@ -579,7 +592,6 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
               <span>
                 {f.title}
                 {f.tag == 'birthday' && '🎂'}
-                {f.tag == 'anniversary' && <CalendarFilled />}
                 {f.tag == 'memorial' && '🗓️'}({repeatMap[f.repeat || 'once']})
               </span>
               {f.content && (
@@ -607,182 +619,196 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
       </div>
       <div className="absolute bottom-4 right-2">
         <App>
-          <Popconfirm
-            {...{
-              title: form.id ? '编辑待办事项' : '新增待办事项',
-              okText: '确定',
-              okType: 'danger',
-              placement: 'topRight',
-              open: open,
-              destroyOnHidden: true,
-              icon: <PlusOutlined style={{ color: 'green' }} />,
-              description: (
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center">
-                    <label htmlFor="form-title">标题：</label>
-                    <Input
-                      id="form-title"
-                      className="flex-1"
-                      placeholder="请输入标题"
-                      defaultValue={form.title}
-                      onChange={(e) => {
-                        setForm({ ...form, title: e.target.value })
-                      }}
-                    />
+          <Tooltip title="添加待办">
+            <Popconfirm
+              {...{
+                title: form.id ? '编辑待办事项' : '新增待办事项',
+                okText: '确定',
+                okType: 'danger',
+                placement: 'topRight',
+                open: open,
+                destroyOnHidden: true,
+                icon: <PlusOutlined style={{ color: 'green' }} />,
+                description: (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center">
+                      <label htmlFor="form-title">标题：</label>
+                      <Input
+                        id="form-title"
+                        className="flex-1"
+                        placeholder="请输入标题"
+                        defaultValue={form.title}
+                        onChange={(e) => {
+                          setForm({ ...form, title: e.target.value })
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center">
+                      <label htmlFor="form-content">内容：</label>
+                      <Input
+                        className="flex-1"
+                        id="form-content"
+                        defaultValue={form.content}
+                        placeholder="请输入内容"
+                        onChange={(e) => {
+                          setForm({ ...form, content: e.target.value })
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center">
+                      <label htmlFor="form-time">时间：</label>
+                      <TimePicker.RangePicker
+                        className="flex-1"
+                        id="form-time"
+                        allowClear
+                        placeholder={['开始时间', '结束时间']}
+                        defaultValue={form.time}
+                        onChange={(value) => {
+                          setForm({
+                            ...form,
+                            time: value
+                          })
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center">
+                      <label htmlFor="form-repeat">重复：</label>
+                      <Select<Job['repeat']>
+                        className="flex-1"
+                        id="form-repeat"
+                        allowClear
+                        defaultValue={form.repeat}
+                        placeholder={'重复类型'}
+                        options={[
+                          {
+                            value: 'once',
+                            label: '仅一次'
+                          },
+                          {
+                            value: 'daily',
+                            label: '每天'
+                          },
+                          {
+                            value: 'workday',
+                            label: '工作日'
+                          },
+                          {
+                            value: 'holiday',
+                            label: '节假日'
+                          },
+                          {
+                            value: 'weekly',
+                            label: '每周'
+                          },
+                          {
+                            value: 'monthly',
+                            label: '每月'
+                          },
+                          {
+                            value: 'yearly',
+                            label: '每年'
+                          }
+                        ]}
+                        onChange={(value) => {
+                          setForm({
+                            ...form,
+                            repeat: value || 'once'
+                          })
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center">
+                      <label htmlFor="form-tag">标签：</label>
+                      <Select
+                        className="flex-1"
+                        id="form-tag"
+                        allowClear
+                        defaultValue={form.tag}
+                        placeholder={'选择标签'}
+                        options={[
+                          {
+                            value: 'birthday',
+                            label: '生日'
+                          },
+                          {
+                            value: 'anniversary',
+                            label: '周年'
+                          },
+                          {
+                            value: 'memorial',
+                            label: '纪念日'
+                          }
+                        ]}
+                        onChange={(value) => {
+                          setForm({
+                            ...form,
+                            tag: value || ''
+                          })
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="flex items-center">
-                    <label htmlFor="form-content">内容：</label>
-                    <Input
-                      className="flex-1"
-                      id="form-content"
-                      defaultValue={form.content}
-                      placeholder="请输入内容"
-                      onChange={(e) => {
-                        setForm({ ...form, content: e.target.value })
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center">
-                    <label htmlFor="form-time">时间：</label>
-                    <TimePicker.RangePicker
-                      className="flex-1"
-                      id="form-time"
-                      allowClear
-                      placeholder={['开始时间', '结束时间']}
-                      onChange={(value) => {
-                        setForm({
-                          ...form,
-                          time:
-                            value
-                              ?.map((v) => v?.format('HH:mm') || '')
-                              .join(' - ') || ''
-                        })
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center">
-                    <label htmlFor="form-repeat">重复：</label>
-                    <Select<Job['repeat']>
-                      className="flex-1"
-                      id="form-repeat"
-                      allowClear
-                      defaultValue={form.repeat}
-                      placeholder={'重复类型'}
-                      options={[
-                        {
-                          value: 'once',
-                          label: '仅一次'
-                        },
-                        {
-                          value: 'daily',
-                          label: '每天'
-                        },
-                        {
-                          value: 'workday',
-                          label: '工作日'
-                        },
-                        {
-                          value: 'holiday',
-                          label: '节假日'
-                        },
-                        {
-                          value: 'weekly',
-                          label: '每周'
-                        },
-                        {
-                          value: 'monthly',
-                          label: '每月'
-                        }
-                      ]}
-                      onChange={(value) => {
-                        setForm({
-                          ...form,
-                          repeat: value || 'once'
-                        })
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center">
-                    <label htmlFor="form-tag">标签：</label>
-                    <Select
-                      className="flex-1"
-                      id="form-tag"
-                      allowClear
-                      defaultValue={form.tag}
-                      placeholder={'选择标签'}
-                      options={[
-                        {
-                          value: 'birthday',
-                          label: '生日'
-                        },
-                        {
-                          value: 'anniversary',
-                          label: '周年'
-                        },
-                        {
-                          value: 'memorial',
-                          label: '纪念日'
-                        }
-                      ]}
-                      onChange={(value) => {
-                        setForm({
-                          ...form,
-                          tag: value || ''
-                        })
-                      }}
-                    />
-                  </div>
-                </div>
-              ),
-              onConfirm: (e) => {
-                e.stopPropagation()
-                isConfirm = true
-                if (!form.title || !form.content) {
-                  message.error('请输入标题和内容')
-                  setOpen(true)
-                  setTimeout(() => {
-                    isConfirm = false
-                  }, 100)
-                  return
+                ),
+                onConfirm: (e) => {
+                  e.stopPropagation()
+                  isConfirm = true
+                  if (!form.title || !form.content) {
+                    message.error('请输入标题和内容')
+                    setOpen(true)
+                    setTimeout(() => {
+                      isConfirm = false
+                    }, 100)
+                    return
+                  }
+                  isConfirm = false
+                  setOpen(false)
+                  if (form.id) {
+                    setJobs([
+                      ...jobs.map((el) => ({
+                        ...el,
+                        ...(el.id === form.id ? { ...form } : el)
+                      }))
+                    ])
+                  } else {
+                    setJobs([
+                      {
+                        ...form,
+                        date: selected.ymd || buildDay().ymd,
+                        id: form.id || Date.now()
+                      },
+                      ...jobs
+                    ])
+                  }
+                  message.success('保存成功')
+                },
+                onOpenChange: (visible) => {
+                  setOpen(isConfirm)
+                  if (!visible) {
+                    setForm({
+                      ...form,
+                      title: '',
+                      content: '',
+                      date: '',
+                      time: [dayjs().startOf('day'), dayjs().endOf('day')],
+                      tag: null,
+                      repeat: 'once'
+                    })
+                  }
+                },
+                onCancel: () => {
+                  setOpen(false)
                 }
-                isConfirm = false
-                setOpen(false)
-                setJobs([
-                  {
-                    ...form,
-                    date: selected.ymd || buildDay().ymd,
-                    id: form.id || Date.now()
-                  },
-                  ...jobs
-                ])
-                message.success('保存成功')
-              },
-              onOpenChange: (visible) => {
-                setOpen(isConfirm)
-                if (!visible) {
-                  setForm({
-                    ...form,
-                    title: '',
-                    content: '',
-                    date: '',
-                    time: '',
-                    tag: '',
-                    repeat: 'once'
-                  })
-                }
-              },
-              onCancel: () => {
-                setOpen(false)
-              }
-            }}>
-            <Button
-              color="green"
-              shape="round"
-              icon={<PlusOutlined />}
-              onClick={() => {
-                setOpen(!open)
-              }}></Button>
-          </Popconfirm>
+              }}>
+              <Button
+                color="green"
+                shape="round"
+                icon={<PlusOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setOpen(!open)
+                }}></Button>
+            </Popconfirm>
+          </Tooltip>
         </App>
       </div>
     </App>

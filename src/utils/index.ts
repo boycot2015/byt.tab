@@ -191,9 +191,8 @@ export function importJson(file: File | null): Promise<any> {
             reader.onload = function (event) {
                 try {
                     const jsonData = JSON.parse(event.target.result as string);
-                    const jsonString = JSON.stringify(jsonData);
                     // 保存JSON数据
-                    alert('JSON数据已成功保存!');
+                    console.log('JSON数据解析成功!');
                     resolve(jsonData)
                 } catch (error) {
                     console.warn('无法解析JSON文件!');

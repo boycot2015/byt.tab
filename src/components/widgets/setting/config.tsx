@@ -1,3 +1,4 @@
+import { DownloadOutlined, UploadOutlined } from '@ant-design/icons'
 import { useLocalStorageState } from 'ahooks'
 import {
   App,
@@ -8,9 +9,10 @@ import {
   Image,
   Popconfirm,
   Select,
-  Switch
+  Switch,
+  Upload
 } from 'antd'
-import type { FormProps } from 'antd'
+import type { FormProps, UploadFile } from 'antd'
 import type { FormInstance } from 'antd/lib/form'
 import React, { useEffect, useRef, useState } from 'react'
 
@@ -45,6 +47,9 @@ type FieldType = {
 function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
   const [apps, setApps] = useLocalStorageState<ItemType[]>('apps', {
     defaultValue: appBase
+  })
+  const [jobs, setJobs] = useLocalStorageState<ItemType[]>('jobs', {
+    defaultValue: []
   })
   const formRef = useRef<FormInstance>()
   const [config, setConfig] = useLocalStorageState<Config>('config', {
@@ -260,14 +265,36 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
           </Form.Item>
           <Form.Item label={'备份'}>
             <div className="flex justify-start gap-2">
-              <Button type="primary" htmlType="submit">
-                导入
-              </Button>
+              <Upload
+                {...{
+                  beforeUpload: (file) => {
+                    importJson(file).then(({ jobs, apps, ...reset }) => {
+                      setConfig(reset)
+                      setApps(apps)
+                      setJobs(jobs)
+                      message.success('导入成功')
+                      formRef.current?.setFieldsValue({
+                        seo: reset.seo,
+                        primary: reset.theme.primary,
+                        fontFamily: reset.theme.fontFamily,
+                        background: reset.theme.background,
+                        festival: reset.theme.festival
+                      })
+                    })
+                    return false
+                  },
+                  showUploadList: false,
+                  accept: '.json',
+                  maxCount: 1
+                }}>
+                <Button icon={<UploadOutlined />}>导入</Button>
+              </Upload>
               <Button
                 type="primary"
                 danger
+                icon={<DownloadOutlined />}
                 onClick={() => {
-                  exportJson(config, 'byt_tab_config')
+                  exportJson({ ...config, jobs, apps }, 'byt_tab_config')
                   message.success('导出成功')
                 }}>
                 导出
@@ -281,7 +308,7 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
               </Button>
               <Popconfirm
                 {...{
-                  title: '重置将清空所有配置，确定要重置吗？',
+                  title: '重置将还原所有配置，确定要重置吗？',
                   okText: '确定',
                   okType: 'danger',
                   onConfirm: async () => {

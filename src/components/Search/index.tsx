@@ -20,7 +20,7 @@ const Search = () => {
     setUrl(seoList.find((item) => item.name === config.seo)?.url || '')
   }, [config.seo])
   return (
-    <div className="flex gap-2 w-full lg:max-w-[1000px] mb-3 text-shadow">
+    <div className="flex gap-2 w-full lg:max-w-[800px] mb-3 text-shadow">
       <Space.Compact block>
         <Select
           value={url}
