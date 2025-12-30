@@ -13,8 +13,10 @@ import {
   Input,
   Select,
   Space,
+  Statistic,
   Tabs
 } from 'antd'
+import dayjs from 'dayjs'
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
 import { useEffect, useRef, useState } from 'react'
 import { useContextMenu } from 'react-contexify'
@@ -48,7 +50,7 @@ export const config: PlasmoCSConfig = {
   matches: ['<all_urls>'],
   all_frames: true
 }
-
+const { Timer } = Statistic
 /**
  * 执行元素动画效果
  *
@@ -608,21 +610,53 @@ function IndexTab() {
   useEffect(() => {
     let dailyJobs = getCurrentJobs(jobs, buildDay())
     dailyJobs.map((el) => {
-      let cron = `0 0 0 * * *`
+      let getDate = (date: dayjs.ConfigType) =>
+        dayjs(date || new Date()).toDate()
+      let timeStart = getDate(el.time[0] || new Date()).getTime()
+      let timeEnd = getDate(el.time[1] || new Date()).getTime()
+      let h = getDate(new Date(timeStart)).getHours()
+      let m = getDate(new Date(timeStart)).getMinutes()
+      let s = getDate(new Date(timeStart)).getSeconds()
+      let cron = `${s || 0} ${m || 0} ${h || 0} * * *`
+      console.log(cron, 'cron')
       let jobInstance = job(cron, () => {
         notification.success({
-          placement: 'topRight',
+          placement: 'bottomRight',
           closable: true,
-          message: el.title,
-          duration: 0,
-          description: el.content
+          message: '待办事项：' + el.title,
+          showProgress: true,
+          duration: Math.max(timeEnd - timeStart, 3 * 1000),
+          pauseOnHover: false,
+          description: (
+            <div>
+              <div>日期：{el.date}</div>
+              {el.time && (
+                <div>
+                  时间：
+                  {el.time
+                    .map((item) => dayjs(item).format('HH:mm:ss'))
+                    .join(' - ')}
+                </div>
+              )}
+              <div>{el.content}</div>
+              <div className="flex gap-2">
+                <Timer
+                  type="countdown"
+                  valueStyle={{ fontSize: '12px' }}
+                  value={timeEnd}
+                  format="D天H时m分s秒"
+                />
+                后关闭提醒
+              </div>
+            </div>
+          )
         })
       })
       return () => {
         jobInstance.stop()
       }
     })
-  }, [])
+  }, [jobs])
   return (
     <ThemeProvider
       token={{
