@@ -618,7 +618,7 @@ function IndexTab() {
       let m = getDate(new Date(timeStart)).getMinutes()
       let s = getDate(new Date(timeStart)).getSeconds()
       let cron = `${s || 0} ${m || 0} ${h || 0} * * *`
-      console.log(cron, 'cron')
+      // console.log(cron, 'cron')
       let jobInstance = job(cron, () => {
         notification.success({
           placement: 'bottomRight',
@@ -639,7 +639,7 @@ function IndexTab() {
                 </div>
               )}
               <div>{el.content}</div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 justify-end">
                 <Timer
                   type="countdown"
                   valueStyle={{ fontSize: '12px' }}

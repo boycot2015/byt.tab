@@ -301,8 +301,8 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
               </Button>
             </div>
           </Form.Item>
-          <Form.Item label={null}>
-            <div className="flex justify-end gap-2">
+          <Form.Item label={null} wrapperCol={{ span: 24 }}>
+            <div className="flex justify-end gap-2 !w-full">
               <Button type="primary" htmlType="submit">
                 保存
               </Button>

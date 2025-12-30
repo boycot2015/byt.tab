@@ -630,7 +630,8 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
         </div>
       </div>
       <div className="lunar flex gap-4">
-        <div>
+        <div className="flex sm:hidden gap-2">
+          <span>{state.selected.ymd}</span>
           农历 {state.selected.lunarMonth}月{state.selected.lunarDay}
         </div>
       </div>
