@@ -639,14 +639,14 @@ function IndexTab() {
         .set('date', now.getDate())
         .toDate()
         .getTime()
-      let isTimeStartValid = timeStart <= now.getTime()
+      // let isTimeStartValid = timeStart <= now.getTime()
       let isTimeEndValid = timeEnd >= now.getTime()
       let h = getDate(new Date(timeStart)).toDate().getHours()
       let m = getDate(new Date(timeStart)).toDate().getMinutes()
       let s = getDate(new Date(timeStart)).toDate().getSeconds()
       let cron = `${s || 0} ${m || 0} ${h || 0} * * *`
       // console.log(cron, 'cron')
-      if (!isTimeStartValid || !isTimeEndValid) return
+      if (!isTimeEndValid) return
       let jobInstance = job(cron, () => {
         notification.success({
           placement: 'bottomRight',

@@ -213,15 +213,13 @@ export const getCurrentJobs = (jobs: Job[], selected: Day): Job[] => {
         (selected.holiday?.isWork() ||
           (!selected.holiday &&
             ![0, 6].includes(dayjs(selected.ymd).toDate().getDay()))) &&
-        isTimeEndValid &&
-        isTimeStartValid
+        isTimeEndValid
     } else if (el.repeat == 'workday_no_holiday') {
       isJob =
         !selected.isHoliday &&
         !selected.holiday &&
         ![0, 6].includes(dayjs(selected.ymd).toDate().getDay()) &&
-        isTimeEndValid &&
-        isTimeStartValid
+        isTimeEndValid
     } else if (el.repeat == 'holiday') {
       isJob = selected.isHoliday
     }
