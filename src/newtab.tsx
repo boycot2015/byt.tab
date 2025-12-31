@@ -4,7 +4,12 @@ import {
   SkinFilled
 } from '@ant-design/icons'
 import * as icons from '@ant-design/icons/lib/icons/index'
-import { useAsyncEffect, useLocalStorageState } from 'ahooks'
+import {
+  useAsyncEffect,
+  useDebounceFn,
+  useLocalStorageState,
+  usePrevious
+} from 'ahooks'
 import {
   App,
   Button,
@@ -50,6 +55,7 @@ export const config: PlasmoCSConfig = {
   matches: ['<all_urls>'],
   all_frames: true
 }
+let background = ''
 const { Timer } = Statistic
 /**
  * 执行元素动画效果
@@ -120,6 +126,7 @@ function IndexTab() {
     defaultValue: tabConfig,
     listenStorageChange: true
   })
+  // const [currentConfig] = useState<Config>(tabConfig)
   const [jobs, setJobs] = useLocalStorageState<Job[]>('jobs', {
     defaultValue: [],
     listenStorageChange: true
@@ -142,26 +149,31 @@ function IndexTab() {
     },
     listenStorageChange: true
   })
-  const setWallpaper = () => {
-    const list = wallpaper.list.filter(
-      (source) => source?.url != config.theme.background
-    )
-    const source = list[Math.floor(Math.random() * list.length)]
-    if (source?.url == config.theme.background) {
-      setWallpaper()
-      return
-    }
-    setConfig({
-      ...config,
-      theme: {
-        ...config.theme,
-        cover: source?.url.includes('.mp4')
-          ? source.img || source.poster
-          : undefined,
-        background: source?.url || list[0]?.url
+  const { run: setWallpaper } = useDebounceFn(
+    () => {
+      const list = wallpaper.list.filter(
+        (source) => source?.url != config.theme.background
+      )
+      const source = list[Math.floor(Math.random() * list.length)]
+      if (source?.url == config.theme.background) {
+        setWallpaper()
+        return
       }
-    })
-  }
+      setConfig({
+        ...config,
+        theme: {
+          ...config.theme,
+          cover: source?.url.includes('.mp4')
+            ? source.img || source.poster
+            : undefined,
+          background: source?.url || list[0]?.url
+        }
+      })
+    },
+    {
+      wait: 100
+    }
+  )
   const [visible, setVisible] = useState(false)
   const [settingVisible, setSettingVisible] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
@@ -558,7 +570,10 @@ function IndexTab() {
     setCurrentItem(item)
   }
   const initTheme = (delay = 300) => {
-    let background = config.theme.background || ''
+    if (background == config.theme.background) return
+
+    background = config.theme.background || ''
+    console.log('initTheme', background, config.theme.background)
     let image = config.theme.cover ? new Audio() : new Image()
     const wrapper = document.querySelector('.wallpaper') as HTMLBodyElement
     image.src = background || ''
@@ -572,7 +587,7 @@ function IndexTab() {
       ) {
         background = config.theme.festival?.url || background
       }
-      console.log(background)
+      // console.log(background)
       timer = setTimeout(() => {
         if (!background?.includes('.mp4')) {
           wrapper.style.backgroundImage = `url(${config.theme.cover || background})`
@@ -790,6 +805,11 @@ function IndexTab() {
 }
 
 export default () => {
+  const [config, setConfig] = useLocalStorageState<Config>('config', {
+    defaultValue: tabConfig,
+    listenStorageChange: false
+  })
+  const previousConfig = usePrevious(config)
   return (
     <ThemeProvider>
       <App message={{ maxCount: 1 }} notification={{ placement: 'bottomLeft' }}>

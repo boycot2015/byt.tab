@@ -18,22 +18,20 @@ import WidgetModal from './config'
 export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
   document.querySelector('#__plasmo')
 export interface News {
-  list?: {
+  id: string
+  name: string
+  icon?: string
+  list: {
     id?: string
     index?: string
     title?: string
     name?: string
     href?: string
     url?: string
+    icon?: string
     link?: string
     hotValue?: string
     desc?: string
-  }[]
-  cates?: {
-    id: string
-    name: string
-    icon?: string
-    list?: News['list']
   }[]
 }
 type WidgetProp = {
@@ -50,7 +48,7 @@ function Widget(props: WidgetProp) {
     cacheKey: 'news',
     manual: true
   })
-  const [cates, setCates] = useLocalStorageState<News['cates']>('news', {
+  const [news, setNews] = useLocalStorageState<News[]>('news', {
     defaultValue: [],
     listenStorageChange: true
   })
@@ -61,13 +59,13 @@ function Widget(props: WidgetProp) {
     }
   }, [data])
   useAsyncEffect(async () => {
-    let res = cates || []
+    let res = news || []
     let cateId = props.cateId || res?.[0]?.id || ''
     if (!res.length) {
       res = await getNewsCate()
       let res2 = await getNews({ id: cateId })
       cateId = cateId || res?.[0]?.id || ''
-      setCates(
+      setNews(
         res.map((item) => ({
           ...item,
           list: cateId === item.id ? res2 : []
@@ -90,8 +88,10 @@ function Widget(props: WidgetProp) {
           !props.withComponents && setVisible(true)
           !props.withComponents && setShow(true)
         }}>
-        <Spin spinning={loading} wrapperClassName={`w-full h-full`}>
-          <div className="h-full w-full !p-4 flex flex-col text-white gap-2 justify-center">
+        <Spin
+          spinning={!list.length || loading}
+          wrapperClassName={`w-full h-full`}>
+          <div className="h-full w-full min-h-[144px] !p-4 flex flex-col text-white gap-2 justify-center">
             {list?.slice(0, 4)?.map((item, index) => (
               <div
                 className="flex justify-between gap-2"
@@ -114,15 +114,15 @@ function Widget(props: WidgetProp) {
           visible={visible}
           cateId={props.cateId || ''}
           id={props.id || ''}
-          cates={cates}
+          cates={news}
           afterOpenChange={(visible) => {
             setShow(visible)
           }}
           onCancel={(cateId, list) => {
             setVisible(false)
             setList(list)
-            setCates(
-              cates.map((item) => ({
+            setNews(
+              news.map((item) => ({
                 ...item,
                 list: cateId === item.id ? list : item.list || []
               })) || []
