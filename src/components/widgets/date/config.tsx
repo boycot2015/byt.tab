@@ -167,6 +167,20 @@ const useStyle = createStyles(({ token, css, cx }) => {
 export const getCurrentJobs = (jobs: Job[], selected: Day): Job[] => {
   return jobs.filter((el) => {
     let isJob = el.date == selected.ymd
+    let timeStart = dayjs((el.time && el.time[0]) || new Date())
+      .set('year', new Date().getFullYear())
+      .set('month', new Date().getMonth())
+      .set('date', new Date().getDate())
+      .toDate()
+      .getTime()
+    let timeEnd = dayjs((el.time && el.time[1]) || new Date())
+      .set('year', new Date().getFullYear())
+      .set('month', new Date().getMonth())
+      .set('date', new Date().getDate())
+      .toDate()
+      .getTime()
+    let isTimeStartValid = timeStart <= new Date().getTime()
+    let isTimeEndValid = timeEnd >= new Date().getTime()
     let sameMonth =
       dayjs(el.date).toDate().getMonth() ==
       dayjs(selected.ymd).toDate().getMonth()
@@ -189,28 +203,30 @@ export const getCurrentJobs = (jobs: Job[], selected: Day): Job[] => {
     if (el.repeat == 'weekly') {
       isJob = sameWeek
     } else if (el.repeat == 'daily') {
-      isJob = true
+      isJob = isTimeEndValid && isTimeStartValid
     } else if (el.repeat == 'monthly') {
       isJob = sameDate
     } else if (el.repeat == 'yearly') {
       isJob = sameMonth && sameDate
     } else if (el.repeat == 'workday') {
       isJob =
-        selected.holiday?.isWork() ||
-        (!selected.holiday &&
-          ![0, 6].includes(dayjs(selected.ymd).toDate().getDay()))
+        (selected.holiday?.isWork() ||
+          (!selected.holiday &&
+            ![0, 6].includes(dayjs(selected.ymd).toDate().getDay()))) &&
+        isTimeEndValid &&
+        isTimeStartValid
     } else if (el.repeat == 'workday_no_holiday') {
       isJob =
         !selected.isHoliday &&
         !selected.holiday &&
-        ![0, 6].includes(dayjs(selected.ymd).toDate().getDay())
+        ![0, 6].includes(dayjs(selected.ymd).toDate().getDay()) &&
+        isTimeEndValid &&
+        isTimeStartValid
     } else if (el.repeat == 'holiday') {
       isJob = selected.isHoliday
     }
-    let timeEnd = dayjs((el.time && el.time[1]) || new Date())
-      .toDate()
-      .getTime()
-    return isJob && timeEnd >= new Date().getTime()
+
+    return isJob
   })
 }
 export const RenderCellCalendar = (
@@ -630,8 +646,8 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
         </div>
       </div>
       <div className="lunar flex gap-4">
-        <div className="flex sm:hidden gap-2">
-          <span>{state.selected.ymd}</span>
+        <div className="flex gap-2">
+          <span className="sm:hidden">{state.selected.ymd}</span>
           农历 {state.selected.lunarMonth}月{state.selected.lunarDay}
         </div>
       </div>

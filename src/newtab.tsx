@@ -610,15 +610,28 @@ function IndexTab() {
   useEffect(() => {
     let dailyJobs = getCurrentJobs(jobs, buildDay())
     dailyJobs.map((el) => {
-      let getDate = (date: dayjs.ConfigType) =>
-        dayjs(date || new Date()).toDate()
-      let timeStart = getDate(el.time[0] || new Date()).getTime()
-      let timeEnd = getDate(el.time[1] || new Date()).getTime()
-      let h = getDate(new Date(timeStart)).getHours()
-      let m = getDate(new Date(timeStart)).getMinutes()
-      let s = getDate(new Date(timeStart)).getSeconds()
+      let now = new Date()
+      let getDate = (date: dayjs.ConfigType) => dayjs(date || now)
+      let timeStart = getDate(el.time && el.time[0])
+        .set('year', now.getFullYear())
+        .set('month', now.getMonth())
+        .set('date', now.getDate())
+        .toDate()
+        .getTime()
+      let timeEnd = getDate(el.time && el.time[1])
+        .set('year', now.getFullYear())
+        .set('month', now.getMonth())
+        .set('date', now.getDate())
+        .toDate()
+        .getTime()
+      let isTimeStartValid = timeStart <= now.getTime()
+      let isTimeEndValid = timeEnd >= now.getTime()
+      let h = getDate(new Date(timeStart)).toDate().getHours()
+      let m = getDate(new Date(timeStart)).toDate().getMinutes()
+      let s = getDate(new Date(timeStart)).toDate().getSeconds()
       let cron = `${s || 0} ${m || 0} ${h || 0} * * *`
       // console.log(cron, 'cron')
+      if (!isTimeStartValid || !isTimeEndValid) return
       let jobInstance = job(cron, () => {
         notification.success({
           placement: 'bottomRight',
