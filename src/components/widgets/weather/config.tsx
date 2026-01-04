@@ -179,10 +179,19 @@ function WidgetModal(props: {
                   </div>
                   {/* top */}
                   <div className="flex flex-col items-center sm:flex-row w-full gap-5">
-                    <div className="flex gap-2 order-1">
+                    <div className="flex items-center gap-2 order-1">
                       {currentWeather?.location?.province}·
                       {currentWeather?.location?.city}
-                      <div>{currentWeather?.weather?.condition}</div>
+                      <div className="flex items-center gap-1">
+                        <span
+                          dangerouslySetInnerHTML={{
+                            __html:
+                              weatherIcon[
+                                currentWeather?.weather?.condition || 'sunny'
+                              ]
+                          }}></span>
+                        {currentWeather?.weather?.condition}
+                      </div>
                     </div>
                     <div className="sm:order-2 md:order-1">
                       更新于：
@@ -212,7 +221,14 @@ function WidgetModal(props: {
                           {currentWeather?.air_quality?.aqi || '20'}
                         </span>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex items-center gap-2">
+                        <span
+                          dangerouslySetInnerHTML={{
+                            __html:
+                              weatherIcon[
+                                currentWeather?.weather?.condition || 'sunny'
+                              ]
+                          }}></span>
                         <span>{currentWeather?.weather?.condition}</span>
                         <span className="flex items-center gap-1">
                           <span
@@ -246,7 +262,24 @@ function WidgetModal(props: {
                       }
                     </div>
                     <div className="flex gap-2">
-                      <span className="flex gap-2">
+                      <span className="flex items-center gap-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24">
+                          <g
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5">
+                            <path
+                              stroke-linecap="round"
+                              d="M15 6V5a3 3 0 1 0-6 0v6.348c0 .338-.175.648-.439.86a5.5 5.5 0 1 0 6.877 0c-.263-.212-.438-.522-.438-.86V10"
+                            />
+                            <path d="M14.5 16.5a2.5 2.5 0 1 1-5 0a2.5 2.5 0 0 1 5 0Z" />
+                            <path stroke-linecap="round" d="M12 14v-2m0-7v3" />
+                          </g>
+                        </svg>
                         <span>
                           最低
                           {currentWeather?.daily_forecast?.[1]?.min_temperature}
@@ -258,11 +291,31 @@ function WidgetModal(props: {
                           °
                         </span>
                       </span>
-                      <span>
+                      <span className="flex items-center gap-1">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16">
+                          <path
+                            fill="currentColor"
+                            d="M7.646 1.146a.5.5 0 0 1 .708 0l1.5 1.5a.5.5 0 0 1-.708.708L8.5 2.707V4.5a.5.5 0 0 1-1 0V2.707l-.646.647a.5.5 0 1 1-.708-.708zM2.343 4.343a.5.5 0 0 1 .707 0l1.414 1.414a.5.5 0 0 1-.707.707L2.343 5.05a.5.5 0 0 1 0-.707m11.314 0a.5.5 0 0 1 0 .707l-1.414 1.414a.5.5 0 1 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0M8 7a3 3 0 0 1 2.599 4.5H5.4A3 3 0 0 1 8 7m3.71 4.5a4 4 0 1 0-7.418 0H.499a.5.5 0 0 0 0 1h15a.5.5 0 0 0 0-1h-3.79zM0 10a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2A.5.5 0 0 1 0 10m13 0a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5"
+                          />
+                        </svg>
                         日出&nbsp;&nbsp;
                         {currentWeather?.sunrise?.sunrise_desc}
                       </span>
-                      <span>
+                      <span className="flex items-center gap-1">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16">
+                          <path
+                            fill="currentColor"
+                            d="M7.646 4.854a.5.5 0 0 0 .708 0l1.5-1.5a.5.5 0 0 0-.708-.708l-.646.647V1.5a.5.5 0 0 0-1 0v1.793l-.646-.647a.5.5 0 1 0-.708.708zm-5.303-.51a.5.5 0 0 1 .707 0l1.414 1.413a.5.5 0 0 1-.707.707L2.343 5.05a.5.5 0 0 1 0-.707zm11.314 0a.5.5 0 0 1 0 .706l-1.414 1.414a.5.5 0 1 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zM8 7a3 3 0 0 1 2.599 4.5H5.4A3 3 0 0 1 8 7m3.71 4.5a4 4 0 1 0-7.418 0H.499a.5.5 0 0 0 0 1h15a.5.5 0 0 0 0-1h-3.79zM0 10a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2A.5.5 0 0 1 0 10m13 0a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5"
+                          />
+                        </svg>
                         日落&nbsp;&nbsp;
                         {currentWeather?.sunrise?.sunset_desc}
                       </span>

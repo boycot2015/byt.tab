@@ -65,7 +65,7 @@ function WidgetModal(props: {
     )
   }
   const { data, loading } = useRequest(() => getNews({ id: cateId }), {
-    cacheKey: cateId,
+    cacheKey: 'news_' + cateId,
     staleTime: 1000 * 60 * 5,
     ready: news?.find((item) => item.id === cateId)?.list?.length == 0
     // refreshDeps: [cateId]

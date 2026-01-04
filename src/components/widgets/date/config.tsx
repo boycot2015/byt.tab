@@ -2,6 +2,7 @@ import { CalendarFilled, CloseOutlined, PlusOutlined } from '@ant-design/icons'
 import { useLocalStorageState, useResetState } from 'ahooks'
 import {
   App,
+  Badge,
   Button,
   Calendar,
   Col,
@@ -35,7 +36,21 @@ import { ThemeProvider } from '~layouts'
 import { buildDay, Day } from '~utils'
 
 dayjs.locale('zh-cn')
-
+const colors = [
+  'pink',
+  'red',
+  'yellow',
+  'orange',
+  'cyan',
+  'green',
+  'blue',
+  'purple',
+  'geekblue',
+  'magenta',
+  'volcano',
+  'gold',
+  'lime'
+]
 class Week {
   public days: Day[] = []
 }
@@ -203,7 +218,7 @@ export const getCurrentJobs = (jobs: Job[], selected: Day): Job[] => {
     if (el.repeat == 'weekly') {
       isJob = sameWeek
     } else if (el.repeat == 'daily') {
-      isJob = isTimeEndValid && isTimeStartValid
+      isJob = isTimeEndValid
     } else if (el.repeat == 'monthly') {
       isJob = sameDate
     } else if (el.repeat == 'yearly') {
@@ -215,6 +230,13 @@ export const getCurrentJobs = (jobs: Job[], selected: Day): Job[] => {
             ![0, 6].includes(dayjs(selected.ymd).toDate().getDay()))) &&
         isTimeEndValid
     } else if (el.repeat == 'workday_no_holiday') {
+      isTimeEndValid =
+        dayjs((el.time && el.time[1]) || new Date())
+          .set('year', new Date(selected.ymd).getFullYear())
+          .set('month', new Date(selected.ymd).getMonth())
+          .set('date', new Date(selected.ymd).getDate())
+          .toDate()
+          .getTime() >= new Date().getTime()
       isJob =
         !selected.isHoliday &&
         !selected.holiday &&
@@ -231,6 +253,11 @@ export const RenderCellCalendar = (
   selectDate: dayjs.Dayjs,
   panelDateDate: dayjs.Dayjs
 ) => {
+  const [jobs] = useLocalStorageState<Job[]>('jobs', {
+    defaultValue: [],
+    listenStorageChange: true
+  })
+  const getJobs = useCallback(getCurrentJobs, [selectDate])
   const cellRender: CalendarProps<Dayjs>['fullCellRender'] = (date, info) => {
     const getDay = useCallback(
       () => buildDay(Solar.fromDate(date.toDate())),
@@ -270,6 +297,16 @@ export const RenderCellCalendar = (
                 {day.isRest ? '休' : '班'}
               </span>
             )}
+            <div className="line-clamp-1 absolute flex h-full flex-col bottom-0 left-[2px]">
+              {getJobs(jobs, day).map((job) => (
+                <Badge
+                  dot
+                  key={job.id}
+                  className="!leading-[12px]"
+                  color={colors[job.id % colors.length]}
+                />
+              ))}
+            </div>
           </div>
         )
       })
@@ -321,7 +358,6 @@ export const WidgetCalendar = (props: {
     })
     return holidays
   }, [panelDateDate])
-
   const onPanelChange = (value: Dayjs, mode: CalendarProps<Dayjs>['mode']) => {
     setPanelDate(value)
   }
@@ -633,7 +669,7 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
                 message.success('删除成功')
               }}>
               <span className="cursor-pointer">
-                {!f.tag && <CalendarFilled />}
+                {!f.tag && <CalendarFilled className="mr-1" />}
                 <span>{f.title}</span>
                 {f.tag == 'birthday' && '🎂'}
                 {f.tag == 'memorial' && '🗓️'}

@@ -1,11 +1,12 @@
 import {
   AppstoreOutlined,
   CloseOutlined,
+  LinkOutlined,
+  MoreOutlined,
   PlusOutlined,
   SearchOutlined,
   SettingOutlined,
-  ToolOutlined,
-  LinkOutlined
+  ToolOutlined
 } from '@ant-design/icons'
 import * as icons from '@ant-design/icons/lib/icons/index'
 import { useGetState, useLocalStorageState, useRequest } from 'ahooks'
@@ -685,15 +686,17 @@ function WidgetModal(props: {
   const [websites, setWebsites] = useState<
     { label: string; key: string; children?: Website[] }[]
   >(websitesBase || [])
+  const [websiteType, setWebsiteType] = useState<string>(websites[0]?.key || '')
   const {
     data,
     loading: websiteLoading,
     run
   } = useRequest(() => getWebsites({ key: websiteType, name: searchKey }), {
     // debounceWait: 300,
-    manual: true
+    staleTime: 1000 * 60 * 5,
+    cacheKey: 'website_' + websiteType + (searchKey || '')
+    // manual: true
   })
-  const [websiteType, setWebsiteType] = useState<string>(websites[0]?.key || '')
   useEffect(() => {
     if (defaultActiveKey !== 'website') {
       return
@@ -779,6 +782,7 @@ function WidgetModal(props: {
                     <Tabs
                       defaultActiveKey="all"
                       animated
+                      moreIcon={<MoreOutlined className="!text-white" />}
                       tabBarExtraContent={{
                         left: (
                           <Input
