@@ -670,9 +670,9 @@ function IndexTab() {
               <div className="flex gap-2 justify-end">
                 <Timer
                   type="countdown"
-                  valueStyle={{ fontSize: '12px' }}
+                  valueStyle={{ fontSize: '14px' }}
                   value={timeEnd}
-                  format="D天H时m分s秒"
+                  format="H时m分s秒"
                 />
                 后关闭提醒
               </div>
