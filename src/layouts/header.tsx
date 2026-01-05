@@ -39,7 +39,8 @@ export default function Header() {
             ? state.customFestivals
                 .map((item) => item + ' ' + state.dateIcons[item] || '')
                 .join('')
-            : null}
+            : state.jieQi || ''}
+          {state.dateIcon || ''}
         </Text>
         <Text className="!text-[18px] !text-white flex justify-center gap-4">
           <span>

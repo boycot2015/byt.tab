@@ -643,7 +643,7 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
             !state.selected.customFestivals.length ? (
               <Tag color={'#179d17'}>{state.dateName}补班</Tag>
             ) : (
-              state.dateName || ''
+              state.dateName || state.selected.jieQi || ''
             )}
             {(!state.isWork && state.dateIcon) || state.selected.dateIcon || ''}
           </span>

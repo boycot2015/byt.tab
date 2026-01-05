@@ -15,6 +15,7 @@ export default {
             copyrightlink: '',
             url: ''
         },
+        autoplay: 0,
         fontFamily: 'CangErYuYang',
         primary: '#1677ff'
     },

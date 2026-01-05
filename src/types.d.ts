@@ -41,6 +41,7 @@ export interface Config {
         background?: string
         cover?: string
         fontFamily?: string
+        autoplay?: number
         festival?: {
             open: boolean
             url?: string

@@ -1,5 +1,5 @@
 import { DownloadOutlined, UploadOutlined } from '@ant-design/icons'
-import { useLocalStorageState } from 'ahooks'
+import { useLocalStorageState, useMemoizedFn } from 'ahooks'
 import {
   App,
   Button,
@@ -12,7 +12,7 @@ import {
   Switch,
   Upload
 } from 'antd'
-import type { FormProps, UploadFile } from 'antd'
+import type { FormProps } from 'antd'
 import type { FormInstance } from 'antd/lib/form'
 import React, { useEffect, useRef, useState } from 'react'
 
@@ -21,7 +21,7 @@ import { getFestivalBackground } from '~data/wallpaper'
 import { ThemeProvider } from '~layouts'
 import tabConfig from '~tabConfig'
 import type { Config, ItemType } from '~types'
-import { exportJson, importJson } from '~utils'
+import { buildDay, exportJson, importJson } from '~utils'
 
 import Wallpaper from '../wallpaper/config'
 
@@ -42,6 +42,7 @@ type FieldType = {
   seo?: string
   festival?: boolean
   fontFamily?: string
+  autoplay?: boolean
   background?: string
 }
 function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
@@ -51,18 +52,22 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
   const [jobs, setJobs] = useLocalStorageState<ItemType[]>('jobs', {
     defaultValue: []
   })
+  const hasFestivals = useMemoizedFn(() => {
+    return buildDay().customFestivals?.length > 0
+  })
   const formRef = useRef<FormInstance>()
   const [config, setConfig] = useLocalStorageState<Config>('config', {
     defaultValue: configDefault,
     listenStorageChange: true
   })
   const [initialValues, setInitialValues] = useState({
-    primary: config?.theme?.primary || settingOptions.primary,
+    ...settingOptions,
+    ...(config?.theme || {}),
     seo: config?.seo || settingOptions.seo,
-    festival: config.theme.festival || false,
-    fontFamily: config.theme.fontFamily || settingOptions.fontFamily,
     background:
-      (config.theme.festival.open && config.theme.festival.url) ||
+      (config.theme.festival.open &&
+        hasFestivals() &&
+        config.theme.festival.url) ||
       config?.theme?.cover ||
       config.theme.background ||
       settingOptions.background
@@ -82,12 +87,13 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
   }
   useEffect(() => {
     setInitialValues({
-      primary: config?.theme?.primary || settingOptions.primary,
+      ...settingOptions,
+      ...(config?.theme || {}),
       seo: config?.seo || settingOptions.seo,
-      fontFamily: config.theme.fontFamily || settingOptions.fontFamily,
-      festival: config.theme.festival || false,
       background:
-        (config.theme.festival.open && config.theme.festival.url) ||
+        (config.theme.festival.open &&
+          hasFestivals() &&
+          config.theme.festival.url) ||
         config?.theme?.cover ||
         config.theme.background ||
         settingOptions.background
@@ -261,6 +267,29 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
                 })
               }}
               defaultChecked
+            />
+          </Form.Item>
+          <Form.Item<FieldType> label="自动切换" name="autoplay">
+            <Select
+              showSearch
+              filterOption={true}
+              optionFilterProp="label"
+              onChange={(value) => {
+                setConfig({
+                  ...config,
+                  theme: { ...config.theme, autoplay: value }
+                })
+              }}
+              options={[
+                { label: '关闭', value: 0 },
+                { label: '15秒', value: 15 },
+                { label: '5分钟', value: 300 },
+                { label: '15分钟', value: 900 },
+                { label: '30分钟', value: 1800 },
+                { label: '1小时', value: 3600 },
+                { label: '3小时', value: 10800 },
+                { label: '24小时', value: 86400 }
+              ]}
             />
           </Form.Item>
           <Form.Item label={'备份'}>

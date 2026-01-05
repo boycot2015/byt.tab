@@ -1,14 +1,16 @@
 import {
   MinusCircleOutlined,
   PlusOutlined,
+  ScheduleOutlined,
   SkinFilled
 } from '@ant-design/icons'
 import * as icons from '@ant-design/icons/lib/icons/index'
 import {
   useAsyncEffect,
   useDebounceFn,
+  useInterval,
   useLocalStorageState,
-  usePrevious
+  useMemoizedFn
 } from 'ahooks'
 import {
   App,
@@ -21,6 +23,7 @@ import {
   Statistic,
   Tabs
 } from 'antd'
+import type { CronJob } from 'cron'
 import dayjs from 'dayjs'
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
 import { useEffect, useRef, useState } from 'react'
@@ -126,12 +129,10 @@ function IndexTab() {
     defaultValue: tabConfig,
     listenStorageChange: true
   })
-  // const [currentConfig] = useState<Config>(tabConfig)
-  const [jobs, setJobs] = useLocalStorageState<Job[]>('jobs', {
-    defaultValue: [],
-    listenStorageChange: true
-  })
   const day = buildDay()
+  const hasFestivals = useMemoizedFn(() => {
+    return day.customFestivals?.length > 0
+  })
   const { message, modal, notification } = App.useApp()
   const [primary, setPrimary] = useState(config.theme.primary)
   const [currentItem, setCurrentItem] = useState<ItemType>()
@@ -571,7 +572,6 @@ function IndexTab() {
   }
   const initTheme = (delay = 300) => {
     if (background == config.theme.background) return
-
     background = config.theme.background || ''
     console.log('initTheme', background, config.theme.background)
     let image = config.theme.cover ? new Audio() : new Image()
@@ -622,9 +622,13 @@ function IndexTab() {
   useEffect(() => {
     initTheme(10)
   }, [config.theme.cover])
+  const [jobs] = useLocalStorageState<Job[]>('jobs', {
+    defaultValue: [],
+    listenStorageChange: true
+  })
   useEffect(() => {
     let dailyJobs = getCurrentJobs(jobs, buildDay())
-    dailyJobs.map((el) => {
+    let crons: CronJob<any, null>[] = dailyJobs.map((el) => {
       let now = new Date()
       let getDate = (date: dayjs.ConfigType) => dayjs(date || now)
       let timeStart = getDate(el.time && el.time[0])
@@ -645,15 +649,16 @@ function IndexTab() {
       let m = getDate(new Date(timeStart)).toDate().getMinutes()
       let s = getDate(new Date(timeStart)).toDate().getSeconds()
       let cron = `${s || 0} ${m || 0} ${h || 0} * * *`
-      // console.log(cron, 'cron')
       if (!isTimeEndValid) return
       let jobInstance = job(cron, () => {
+        // console.log(timeEnd - timeStart, 'cron')
         notification.success({
           placement: 'bottomRight',
           closable: true,
           message: '待办事项：' + el.title,
           showProgress: true,
-          duration: Math.max(timeEnd - timeStart, 3 * 1000),
+          icon: <ScheduleOutlined style={{ color: primary }} />,
+          duration: Math.max((timeEnd - timeStart) / 1000, 3),
           pauseOnHover: false,
           description: (
             <div>
@@ -680,11 +685,22 @@ function IndexTab() {
           )
         })
       })
-      return () => {
-        jobInstance.stop()
-      }
+      return jobInstance
     })
+    return () => {
+      crons.forEach((jobInstance: CronJob<any, null>) => {
+        jobInstance.stop()
+      })
+    }
   }, [jobs])
+  useInterval(
+    () => {
+      setWallpaper()
+    },
+    config.theme.autoplay && !hasFestivals()
+      ? config.theme.autoplay * 1000
+      : undefined
+  )
   return (
     <ThemeProvider
       token={{
@@ -805,13 +821,13 @@ function IndexTab() {
 }
 
 export default () => {
-  const [config, setConfig] = useLocalStorageState<Config>('config', {
-    defaultValue: tabConfig,
-    listenStorageChange: false
-  })
-  const previousConfig = usePrevious(config)
   return (
-    <ThemeProvider>
+    <ThemeProvider
+      token={{
+        Notification: {
+          zIndexPopup: 99
+        }
+      }}>
       <App message={{ maxCount: 1 }} notification={{ placement: 'bottomLeft' }}>
         <IndexTab />
       </App>

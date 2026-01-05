@@ -177,7 +177,7 @@ export const exportJson = (obj: Record<string, any>, fileName = 'data.json') => 
         // 设置链接的href属性为blob的URL
         link.href = URL.createObjectURL(blob);
         // 设置下载的文件名
-        link.download = `${fileName}_${new Date().getTime()}.json`;
+        link.download = `${fileName}_${new Date().toLocaleString()}.json`;
         // 触发下载
         link.click();
     } catch (error) {
