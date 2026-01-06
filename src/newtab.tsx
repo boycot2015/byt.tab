@@ -1,5 +1,6 @@
 import {
   MinusCircleOutlined,
+  MoreOutlined,
   PlusOutlined,
   ScheduleOutlined,
   SkinFilled
@@ -134,7 +135,7 @@ function IndexTab() {
     return day.customFestivals?.length > 0
   })
   const { message, modal, notification } = App.useApp()
-  const [primary, setPrimary] = useState(config.theme.primary)
+  const [primary, setPrimary] = useState(config.theme?.primary)
   const [currentItem, setCurrentItem] = useState<ItemType>()
   const [activeKey, setActiveKey] = useState('1')
   const [toggleClass, setToggleClass] = useState('')
@@ -153,10 +154,10 @@ function IndexTab() {
   const { run: setWallpaper } = useDebounceFn(
     () => {
       const list = wallpaper.list.filter(
-        (source) => source?.url != config.theme.background
+        (source) => source?.url != config.theme?.background
       )
       const source = list[Math.floor(Math.random() * list.length)]
-      if (source?.url == config.theme.background) {
+      if (source?.url == config.theme?.background) {
         setWallpaper()
         return
       }
@@ -571,26 +572,26 @@ function IndexTab() {
     setCurrentItem(item)
   }
   const initTheme = (delay = 300) => {
-    if (background == config.theme.background) return
-    background = config.theme.background || ''
-    console.log('initTheme', background, config.theme.background)
-    let image = config.theme.cover ? new Audio() : new Image()
+    if (background == config.theme?.background) return
+    background = config.theme?.background || ''
+    console.log('initTheme', background, config.theme?.background)
+    let image = config.theme?.cover ? new Audio() : new Image()
     const wrapper = document.querySelector('.wallpaper') as HTMLBodyElement
     image.src = background || ''
     let timer = null
     wrapper.classList.add('change')
     image.onload = () => {
       if (
-        config.theme.festival &&
-        config.theme.festival.open &&
+        config.theme?.festival &&
+        config.theme?.festival.open &&
         day.customFestivals.length
       ) {
-        background = config.theme.festival?.url || background
+        background = config.theme?.festival?.url || background
       }
       // console.log(background)
       timer = setTimeout(() => {
         if (!background?.includes('.mp4')) {
-          wrapper.style.backgroundImage = `url(${config.theme.cover || background})`
+          wrapper.style.backgroundImage = `url(${config.theme?.cover || background})`
         }
         wrapper.classList.remove('change')
       }, delay)
@@ -600,7 +601,7 @@ function IndexTab() {
     }
   }
   useEffect(() => {
-    setPrimary(config.theme.primary)
+    setPrimary(config.theme?.primary)
   }, [config])
   useEffect(() => {
     setCurrentItem({
@@ -618,10 +619,10 @@ function IndexTab() {
   }, [])
   useEffect(() => {
     initTheme()
-  }, [config.theme.background, config.theme.festival])
+  }, [config.theme?.background, config.theme?.festival])
   useEffect(() => {
     initTheme(10)
-  }, [config.theme.cover])
+  }, [config.theme?.cover])
   const [jobs] = useLocalStorageState<Job[]>('jobs', {
     defaultValue: [],
     listenStorageChange: true
@@ -697,8 +698,8 @@ function IndexTab() {
     () => {
       setWallpaper()
     },
-    config.theme.autoplay && !hasFestivals()
-      ? config.theme.autoplay * 1000
+    config.theme?.autoplay && !hasFestivals()
+      ? config.theme?.autoplay * 1000
       : undefined
   )
   return (
@@ -734,6 +735,7 @@ function IndexTab() {
               }}
               defaultActiveKey="1"
               activeKey={activeKey}
+              moreIcon={<MoreOutlined className="!text-white" />}
               tabBarExtraContent={
                 <AddComponent
                   apps={apps}
@@ -776,7 +778,7 @@ function IndexTab() {
                 variant="text"
                 onClick={() =>
                   (!day.customFestivals?.length ||
-                    !config.theme.festival?.open) &&
+                    !config.theme?.festival?.open) &&
                   setWallpaper()
                 }>
                 {day.customFestivals?.length ? day.dateIcon : <SkinFilled />}
@@ -784,10 +786,10 @@ function IndexTab() {
             </div>
           </div>
         </div>
-        {config.theme.background?.includes('.mp4') ? (
+        {config.theme?.background?.includes('.mp4') ? (
           <video
-            poster={config.theme.cover}
-            src={config.theme.background}
+            poster={config.theme?.cover}
+            src={config.theme?.background}
             className={`wallpaper-video wallpaper`}
             autoPlay
             loop

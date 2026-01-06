@@ -160,7 +160,7 @@ function WidgetModal(props: {
           <Spin spinning={loading}>
             <div className="flex !p-3 !pr-0 !pt-10 md:!pr-1">
               <div
-                className="flex-1 max-h-[60vh] pr-4 md:pr-1 overflow-y-auto relative"
+                className="flex-1 max-h-[60vh] pr-3 md:pr-1 overflow-y-auto relative"
                 ref={(el) => (scrollRef.current = el)}>
                 <div
                   className=" !text-white weather-container"

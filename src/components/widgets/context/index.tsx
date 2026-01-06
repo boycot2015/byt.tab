@@ -91,9 +91,9 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
   useEffect(() => {
     document.documentElement.style.setProperty(
       '--contexify-activeItem-bgColor',
-      config.theme.primary
+      config.theme?.primary
     )
-  }, [config.theme.primary])
+  }, [config.theme?.primary])
   return (
     <ThemeProvider
       token={{
@@ -183,7 +183,7 @@ function Contexify(props: { data: Record<string, any>; isEdit: boolean }) {
         </Item>
         <Item
           id="delete-all"
-          hidden={!data.id}
+          hidden={!data.pid}
           disabled={!data.closable || data.id != data.pid}
           onClick={handleItemClick}>
           <Text className="w-full flex justify-between items-center">

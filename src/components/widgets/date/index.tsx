@@ -6,7 +6,7 @@ import { useCallback, useState } from 'react'
 import { sizeMap, ThemeProvider } from '~layouts'
 import { buildDay, getWeek } from '~utils'
 
-import Config, { RenderCellCalendar, WidgetCalendar } from './config'
+import Config, { RenderCellCalendar } from './config'
 
 function Widget(props: {
   withComponents: boolean
@@ -30,7 +30,7 @@ function Widget(props: {
               className={`!border-none overflow-hidden h-full mx-auto !bg-transparent ${sizeMap[props.size || 'mini']}`}
               classNames={{
                 header: '!bg-red-500 !text-white',
-                body: '!bg-white w-full h-full'
+                body: '!bg-white w-full'
               }}
               title={
                 <div className="title w-full text-center">
@@ -45,18 +45,18 @@ function Widget(props: {
                 !props.withComponents && setVisible(true)
               }}>
               <div className="flex flex-col items-center justify-center">
-                <div>
-                  {day.customFestivals[0] || day.jieQi || ''}
-                  {day.dateIcon}
-                </div>
-                <div className="text-[32px] text-[var(--byt-color-text)] font-bold">
-                  {new Date().getDate()}
+                <div className="text-[42px] text-[var(--byt-color-text)] font-bold">
+                  {day.day}
+                  <span className="text-[16px]">
+                    {day.customFestivals[0] || day.jieQi || ''}
+                    {day.dateIcon}
+                  </span>
                 </div>
                 <div className="text-sm flex gap-3">
                   <span>
                     {day.lunarMonth}月{day.lunarDay}
                   </span>
-                  {getWeek(new Date().getDay())}
+                  {getWeek(day.week)}
                 </div>
               </div>
             </Card>

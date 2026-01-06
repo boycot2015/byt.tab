@@ -65,11 +65,11 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
     ...(config?.theme || {}),
     seo: config?.seo || settingOptions.seo,
     background:
-      (config.theme.festival.open &&
+      (config.theme?.festival.open &&
         hasFestivals() &&
-        config.theme.festival.url) ||
+        config.theme?.festival.url) ||
       config?.theme?.cover ||
-      config.theme.background ||
+      config.theme?.background ||
       settingOptions.background
   })
   const [wallpaperVisible, setWallpaperVisible] = useState<boolean>(false)
@@ -91,19 +91,19 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
       ...(config?.theme || {}),
       seo: config?.seo || settingOptions.seo,
       background:
-        (config.theme.festival.open &&
+        (config.theme?.festival.open &&
           hasFestivals() &&
-          config.theme.festival.url) ||
+          config.theme?.festival.url) ||
         config?.theme?.cover ||
-        config.theme.background ||
+        config.theme?.background ||
         settingOptions.background
     })
   }, [config])
   return (
     <ThemeProvider
       token={{
-        fontFamily: config.theme.fontFamily,
-        colorPrimary: config.theme.primary,
+        fontFamily: config.theme?.fontFamily,
+        colorPrimary: config.theme?.primary,
         Form: { labelColor: '#fff' }
       }}>
       <Drawer
@@ -137,7 +137,7 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
                 {
                   label: '推荐',
                   colors: [
-                    config.theme.primary,
+                    config.theme?.primary,
                     '#f43f5e',
                     '#2563eb',
                     '#10b981',
@@ -162,9 +162,6 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
             name="fontFamily"
             rules={[{ required: true, message: '请选择字体' }]}>
             <Select
-              showSearch
-              filterOption={true}
-              optionFilterProp="label"
               onChange={(value) => {
                 setConfig({
                   ...config,
@@ -271,9 +268,6 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
           </Form.Item>
           <Form.Item<FieldType> label="自动切换" name="autoplay">
             <Select
-              showSearch
-              filterOption={true}
-              optionFilterProp="label"
               onChange={(value) => {
                 setConfig({
                   ...config,
@@ -369,7 +363,7 @@ export default (props: { visible: boolean; onCancel: () => void }) => {
     defaultValue: tabConfig,
     listenStorageChange: true
   })
-  const [primary] = useState(config.theme.primary)
+  const [primary] = useState(config.theme?.primary)
   return (
     <ThemeProvider
       token={{

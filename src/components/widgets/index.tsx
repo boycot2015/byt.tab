@@ -494,6 +494,20 @@ const IconContent = (props: {
       </Form.Item>
       <Form.Item label="图标背景" name="backgroundColor">
         <ColorPicker
+          presets={[
+            {
+              label: '推荐',
+              colors: [
+                '#f43f5e',
+                '#2563eb',
+                '#10b981',
+                '#059669',
+                '#06b6d4',
+                '#0ea5e9',
+                '#0284c7'
+              ]
+            }
+          ]}
           onChange={(value) =>
             setState({ ...state, backgroundColor: value.toHexString() })
           }

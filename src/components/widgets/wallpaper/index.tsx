@@ -72,7 +72,7 @@ function Widget(props: {
       //     theme: {
       //       ...config.theme,
       //       festival: {
-      //         ...config.theme.festival,
+      //         ...config.theme?.festival,
       //         url: ''
       //       }
       //     }
@@ -84,9 +84,9 @@ function Widget(props: {
         ...config,
         theme: {
           ...config.theme,
-          background: res.url || config.theme.background,
+          background: res.url || config.theme?.background,
           festival: {
-            ...config.theme.festival,
+            ...config.theme?.festival,
             ...res
           }
         }
@@ -108,9 +108,9 @@ function Widget(props: {
           <img
             className="w-full h-full object-cover"
             src={
-              (config.theme.festival.open && config.theme.festival.url) ||
-              config.theme.cover ||
-              config.theme.background
+              (config.theme?.festival.open && config.theme?.festival.url) ||
+              config.theme?.cover ||
+              config.theme?.background
             }
             alt="random image"
           />

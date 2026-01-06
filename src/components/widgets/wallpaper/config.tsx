@@ -230,9 +230,9 @@ function WidgetModal(props: {
     // item?.url &&
     //   document.documentElement.style.setProperty(
     //     '--byt-bg-image',
-    //     config.theme.background?.includes('http')
-    //       ? `url(${config.theme.background}) center/cover no-repeat fixed`
-    //       : config.theme.background
+    //     config.theme?.background?.includes('http')
+    //       ? `url(${config.theme?.background}) center/cover no-repeat fixed`
+    //       : config.theme?.background
     //   )
   }
   useAsyncEffect(async () => {
@@ -354,23 +354,23 @@ function WidgetModal(props: {
                 <div
                   id={'scrollable_' + wallpaper.cate}
                   className="h-[462px] overflow-hidden overflow-y-auto">
-                  {wallpaper.cate === 'bing' && config.theme.festival.url && (
+                  {wallpaper.cate === 'bing' && config.theme?.festival.url && (
                     <div className="flex gap-2 mb-4">
                       <Image
-                        src={config.theme.festival.url}
-                        alt={config.theme.festival.title}
+                        src={config.theme?.festival.url}
+                        alt={config.theme?.festival.title}
                         className="overflow-hidden rounded-xl"
                         width={190}
                       />
                       <div className="flex flex-col">
                         <div className=" text-white pl-4">
-                          {config.theme.festival.title}
+                          {config.theme?.festival.title}
                         </div>
                         <Button
                           type="link"
                           target="_blank"
-                          href={config.theme.festival.copyrightlink}>
-                          {config.theme.festival.copyright}
+                          href={config.theme?.festival.copyrightlink}>
+                          {config.theme?.festival.copyright}
                         </Button>
                         <div className="source text-white pl-4">
                           壁纸来源：
@@ -378,7 +378,9 @@ function WidgetModal(props: {
                             type="link"
                             target="_blank"
                             href={
-                              config.theme.festival.copyrightlink?.split('?')[0]
+                              config.theme?.festival.copyrightlink?.split(
+                                '?'
+                              )[0]
                             }>
                             必应
                           </Button>

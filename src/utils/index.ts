@@ -77,6 +77,7 @@ export const $GET = async (url: string, options?: RequestInit) => {
 export class Day {
     public month: number = 0
     public day: number = 0
+    public week: number = 0
     public lunarDay: string = ''
     public lunarMonth: string = ''
     public yearGanZhi: string = ''
@@ -105,6 +106,7 @@ export function buildDay(d: Solar = Solar.fromDate(new Date())) {
     const day = new Day()
     day.month = d.getMonth()
     day.day = d.getDay()
+    day.week = d.getWeek()
     day.lunarMonth = lunar.getMonthInChinese()
     day.lunarDay = lunar.getDayInChinese()
     day.yearGanZhi = lunar.getYearInGanZhi()
