@@ -4,19 +4,14 @@ import {
   useLocalStorageState,
   useRequest
 } from 'ahooks'
-import { Card, message, Spin } from 'antd'
-import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from 'plasmo'
+import { Card, Spin } from 'antd'
 import React, { useEffect, useState } from 'react'
 
 import { getNews, getNewsCate } from '~data/news'
 import { sizeMap, ThemeProvider } from '~layouts'
-import tabConfig from '~tabConfig'
-import type { Config } from '~types.d'
 
 import WidgetModal from './config'
 
-export const getInlineAnchor: PlasmoGetInlineAnchor = async () =>
-  document.querySelector('#__plasmo')
 export interface News {
   id: string
   name: string
@@ -44,18 +39,21 @@ type WidgetProp = {
 function Widget(props: WidgetProp) {
   const [visible, setVisible] = useState(false)
   const [show, setShow] = useState(false)
-  const { data, loading } = useRequest(getNews, {
-    cacheKey: 'news',
-    manual: true
+  const { data, run } = useRequest(getNews, {
+    cacheKey: 'news_' + props.cateId,
+    staleTime: 1000 * 60 * 5
   })
+  const [page, setPage] = useState(1)
   const [news, setNews] = useLocalStorageState<News[]>('news', {
     defaultValue: [],
     listenStorageChange: true
   })
   const [list, setList] = useState<News['list']>([])
+  const [currentList, setCurrentList] = useState<News['list']>([])
   useEffect(() => {
     if (data) {
       setList(data)
+      setCurrentList(data.slice(0, 4))
     }
   }, [data])
   useAsyncEffect(async () => {
@@ -77,6 +75,13 @@ function Widget(props: WidgetProp) {
       setList(res2)
     }
   }, [])
+  useInterval(() => {
+    setPage((page) => {
+      let data = list.slice(page * 4, (page + 1) * 4)
+      data.length && setCurrentList(data)
+      return data.length ? page + 1 : 0
+    })
+  }, 1000 * 10)
   return (
     <ThemeProvider>
       <Card
@@ -88,18 +93,16 @@ function Widget(props: WidgetProp) {
           !props.withComponents && setVisible(true)
           !props.withComponents && setShow(true)
         }}>
-        <Spin
-          spinning={!list.length || loading}
-          wrapperClassName={`w-full h-full`}>
-          <div className="h-full w-full min-h-[144px] !p-4 flex flex-col text-white gap-2 justify-center">
-            {list?.slice(0, 4)?.map((item, index) => (
+        <Spin spinning={!currentList.length} wrapperClassName={`w-full h-full`}>
+          <div className="h-full w-full min-h-[144px] !p-4 flex flex-col text-white gap-2">
+            {currentList?.map((item, index) => (
               <div
                 className="flex justify-between gap-2"
                 title={item.title}
                 key={item.id || index}>
                 <span
                   className={`line-clamp-1 ${props.size === 'large' ? 'flex-1' : ''}`}>
-                  {index + 1}. {item.title}
+                  {item.title}
                 </span>
                 {props.size === 'large' && item.hotValue && (
                   <span>{item.hotValue}</span>
@@ -121,6 +124,7 @@ function Widget(props: WidgetProp) {
           onCancel={(cateId, list) => {
             setVisible(false)
             setList(list)
+            setCurrentList(list.slice(0, 4))
             setNews(
               news.map((item) => ({
                 ...item,
