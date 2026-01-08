@@ -96,6 +96,13 @@ export const widgets: Widget[] = [
     size: ['middle', 'large'],
     name: '新闻动态',
     component: 'NewsWidget'
+  },
+  {
+    id: 'FinanceWidget',
+    ctype: 'recommend',
+    size: ['middle', 'large'],
+    name: '财经指数',
+    component: 'FinanceWidget'
   }
 ]
 const getBase64 = (file: FileType): Promise<string> =>
