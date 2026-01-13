@@ -1,5 +1,7 @@
-import { akApiUrl } from '~api/baseUrl'
 import dayjs from 'dayjs'
+
+import { akApiUrl } from '~api/baseUrl'
+
 const $GET = async (url: string, options?: any) => {
   try {
     const res = await fetch(url, {
@@ -33,15 +35,15 @@ const getFinanceData = ({
  */
 const getFinanceStatistic = ({
   code = 'stock_sse_summary',
-  date = new Date().toLocaleDateString()
+  date = dayjs().format('YYYYMMDD')
 }: {
   code: 'stock_sse_summary' | 'stock_szse_summary'
   date?: string
 }) => {
   let url = `${akApiUrl}/${code}`
-  if (code === 'stock_szse_summary') {
-    url = `${akApiUrl}/${code}?date=${date}`
-  }
+  //   if (code === 'stock_szse_summary') {
+  //     url = `${akApiUrl}/${code}?date=${date}`
+  //   }
   return $GET(url)
 }
 /**
@@ -106,8 +108,8 @@ const getFinanceRealTime = ({
 const getFinanceHistory = ({
   code = 'stock_zh_a_hist',
   symbol = 'sh600006',
-  start_date = '2024-01-01 09:30:00', // 开始日期
-  end_date = '2026-12-31 09:30:00', // 结束日期
+  start_date = dayjs('2026-01-01 09:30:00').format('YYYYMMDD'), // 开始日期
+  end_date = dayjs('2026-12-31 09:30:00').format('YYYYMMDD'), // 结束日期
   period = '1d',
   adjust = 'hfq'
 }: {
@@ -151,8 +153,8 @@ const getFinanceIntraday = ({
 const getFinanceHoursMinis = ({
   code = 'stock_zh_a_minute',
   symbol = 'sh000300',
-  start_date = '2026-01-01 09:30:00', // 开始日期
-  end_date = new Date().toLocaleDateString(), // 结束日期
+  start_date = dayjs('2026-01-01 09:30:00').format('YYYYMMDD'), // 开始日期
+  end_date = dayjs().format('YYYYMMDD'), // 结束日期
   period = '1d',
   adjust = 'hfq'
 }: {
@@ -172,6 +174,57 @@ const getFinanceNews = (date = '') => {
     `${akApiUrl}/stock_gsrl_gsdt_em?date=${date || dayjs().format('YYYYMMDD')}`
   )
 }
+
+/**
+ * 股票指数
+ * @param code 
+ * a股东财 | a股新浪 | 港股东财 | 港股新浪 | 美股新浪 | 全球指数-实时行情数据
+ * 'stock_zh_index_spot_em' | 'stock_zh_index_spot_sina' | 'stock_hk_index_spot_em' | 'stock_hk_index_spot_sina' | 'index_us_stock_sina'
+ * @param symbol symbol="上证系列指数"；choice of {"沪深重要指数", "上证系列指数", "深证系列指数", "指数成份", "中证系列指数"}
+
+ */
+const getFinanceSpot = ({
+  code = 'stock_zh_index_spot_em',
+  symbol = ''
+}: {
+  code:
+    | 'stock_zh_index_spot_em'
+    | 'stock_zh_index_spot_sina'
+    | 'stock_hk_index_spot_em'
+    | 'stock_hk_index_spot_sina'
+    | 'index_us_stock_sina'
+    | 'index_global_spot_em'
+  symbol?: string
+}) => {
+  let url = `${akApiUrl}/${code}`
+  if (symbol) url = `${url}?symbol=${symbol}`
+  return $GET(url)
+}
+/**
+ * 板块排行
+ */
+const getFinanceBoardRank = ({
+  code = 'stock_hsgt_board_rank_em',
+  symbol = '北向资金增持行业板块排行',
+  indicator = '今日'
+}: {
+  code:
+    | 'stock_hsgt_board_rank_em'
+    | 'stock_zh_index_spot_sina'
+    | 'stock_hk_index_spot_em'
+    | 'stock_hk_index_spot_sina'
+    | 'index_us_stock_sina'
+    | 'index_global_spot_em'
+  symbol?:
+    | '北向资金增持行业板块排行'
+    | '北向资金增持概念板块排行'
+    | '北向资金增持地域板块排行'
+  indicator?: '今日' | '3日' | '5日' | '10日' | '1月' | '1季' | '1年'
+}) => {
+  let url = `${akApiUrl}/${code}`
+  if (symbol) url = `${url}?symbol=${symbol}&indicator=${indicator}`
+  return $GET(url)
+}
 export {
   getFinanceData,
   getFinanceStatistic,
@@ -180,5 +233,7 @@ export {
   getFinanceHoursMinis,
   getFinanceIntraday,
   getFinanceHistory,
-  getFinanceNews
+  getFinanceNews,
+  getFinanceSpot,
+  getFinanceBoardRank
 }

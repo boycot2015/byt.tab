@@ -1,36 +1,35 @@
 import {
-  useAsyncEffect,
+  clearCache,
   useInterval,
   useLocalStorageState,
-  useRequest
+  useRequest,
+  useUpdateEffect
 } from 'ahooks'
 import { Card, Spin } from 'antd'
 import React, { useEffect, useState } from 'react'
 
-import {
-  getFinanceData,
-  getFinanceNews,
-  getFinanceStatistic
-} from '~data/finance'
+import { getFinanceSpot } from '~data/finance'
 import { sizeMap, ThemeProvider } from '~layouts'
 
 import WidgetModal from './config'
 
-export interface News {
-  id: string
+export interface Finance {
+  type: 'hk' | 'se' | 'us'
   name: string
   icon?: string
   list: {
-    id?: string
-    index?: string
-    title?: string
-    name?: string
-    href?: string
-    url?: string
-    icon?: string
-    link?: string
-    hotValue?: string
-    desc?: string
+    序号?: string
+    代码: string
+    名称: string
+    最新价: number
+    涨跌幅: number
+    涨跌额: number
+    振幅?: number
+    最高: number
+    最低: number
+    今开: number
+    昨收: number
+    量比?: number
   }[]
 }
 type WidgetProp = {
@@ -43,68 +42,142 @@ type WidgetProp = {
 function Widget(props: WidgetProp) {
   const [visible, setVisible] = useState(false)
   const [show, setShow] = useState(false)
-  const fetchData = async () => {
-    return await getFinanceStatistic({
-      code: 'stock_sse_summary'
-    })
-  }
-  const { data, run } = useRequest(fetchData, {
-    cacheKey: 'finance_static_' + props.cateId,
-    staleTime: 1000 * 10
-  })
-  const { data: news, run: fetchNews } = useRequest(getFinanceNews, {
-    cacheKey: 'finance_news',
-    staleTime: 1000 * 60 * 5
-  })
+  const pageSize = props.size == 'large' ? 4 : 2
   const [page, setPage] = useState(1)
-  const [finance, setFinance] = useLocalStorageState<News[]>('finance_news', {
-    defaultValue: news || [],
-    listenStorageChange: true
-  })
-  const [list, setList] = useState<News['list']>([])
-  const [currentList, setCurrentList] = useState<News['list']>([])
-  useEffect(() => {
-    if (news) {
-      setList(news)
-      setCurrentList(news.slice(0, 4))
-      setFinance(news)
-    }
-  }, [news])
-  // useAsyncEffect(async () => {
-  //   let res = finance || []
-  //   let cateId = props.cateId || res?.[0]?.id || ''
-  //   if (!res.length) {
-  //     let res2 = await getFinanceStatistic({
-  //       code: 'stock_sse_summary'
-  //     })
-  //     cateId = cateId || res?.[0]?.id || ''
-  //     setFinance(
-  //       res.map((item) => ({
-  //         ...item,
-  //         list: cateId === item.id ? res2 : []
-  //       })) || []
-  //     )
-  //     setList(res2 || [])
-  //   } else {
-  //     let res2 = res.filter((item) => item.id === cateId)?.[0]?.list || []
-  //     setList(res2)
-  //   }
-  // }, [])
-  useInterval(
-    () => {
-      setPage((page) => {
-        let data = list.slice(page * 4, (page + 1) * 4)
-        data.length && setCurrentList(data)
-        return data.length ? page + 1 : 0
+  const hkspots = ['HSTECH', 'HSI', 'HSCEI', 'HSCCI']
+  const usspots = ['DJIA', 'IXIC', 'NDX', 'SPX']
+  const fetchData = async (): Promise<Finance[]> => {
+    let res = await Promise.all([
+      getFinanceSpot({
+        code: 'stock_zh_index_spot_em',
+        symbol: '沪深重要指数'
+      }),
+      getFinanceSpot({
+        code: 'stock_hk_index_spot_sina'
       })
-      fetchNews()
-      console.log(news, data, 'finance_data')
-    },
-    1000 * 10,
+    ])
+    return [
+      {
+        type: 'se',
+        name: '深沪京',
+        icon: '🇨🇳',
+        list: [...(res[0] || [])]
+      },
+      {
+        type: 'hk',
+        name: '港股',
+        icon: '🇭🇰',
+        list: [...(res[1] || []).filter((el) => hkspots.includes(el['代码']))]
+      }
+    ]
+  }
+  const fetchUsData = async (): Promise<Finance[]> => {
+    let res: Finance['list'] = await getFinanceSpot({
+      code: 'index_global_spot_em'
+    })
+    return [
+      {
+        type: 'us',
+        name: '美股',
+        icon: '🇺🇸',
+        list: res
+          ?.filter((el) => usspots.includes(el['代码']))
+          .map((el) => ({
+            ...el,
+            昨收: el['昨收价'],
+            振幅: el['振幅'],
+            今开: el['开盘价'],
+            最高: el['最高价'],
+            最低: el['最低价']
+          }))
+      }
+    ]
+  }
+  const { data, run: getSpotData } = useRequest(fetchData, {
+    cacheKey: 'finance_data',
+    staleTime: 1000 * 30
+  })
+  const { data: usData, run: getUsData } = useRequest(fetchUsData, {
+    cacheKey: 'finance_data_us',
+    staleTime: 1000 * 30
+  })
+  const [financeData, setFinanceData] = useLocalStorageState<Finance[]>(
+    'finance_data',
     {
-      immediate: true
+      defaultValue: [],
+      listenStorageChange: true
     }
   )
+  const [loading, setLoading] = useState(false)
+  const updateData = (type) => {
+    setLoading(true)
+    if (type == 'se' || type == 'hk') clearCache('finance_data')
+    if (type == 'us') clearCache('finance_data_us')
+    if (type == 'se' || type == 'hk') getUsData()
+    if (type == 'us') getSpotData()
+  }
+  const [list, setList] = useState<Finance['list']>([])
+  useEffect(() => {
+    if (data && data.length > 0) {
+      let newdata = financeData && financeData.length ? [...financeData] : data
+      if (newdata.find((item) => item.type === 'se')) {
+        newdata = newdata.map((item) => {
+          if (item.type === 'se') {
+            item.list = data[0].list || []
+          }
+          return item
+        })
+      } else {
+        newdata.unshift(...data)
+      }
+      let list = newdata[0]?.list?.slice(0, pageSize) || []
+      setList(list)
+      setFinanceData(newdata)
+      setLoading(false)
+    }
+  }, [data])
+  useEffect(() => {
+    if (usData && usData.length > 0) {
+      let newdata =
+        financeData && financeData.length ? [...financeData] : usData
+      if (newdata.find((item) => item.type === 'us')) {
+        newdata = newdata.map((item) => {
+          if (item.type === 'us') {
+            item.list = usData[0].list || []
+          }
+          return item
+        })
+      } else {
+        newdata.push(usData[0])
+      }
+      let list = newdata[0]?.list?.slice(0, pageSize) || []
+      setList(list)
+      setFinanceData(newdata)
+      setLoading(false)
+    }
+  }, [usData])
+  useInterval(() => {
+    setPage((page) => {
+      if (!financeData) return 0
+      let data =
+        financeData
+          ?.find((item) => item.type === 'se')
+          ?.list?.slice(page * pageSize, (page + 1) * pageSize) || []
+      data.length && setList(data)
+      return data.length ? page + 1 : 0
+    })
+    getSpotData()
+    getUsData()
+  }, 1000 * 15)
+  // 数据清除自动获取
+  useUpdateEffect(() => {
+    if (!financeData) {
+      setPage(0)
+      setList([])
+      updateData('se')
+      updateData('us')
+    }
+  }, [financeData])
   return (
     <ThemeProvider>
       <Card
@@ -116,20 +189,32 @@ function Widget(props: WidgetProp) {
           !props.withComponents && setVisible(true)
           !props.withComponents && setShow(true)
         }}>
-        <Spin spinning={!currentList.length} wrapperClassName={`w-full h-full`}>
+        <Spin spinning={!list.length} wrapperClassName={`w-full h-full`}>
           <div className="h-full w-full min-h-[144px] !p-4 flex flex-col text-white gap-2">
-            {currentList?.map((item, index) => (
+            {list?.map((item, index) => (
               <div
-                className="flex justify-between gap-2"
-                title={item.title}
-                key={item.id || index}>
-                <span
-                  className={`line-clamp-1 ${props.size === 'large' ? 'flex-1' : ''}`}>
-                  {item['具体事项']}
-                </span>
-                {props.size === 'large' && item.hotValue && (
-                  <span>{item['简称']}</span>
+                className={`flex justify-between w-full gap-2 ${props.size === 'large' ? 'flex-row' : 'flex-col'}`}
+                title={item['具体事项']}
+                key={item['名称'] || item['代码'] || index}>
+                {item['名称'] && (
+                  <span className="flex justify-between w-full gap-1">
+                    <span className="line-clamp-1">{item['名称']}</span>
+                    <span className={props.size === 'large' ? 'hidden' : ''}>
+                      {item['最新价']}
+                    </span>
+                  </span>
                 )}
+                <span
+                  className={`text-right flex gap-2 ${item['涨跌幅'] > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                  <span className={props.size === 'large' ? '' : 'hidden'}>
+                    {item['最新价']}
+                  </span>
+                  <span>{item['涨跌额']}</span>
+                  <span>
+                    {item['最新价'] > item['昨收'] ? '+' : ''}
+                    {item['涨跌幅']}%
+                  </span>
+                </span>
               </div>
             ))}
           </div>
@@ -138,27 +223,20 @@ function Widget(props: WidgetProp) {
       {show && (
         <WidgetModal
           visible={visible}
+          loading={loading}
           cateId={props.cateId || ''}
           id={props.id || ''}
-          cates={finance}
           afterOpenChange={(visible) => {
             setShow(visible)
           }}
-          onCancel={(cateId, list) => {
+          onCancel={(cateId) => {
             setVisible(false)
-            setList(list)
-            setCurrentList(list.slice(0, 4))
-            setFinance(
-              finance.map((item) => ({
-                ...item,
-                list: cateId === item.id ? list : item.list || []
-              })) || []
-            )
             props.update({
               id: props.id,
-              props: { size: props.size, cateId: cateId }
+              props: { size: props.size, cateId: 'symbol' }
             })
           }}
+          update={updateData}
         />
       )}
     </ThemeProvider>

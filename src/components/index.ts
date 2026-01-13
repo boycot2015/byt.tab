@@ -2,6 +2,7 @@ import * as icons from '@ant-design/icons/lib/icons/index'
 import React from 'react'
 
 import DateWidget from './widgets/date'
+import FinanceNewsWidget from './widgets/finance/news'
 import FinanceWidget from './widgets/finance'
 import NewsWidget from './widgets/news'
 import SettingWidget from './widgets/setting'
@@ -17,7 +18,8 @@ const components = {
   WeatherWidget,
   WallpaperWidget,
   NewsWidget,
-  FinanceWidget
+  FinanceWidget,
+  FinanceNewsWidget
 }
 export const renderComponent = (
   componentName,

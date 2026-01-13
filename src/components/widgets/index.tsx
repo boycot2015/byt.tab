@@ -98,10 +98,17 @@ export const widgets: Widget[] = [
     component: 'NewsWidget'
   },
   {
+    id: 'FinanceNewsWidget',
+    ctype: 'recommend',
+    size: ['middle', 'large'],
+    name: '财经资讯',
+    component: 'FinanceNewsWidget'
+  },
+  {
     id: 'FinanceWidget',
     ctype: 'recommend',
     size: ['middle', 'large'],
-    name: '财经指数',
+    name: '股票行情',
     component: 'FinanceWidget'
   }
 ]
