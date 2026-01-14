@@ -25,26 +25,26 @@ import {
 } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 
-import { getFinanceBoardRank } from '~data/finance'
+import { getStockBoardRank } from '~data/stock'
 import { ThemeProvider } from '~layouts'
-
-const { Paragraph, Text } = Typography
 
 export interface BoardRank {
   序号: string
   名称: string
-  最新涨跌幅: number
-  今日持股市值: number
-  今日持股市值变化: number
+  今日涨跌幅: number
+  '今日主力净流入-净占比': number
+  '今日主力净流入-净额': number
+  今日主力净流入最大股: string
   板块类型: string
 }
 
 type WidgetProp = {
   withComponents?: boolean
+  rankTypes?: any[]
   cateId?: string
   id?: string
   update?: (args: { id: WidgetProp['id']; props: WidgetProp }) => void
-  size?: 'middle' | 'large' | 'bigest'
+  size?: 'middle' | 'large' | 'biggest'
 }
 
 // 独立的排行面板组件 - 可以在任何地方使用
@@ -90,8 +90,9 @@ export function RankPanel(props: {
     },
     {
       title: '涨跌幅',
-      dataIndex: '最新涨跌幅',
-      key: '最新涨跌幅',
+      dataIndex: '今日涨跌幅',
+      key: '今日涨跌幅',
+      sortable: true,
       width: 100,
       align: 'right' as const,
       render: (value: number) => (
@@ -102,17 +103,15 @@ export function RankPanel(props: {
       )
     },
     {
-      title: '持股市值',
-      dataIndex: '今日持股-市值',
-      key: '今日持股-市值',
+      title: '资金流入',
+      dataIndex: '今日主力净流入-净额',
+      key: '今日主力净流入-净额',
+      sortable: true,
       width: 120,
       align: 'right' as const,
       render: (value: number) => (
-        <div className="text-white/70">
-          {value?.toLocaleString('zh-CN', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          })}
+        <div className={`${value > 0 ? 'text-red-400' : 'text-green-400'}`}>
+          {(value / 100000000).toFixed(2)}亿
         </div>
       )
     }
@@ -125,16 +124,13 @@ export function RankPanel(props: {
 
     return (
       <Spin spinning={!loaded && !props.data?.length}>
-        <div
-          className={props.height || 'h-[50vh]'}
-          style={{ overflow: 'auto' }}>
+        <div style={{ overflow: 'auto' }}>
           <Table
             dataSource={props.data}
             columns={columns}
             rowKey={(record, index) => record.序号 || index?.toString()}
             pagination={false}
             size="small"
-            scroll={{ y: 'calc(50vh - 60px)' }}
             className="bg-transparent"
             components={{
               header: {
@@ -173,16 +169,15 @@ export function RankPanel(props: {
     )
   }
 
-  useUpdateEffect(() => {
-    !props.loading && message.success('数据更新成功')
-  }, [props.loading])
-
   return (
     <ThemeProvider
       token={{
         colorBgContainer: 'rgba(0, 0, 0, 0.5)',
-        colorText: 'rgba(255, 255, 255, 0.65)',
+        // colorText: 'rgba(255, 255, 255, 0.65)',
         colorTextDisabled: 'rgba(255, 255, 255, 0.35)',
+        Message: {
+          contentBg: 'rgba(0, 0, 0, 0.8)'
+        },
         Tabs: {
           itemColor: 'rgba(255, 255, 255, 0.65)'
         }
@@ -193,58 +188,58 @@ export function RankPanel(props: {
           ref={(el) => (tabWrapRef.current = el)}>
           <div className="flex flex-col w-full">
             {/* 使用Tabs组件替代下拉筛选 */}
-            <Spin spinning={props.loading} wrapperClassName="!h-full">
-              <div className="min-h-[160px] w-full h-full">
-                <Tabs
-                  activeKey={props.currentBoardType}
-                  onChange={props.onBoardTypeChange}
-                  tabBarExtraContent={{
-                    right: (
-                      <div className="flex items-center gap-2">
-                        {/* 时间周期选择器放在tabBarExtraContent中 */}
-                        <Select
-                          size="small"
-                          value={props.currentIndicator}
-                          onChange={props.onIndicatorChange}
-                          options={props.indicatorOptions}
-                          className="w-24"
-                          dropdownStyle={{
-                            background: 'rgba(0, 0, 0, 0.8)',
-                            backdropFilter: 'blur(10px)'
-                          }}
-                        />
-                        {/* 刷新按钮 */}
-                        <Button
-                          type="text"
-                          loading={props.loading}
-                          size="small"
-                          icon={<ReloadOutlined />}
-                          className="cursor-pointer hover:!text-white text-white"
-                          onClick={props.onUpdate}
-                          title="获取最新数据">
-                          刷新
-                        </Button>
-                      </div>
-                    )
-                  }}
-                  items={props.boardTypes.map((item) => ({
-                    label: (
-                      <div className="flex items-center gap-1">
-                        {item.icon}
-                        {item.label}
-                      </div>
-                    ),
-                    key: item.key,
-                    children: (
-                      <TabContent
-                        data={props.boardData}
-                        height={props.height}
+            <div className="min-h-[160px] w-full h-full">
+              <Tabs
+                activeKey={props.currentBoardType}
+                onChange={props.onBoardTypeChange}
+                tabBarExtraContent={{
+                  right: (
+                    <div className="flex items-center gap-2">
+                      {/* 时间周期选择器放在tabBarExtraContent中 */}
+                      <Select
+                        size="small"
+                        value={props.currentIndicator}
+                        onChange={props.onIndicatorChange}
+                        options={props.indicatorOptions}
+                        className="w-24"
+                        styles={{
+                          popup: {
+                            root: {
+                              background: 'rgba(0, 0, 0, 0.8)',
+                              backdropFilter: 'blur(10px)'
+                            }
+                          }
+                        }}
                       />
-                    )
-                  }))}
-                />
-              </div>
-            </Spin>
+                      {/* 刷新按钮 */}
+                      <Button
+                        type="text"
+                        loading={props.loading}
+                        size="small"
+                        icon={<ReloadOutlined />}
+                        className="cursor-pointer hover:!text-white text-white"
+                        onClick={props.onUpdate}
+                        title="获取最新数据">
+                        刷新
+                      </Button>
+                    </div>
+                  )
+                }}
+                items={props.boardTypes.map((item) => ({
+                  label: (
+                    <div className="flex items-center gap-1">
+                      {item.icon}
+                      {item.label}
+                    </div>
+                  ),
+                  key: item.key,
+                  disabled: props.loading,
+                  children: (
+                    <TabContent data={props.boardData} height={props.height} />
+                  )
+                }))}
+              />
+            </div>
           </div>
         </div>
       </App>
@@ -253,24 +248,24 @@ export function RankPanel(props: {
 }
 
 // 排行小组件 - 保持原有功能
-function RankWidget(props: WidgetProp) {
+function BoardRankWidget(props: WidgetProp) {
   const [visible, setVisible] = useState(false)
   const [show, setShow] = useState(false)
 
   // 板块类型配置
   const boardTypes = [
     {
-      key: '北向资金增持行业板块排行',
+      key: '行业资金流',
       label: '行业板块',
       icon: <RiseOutlined />
     },
     {
-      key: '北向资金增持概念板块排行',
+      key: '概念资金流',
       label: '概念板块',
       icon: <RiseOutlined />
     },
     {
-      key: '北向资金增持地域板块排行',
+      key: '地域资金流',
       label: '地域板块',
       icon: <RiseOutlined />
     }
@@ -279,18 +274,14 @@ function RankWidget(props: WidgetProp) {
   // 时间周期配置
   const indicatorOptions = [
     { label: '今日', value: '今日' },
-    { label: '3日', value: '3日' },
     { label: '5日', value: '5日' },
-    { label: '10日', value: '10日' },
-    { label: '1月', value: '1月' },
-    { label: '1季', value: '1季' },
-    { label: '1年', value: '1年' }
+    { label: '10日', value: '10日' }
   ]
 
   const [currentBoardType, setCurrentBoardType] = useState(boardTypes[0].key)
   const [currentIndicator, setCurrentIndicator] = useState('今日')
   const [boardData, setBoardData] = useLocalStorageState<BoardRank[]>(
-    'finance_board_rank',
+    'stock_board_rank',
     {
       defaultValue: [],
       listenStorageChange: true
@@ -304,15 +295,15 @@ function RankWidget(props: WidgetProp) {
     run: fetchBoardRank
   } = useRequest(
     async () => {
-      const result = await getFinanceBoardRank({
-        code: 'stock_hsgt_board_rank_em',
-        symbol: currentBoardType as any,
+      const result = await getStockBoardRank({
+        code: 'stock_sector_fund_flow_rank',
+        sector_type: currentBoardType as any,
         indicator: currentIndicator as any
       })
       return result || []
     },
     {
-      cacheKey: `finance_board_rank_${currentBoardType}_${currentIndicator}`,
+      cacheKey: `stock_board_rank_${currentBoardType}_${currentIndicator}`,
       staleTime: 60 * 1000, // 缓存60秒
       manual: true
     }
@@ -353,11 +344,11 @@ function RankWidget(props: WidgetProp) {
           !props.withComponents && setVisible(true)
           !props.withComponents && setShow(true)
         }}>
-        <Spin spinning={loading} wrapperClassName="w-full h-full">
-          <div className="h-full w-full min-h-[144px] !p-4 flex flex-col text-white gap-2 bg-black/50 backdrop-blur-md rounded-xl">
+        <Spin spinning={!boardData.length} wrapperClassName="w-full h-full">
+          <div className="h-full w-full min-h-[144px]flex flex-col text-white gap-2">
             {boardData?.slice(0, 4)?.map((item, index) => (
               <div
-                className="flex justify-between items-center gap-2"
+                className="flex justify-between items-center gap-2 mb-4"
                 key={item.序号 || index}>
                 <div className="flex items-center gap-2 flex-1">
                   <span className="text-sm opacity-70 w-6 text-center">
@@ -370,10 +361,10 @@ function RankWidget(props: WidgetProp) {
                 <div className="flex items-center gap-2">
                   <span
                     className={
-                      item.最新涨跌幅 > 0 ? 'text-red-500' : 'text-green-500'
+                      item.今日涨跌幅 > 0 ? 'text-red-500' : 'text-green-500'
                     }>
-                    {item.最新涨跌幅 > 0 ? '+' : ''}
-                    {item.最新涨跌幅}%
+                    {item.今日涨跌幅 > 0 ? '+' : ''}
+                    {item.今日涨跌幅}%
                   </span>
                   <span className="text-sm opacity-70">
                     {item['今日持股-市值']?.toFixed(2)}
@@ -384,10 +375,9 @@ function RankWidget(props: WidgetProp) {
             {!loading && !boardData?.length && (
               <Empty
                 description={<span className="!text-white">暂无数据~</span>}
-                imageStyle={{ height: 60 }}
               />
             )}
-            {props.size == 'bigest' && (
+            {props.size == 'biggest' && (
               <RankPanel
                 loading={loading}
                 boardTypes={boardTypes}
@@ -409,7 +399,7 @@ function RankWidget(props: WidgetProp) {
 
       {/* 使用独立的排行面板组件 */}
       {visible && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-md p-4">
           {/* 排行榜面板 */}
           <Modal>
             <RankPanel
@@ -438,4 +428,4 @@ function RankWidget(props: WidgetProp) {
   )
 }
 
-export default RankWidget
+export default BoardRankWidget

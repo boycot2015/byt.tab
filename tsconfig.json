@@ -3,7 +3,6 @@
   "exclude": ["node_modules"],
   "include": [".plasmo/index.d.ts", "./**/*.ts", "./src/**/*.tsx"],
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
     "paths": {
       "~*": ["./src/*"]
     },

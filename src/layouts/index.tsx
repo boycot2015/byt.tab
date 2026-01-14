@@ -61,7 +61,9 @@ export const ThemeProvider = ({
           ...token
         },
         algorithm:
-          themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm
+          token.algorithm || themeMode === 'dark'
+            ? theme.darkAlgorithm
+            : theme.defaultAlgorithm
       }}>
       {children}
     </ConfigProvider>

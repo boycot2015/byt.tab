@@ -7,7 +7,7 @@ import {
 import { Card, Spin } from 'antd'
 import React, { useEffect, useState } from 'react'
 
-import { getFinanceNews } from '~data/finance'
+import { getStockNews } from '~data/stock'
 import { sizeMap, ThemeProvider } from '~layouts'
 
 import WidgetModal from './config'
@@ -40,12 +40,12 @@ function Widget(props: WidgetProp) {
   const [visible, setVisible] = useState(false)
   const [show, setShow] = useState(false)
   const [page, setPage] = useState(1)
-  const [news, setNews] = useLocalStorageState<News[]>('finance_news', {
+  const [news, setNews] = useLocalStorageState<News[]>('stock_news', {
     defaultValue: [],
     listenStorageChange: true
   })
-  const { data, run: fetchNews } = useRequest(getFinanceNews, {
-    cacheKey: 'finance_news',
+  const { data, run: fetchNews } = useRequest(getStockNews, {
+    cacheKey: 'stock_news',
     staleTime: 1000 * 60 * 5,
     manual: true
   })
@@ -124,7 +124,7 @@ function Widget(props: WidgetProp) {
             setVisible(false)
             props.update({
               id: props.id,
-              props: { size: props.size, cateId: 'financeNews' }
+              props: { size: props.size, cateId: 'stockNews' }
             })
           }}
         />

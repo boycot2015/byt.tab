@@ -8,12 +8,12 @@ import {
 import { Card, Spin } from 'antd'
 import React, { useEffect, useState } from 'react'
 
-import { getFinanceSpot } from '~data/finance'
+import { getStockSpot } from '~data/stock'
 import { sizeMap, ThemeProvider } from '~layouts'
 
 import WidgetModal from './config'
 
-export interface Finance {
+export interface Stock {
   type: 'hk' | 'se' | 'us'
   name: string
   icon?: string
@@ -46,13 +46,13 @@ function Widget(props: WidgetProp) {
   const [page, setPage] = useState(1)
   const hkspots = ['HSTECH', 'HSI', 'HSCEI', 'HSCCI']
   const usspots = ['DJIA', 'IXIC', 'NDX', 'SPX']
-  const fetchData = async (): Promise<Finance[]> => {
+  const fetchData = async (): Promise<Stock[]> => {
     let res = await Promise.all([
-      getFinanceSpot({
+      getStockSpot({
         code: 'stock_zh_index_spot_em',
         symbol: '沪深重要指数'
       }),
-      getFinanceSpot({
+      getStockSpot({
         code: 'stock_hk_index_spot_sina'
       })
     ])
@@ -71,8 +71,8 @@ function Widget(props: WidgetProp) {
       }
     ]
   }
-  const fetchUsData = async (): Promise<Finance[]> => {
-    let res: Finance['list'] = await getFinanceSpot({
+  const fetchUsData = async (): Promise<Stock[]> => {
+    let res: Stock['list'] = await getStockSpot({
       code: 'index_global_spot_em'
     })
     return [
@@ -94,15 +94,15 @@ function Widget(props: WidgetProp) {
     ]
   }
   const { data, run: getSpotData } = useRequest(fetchData, {
-    cacheKey: 'finance_data',
+    cacheKey: 'stock_spot_data_se_hk',
     staleTime: 1000 * 30
   })
   const { data: usData, run: getUsData } = useRequest(fetchUsData, {
-    cacheKey: 'finance_data_us',
+    cacheKey: 'stock_spot_data_us',
     staleTime: 1000 * 30
   })
-  const [financeData, setFinanceData] = useLocalStorageState<Finance[]>(
-    'finance_data',
+  const [stockData, setStockData] = useLocalStorageState<Stock[]>(
+    'stock_spot_data',
     {
       defaultValue: [],
       listenStorageChange: true
@@ -111,15 +111,15 @@ function Widget(props: WidgetProp) {
   const [loading, setLoading] = useState(false)
   const updateData = (type) => {
     setLoading(true)
-    if (type == 'se' || type == 'hk') clearCache('finance_data')
-    if (type == 'us') clearCache('finance_data_us')
-    if (type == 'se' || type == 'hk') getUsData()
-    if (type == 'us') getSpotData()
+    if (type == 'se' || type == 'hk') clearCache('stock_spot_data_se_hk')
+    if (type == 'us') clearCache('stock_spot_data_us')
+    if (type == 'se' || type == 'hk') getSpotData()
+    if (type == 'us') getUsData()
   }
-  const [list, setList] = useState<Finance['list']>([])
+  const [list, setList] = useState<Stock['list']>([])
   useEffect(() => {
     if (data && data.length > 0) {
-      let newdata = financeData && financeData.length ? [...financeData] : data
+      let newdata = stockData && stockData.length ? [...stockData] : data
       if (newdata.find((item) => item.type === 'se')) {
         newdata = newdata.map((item) => {
           if (item.type === 'se') {
@@ -132,14 +132,13 @@ function Widget(props: WidgetProp) {
       }
       let list = newdata[0]?.list?.slice(0, pageSize) || []
       setList(list)
-      setFinanceData(newdata)
+      setStockData(newdata)
       setLoading(false)
     }
   }, [data])
   useEffect(() => {
     if (usData && usData.length > 0) {
-      let newdata =
-        financeData && financeData.length ? [...financeData] : usData
+      let newdata = stockData && stockData.length ? [...stockData] : usData
       if (newdata.find((item) => item.type === 'us')) {
         newdata = newdata.map((item) => {
           if (item.type === 'us') {
@@ -152,15 +151,15 @@ function Widget(props: WidgetProp) {
       }
       let list = newdata[0]?.list?.slice(0, pageSize) || []
       setList(list)
-      setFinanceData(newdata)
+      setStockData(newdata)
       setLoading(false)
     }
   }, [usData])
   useInterval(() => {
     setPage((page) => {
-      if (!financeData) return 0
+      if (!stockData) return 0
       let data =
-        financeData
+        stockData
           ?.find((item) => item.type === 'se')
           ?.list?.slice(page * pageSize, (page + 1) * pageSize) || []
       data.length && setList(data)
@@ -171,13 +170,13 @@ function Widget(props: WidgetProp) {
   }, 1000 * 15)
   // 数据清除自动获取
   useUpdateEffect(() => {
-    if (!financeData) {
+    if (!stockData) {
       setPage(0)
       setList([])
       updateData('se')
       updateData('us')
     }
-  }, [financeData])
+  }, [stockData])
   return (
     <ThemeProvider>
       <Card
@@ -229,7 +228,7 @@ function Widget(props: WidgetProp) {
           afterOpenChange={(visible) => {
             setShow(visible)
           }}
-          onCancel={(cateId) => {
+          onCancel={() => {
             setVisible(false)
             props.update({
               id: props.id,

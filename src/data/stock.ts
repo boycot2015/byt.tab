@@ -19,7 +19,7 @@ const $GET = async (url: string, options?: any) => {
  * @param code 'stock_individual_info_em' | 'stock_individual_basic_info_xq', 东财 | 雪球
  * @param symbol string 东财 | 雪球
  */
-const getFinanceData = ({
+const getStockData = ({
   code = 'stock_individual_info_em',
   symbol = '603777'
 }: {
@@ -33,7 +33,7 @@ const getFinanceData = ({
  * @param code 'stock_sse_summary' 上海证券交易所 | 'stock_szse_summary' 深圳证券交易所
  * @param date string 交易日期
  */
-const getFinanceStatistic = ({
+const getStockStatistic = ({
   code = 'stock_sse_summary',
   date = dayjs().format('YYYYMMDD')
 }: {
@@ -52,7 +52,7 @@ const getFinanceStatistic = ({
  * @param date string 交易日期
  *
  */
-const getFinanceDaily = ({
+const getStockDaily = ({
   code = 'stock_sse_deal_daily',
   date = ''
 }: {
@@ -87,7 +87,7 @@ enum stock_code {
  * @param code stock_code 渠道类型
  * @param symbol string 股票代码
  */
-const getFinanceRealTime = ({
+const getStockRealTime = ({
   code = stock_code.stock_zh_a_spot_em
 }: {
   code: stock_code
@@ -105,7 +105,7 @@ const getFinanceRealTime = ({
  * @param adjust string 复权类型
  *
  */
-const getFinanceHistory = ({
+const getStockHistory = ({
   code = 'stock_zh_a_hist',
   symbol = 'sh600006',
   start_date = dayjs('2026-01-01 09:30:00').format('YYYYMMDD'), // 开始日期
@@ -131,7 +131,7 @@ const getFinanceHistory = ({
  * @param symbol string, 股票代码
  *
  */
-const getFinanceIntraday = ({
+const getStockIntraday = ({
   code = 'stock_intraday_sina',
   symbol = 'sh000300'
 }: {
@@ -150,7 +150,7 @@ const getFinanceIntraday = ({
  * @param adjust string 复权类型
  *
  */
-const getFinanceHoursMinis = ({
+const getStockHoursMinis = ({
   code = 'stock_zh_a_minute',
   symbol = 'sh000300',
   start_date = dayjs('2026-01-01 09:30:00').format('YYYYMMDD'), // 开始日期
@@ -169,7 +169,7 @@ const getFinanceHoursMinis = ({
     `${akApiUrl}/${code}?symbol=${symbol}&period=${period}&adjust=${adjust}&start_date=${start_date || ''}&end_date=${end_date || ''}`
   )
 }
-const getFinanceNews = (date = '') => {
+const getStockNews = (date = '') => {
   return $GET(
     `${akApiUrl}/stock_gsrl_gsdt_em?date=${date || dayjs().format('YYYYMMDD')}`
   )
@@ -183,7 +183,7 @@ const getFinanceNews = (date = '') => {
  * @param symbol symbol="上证系列指数"；choice of {"沪深重要指数", "上证系列指数", "深证系列指数", "指数成份", "中证系列指数"}
 
  */
-const getFinanceSpot = ({
+const getStockSpot = ({
   code = 'stock_zh_index_spot_em',
   symbol = ''
 }: {
@@ -203,37 +203,38 @@ const getFinanceSpot = ({
 /**
  * 板块排行
  */
-const getFinanceBoardRank = ({
-  code = 'stock_hsgt_board_rank_em',
-  symbol = '北向资金增持行业板块排行',
-  indicator = '今日'
+const getStockBoardRank = ({
+  code = 'stock_sector_fund_flow_rank',
+  indicator = '' as any,
+  sector_type = '' as any,
+  symbol = '' as any
 }: {
   code:
-    | 'stock_hsgt_board_rank_em'
-    | 'stock_zh_index_spot_sina'
-    | 'stock_hk_index_spot_em'
-    | 'stock_hk_index_spot_sina'
-    | 'index_us_stock_sina'
-    | 'index_global_spot_em'
-  symbol?:
-    | '北向资金增持行业板块排行'
-    | '北向资金增持概念板块排行'
-    | '北向资金增持地域板块排行'
-  indicator?: '今日' | '3日' | '5日' | '10日' | '1月' | '1季' | '1年'
+    | 'stock_fund_flow_individual'
+    | 'stock_sector_fund_flow_rank'
+    | 'stock_hot_rank_em' // 人气榜-A股
+    | 'stock_hot_up_em' // 飙升榜-A股
+    | 'stock_hk_hot_rank_em' // 人气榜-港股
+    | 'stock_us_famous_spot_em' // 知名美股的实时行情数据
+  symbol?: '即时' | '3日排行' | '5日排行' | '10日排行' | '20日排行' | '科技类'
+  indicator?: '今日' | '5日' | '10日'
+  sector_type?: '行业资金流' | '概念资金流' | '地域资金流'
 }) => {
-  let url = `${akApiUrl}/${code}`
-  if (symbol) url = `${url}?symbol=${symbol}&indicator=${indicator}`
+  let url = `${akApiUrl}/${code}?`
+  if (symbol) url += `symbol=${symbol}`
+  if (indicator) url += `&indicator=${indicator}`
+  if (sector_type) url += `&sector_type=${sector_type}`
   return $GET(url)
 }
 export {
-  getFinanceData,
-  getFinanceStatistic,
-  getFinanceDaily,
-  getFinanceRealTime,
-  getFinanceHoursMinis,
-  getFinanceIntraday,
-  getFinanceHistory,
-  getFinanceNews,
-  getFinanceSpot,
-  getFinanceBoardRank
+  getStockData,
+  getStockStatistic,
+  getStockDaily,
+  getStockRealTime,
+  getStockHoursMinis,
+  getStockIntraday,
+  getStockHistory,
+  getStockNews,
+  getStockSpot,
+  getStockBoardRank
 }

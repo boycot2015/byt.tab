@@ -98,18 +98,25 @@ export const widgets: Widget[] = [
     component: 'NewsWidget'
   },
   {
-    id: 'FinanceNewsWidget',
+    id: 'StockNewsWidget',
     ctype: 'recommend',
     size: ['middle', 'large'],
-    name: '财经资讯',
-    component: 'FinanceNewsWidget'
+    name: '股票资讯',
+    component: 'StockNewsWidget'
   },
   {
-    id: 'FinanceWidget',
+    id: 'StockWidget',
     ctype: 'recommend',
     size: ['middle', 'large'],
     name: '股票行情',
-    component: 'FinanceWidget'
+    component: 'StockWidget'
+  },
+  {
+    id: 'StockRankWidget',
+    ctype: 'recommend',
+    size: ['middle', 'large'],
+    name: '股票排行',
+    component: 'StockRankWidget'
   }
 ]
 const getBase64 = (file: FileType): Promise<string> =>

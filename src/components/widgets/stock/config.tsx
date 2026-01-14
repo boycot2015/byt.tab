@@ -26,9 +26,9 @@ import {
 import dayjs from 'dayjs'
 import { useEffect, useRef, useState } from 'react'
 
-import type { Finance } from '~components/widgets/finance'
-import type { News } from '~components/widgets/finance/news'
-import Rank from '~components/widgets/finance/rank'
+import type { Stock } from '~components/widgets/stock'
+import type { News } from '~components/widgets/stock/news'
+import Rank from '~components/widgets/stock/rank/index'
 import { ThemeProvider } from '~layouts'
 
 const { Paragraph, Text } = Typography
@@ -42,17 +42,17 @@ function WidgetModal(props: {
   cates?: News[]
   id?: string
   onCancel: (cateId: string) => void
-  update?: (financeType: string) => void
+  update?: (stockType: string) => void
   afterOpenChange: (visible: boolean) => void
 }) {
   const { message } = App.useApp()
   const tabWrapRef = useRef<HTMLDivElement>(null)
-  const [news] = useLocalStorageState<News[]>('finance_news', {
+  const [news] = useLocalStorageState<News[]>('stock_news', {
     defaultValue: [],
     listenStorageChange: true
   })
-  const [financeData, setFinanceData] = useLocalStorageState<Finance[]>(
-    'finance_data',
+  const [stockData, setStockData] = useLocalStorageState<Stock[]>(
+    'stock_spot_data',
     {
       defaultValue: [],
       listenStorageChange: true
@@ -61,10 +61,10 @@ function WidgetModal(props: {
   const [cateId, setCateId] = useState<string>(
     props.cateId || news?.[0]?.id || ''
   )
-  const [financeType, setFinanceType] = useState<string>('se')
+  const [stockType, setStockType] = useState<string>('se')
   const TabContent = (props: {
     id?: string | number
-    data?: Finance['list'] | News['list']
+    data?: Stock['list'] | News['list']
   }) => {
     const scrollRef = useRef<HTMLDivElement>(null)
     const [loaded, setLoaded] = useState<boolean>(false)
@@ -110,7 +110,7 @@ function WidgetModal(props: {
                 ))}
             </Row>
             <div className="mt-2">
-              <Rank size="bigest" withComponents />
+              <Rank size="biggest" stockType={stockType} />
             </div>
             {loaded && !props.data?.length && (
               <Empty
@@ -172,12 +172,7 @@ function WidgetModal(props: {
             body: '!p-5'
           }}
           getContainer={() => document.body}
-          width={{
-            xxl: 1200,
-            xl: 1000,
-            lg: 800,
-            md: 600
-          }}
+          width={1000}
           footer={null}
           open={props.visible}
           closeIcon={<CloseOutlined className="!text-white" />}
@@ -213,26 +208,26 @@ function WidgetModal(props: {
                     name: '股票行情'
                   },
                   {
-                    id: 'financeNews',
+                    id: 'stockNews',
                     icon: <ReadOutlined />,
-                    name: '财经资讯'
+                    name: '股票资讯'
                   }
                 ]?.map((item, index) => ({
                   label: item.name,
                   key: item.id || index.toString(),
                   icon: item.icon,
-                  disabled: !financeData
+                  disabled: !stockData
                 }))}
               />
               <div className="flex-1 mt-5 h-full">
                 <Spin
-                  spinning={!financeData}
+                  spinning={!stockData}
                   rootClassName="!h-full"
                   wrapperClassName="!h-full">
                   <div className="min-h-[160px] w-full h-full">
-                    {cateId === 'symbol' && financeData?.length ? (
+                    {cateId === 'symbol' && stockData?.length ? (
                       <Tabs
-                        defaultActiveKey={financeType}
+                        defaultActiveKey={stockType}
                         indicator={{
                           align: 'start',
                           size: (origin) => origin * 1
@@ -245,7 +240,7 @@ function WidgetModal(props: {
                               size="small"
                               icon={<ReloadOutlined />}
                               className="cursor-pointer hover:!text-white text-white"
-                              onClick={() => props.update(financeType)}
+                              onClick={() => props.update(stockType)}
                               title="获取最新数据">
                               刷新
                             </Button>
@@ -260,10 +255,10 @@ function WidgetModal(props: {
                           icon: <MoreOutlined className="!text-white" />
                         }}
                         onChange={(key) => {
-                          setFinanceType(key)
+                          setStockType(key)
                         }}
                         className="text-shadow"
-                        items={financeData.map((item, index) => ({
+                        items={stockData.map((item, index) => ({
                           label: item.name,
                           key: item.type,
                           icon: item.icon || <StockOutlined />,
@@ -278,7 +273,7 @@ function WidgetModal(props: {
                       news &&
                       news.length && (
                         <div className="h-[50vh] overflow-auto">
-                          <TabContent id={'finance_news'} data={news} />
+                          <TabContent id={'stock_news'} data={news} />
                         </div>
                       )
                     )}
