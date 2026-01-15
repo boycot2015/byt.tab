@@ -40,7 +40,6 @@ export default (props: Props) => {
     <div>
       {props.stockType && props.stockType == 'se' && (
         <>
-          <h3 className="text-white text-lg font-bold my-2">板块排行</h3>
           <BoardRank {...props} withComponents />
         </>
       )}

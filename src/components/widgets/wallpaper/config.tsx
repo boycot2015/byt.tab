@@ -148,7 +148,6 @@ function WidgetModal(props: {
                       />
                     }
                     preview={{
-                      destroyOnHidden: true,
                       imageRender: () =>
                         item.url.includes('.mp4') ? (
                           <video
@@ -260,7 +259,7 @@ function WidgetModal(props: {
       <Modal
         // title={<span className=" !text-white">设置壁纸</span>}
         classNames={{
-          content: `!bg-black/50 h-[500px] !overflow-hidden backdrop-blur-md`,
+          container: `!bg-black/50 h-[500px] !overflow-hidden backdrop-blur-md`,
           body: '!p-0',
           header: `!bg-transparent`
         }}
@@ -282,7 +281,7 @@ function WidgetModal(props: {
           ref={(el) => (tabWrapRef.current = el)}>
           <Tabs
             defaultActiveKey={wallpaper?.cate || '0'}
-            tabPosition="left"
+            tabPlacement="start"
             tabBarExtraContent={{
               left: <span className=" !text-white text-2xl">壁纸库</span>
             }}

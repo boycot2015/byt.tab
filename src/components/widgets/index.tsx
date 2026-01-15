@@ -106,7 +106,7 @@ export const widgets: Widget[] = [
   },
   {
     id: 'StockWidget',
-    ctype: 'recommend',
+    ctype: 'hot',
     size: ['middle', 'large'],
     name: '股票行情',
     component: 'StockWidget'
@@ -117,6 +117,13 @@ export const widgets: Widget[] = [
     size: ['middle', 'large'],
     name: '股票排行',
     component: 'StockRankWidget'
+  },
+  {
+    id: 'StockSelfWidget',
+    ctype: 'hot',
+    size: ['middle', 'large'],
+    name: '自选股票',
+    component: 'StockSelfWidget'
   }
 ]
 const getBase64 = (file: FileType): Promise<string> =>
@@ -771,7 +778,7 @@ function WidgetModal(props: {
           wrapClassName="!bg-black/30 backdrop-blur-md"
           classNames={{
             header: '!bg-transparent !text-white',
-            content: '!overflow-hidden !p-0 !rounded-xl !bg-black/30',
+            container: '!overflow-hidden !p-0 !rounded-xl !bg-black/30',
             body: '!p-3 !pl-0'
           }}
           width={{
@@ -787,7 +794,7 @@ function WidgetModal(props: {
           <div className="h-[70vh]">
             <Tabs
               defaultActiveKey={defaultActiveKey}
-              tabPosition="left"
+              tabPlacement="start"
               style={{ height: '100%' }}
               animated
               tabBarExtraContent={{

@@ -24,7 +24,7 @@ import {
   Typography
 } from 'antd'
 import dayjs from 'dayjs'
-import { useEffect, useRef, useState } from 'react'
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Stock } from '~components/widgets/stock'
 import type { News } from '~components/widgets/stock/news'
@@ -62,6 +62,12 @@ function WidgetModal(props: {
     props.cateId || news?.[0]?.id || ''
   )
   const [stockType, setStockType] = useState<string>('se')
+  const [loading, setLoading] = useState<boolean>(false)
+  const rankComponent = useMemo(
+    () => <Rank size="biggest" stockType={stockType} />,
+    [stockType]
+  )
+
   const TabContent = (props: {
     id?: string | number
     data?: Stock['list'] | News['list']
@@ -75,11 +81,12 @@ function WidgetModal(props: {
     return (
       <Spin spinning={!loaded && !props.data?.length}>
         {props.id == 'symbol' ? (
-          <div className="min-h-[180px]">
+          <div className="min-h-[180px] w-full">
             <Row gutter={[10, 10]} className="w-full">
               {props.data
                 ?.filter((item) => item['名称'])
-                ?.map((item, index) => (
+                ?.slice(0, 8)
+                .map((item, index) => (
                   <Col
                     key={item['代码'] || index}
                     span={24}
@@ -109,9 +116,7 @@ function WidgetModal(props: {
                   </Col>
                 ))}
             </Row>
-            <div className="mt-2">
-              <Rank size="biggest" stockType={stockType} />
-            </div>
+            <div className="mt-4">{rankComponent}</div>
             {loaded && !props.data?.length && (
               <Empty
                 description={<span className="!text-white">暂无数据~</span>}
@@ -151,6 +156,7 @@ function WidgetModal(props: {
   }
   useUpdateEffect(() => {
     !props.loading && message.success('数据更新成功')
+    setLoading(false)
   }, [props.loading])
   return (
     <ThemeProvider
@@ -168,7 +174,7 @@ function WidgetModal(props: {
           wrapClassName="!bg-black/30 backdrop-blur-md"
           classNames={{
             header: '!bg-transparent !text-white',
-            content: '!overflow-hidden !rounded-xl !p-0 !bg-black/50',
+            container: '!overflow-hidden !rounded-xl !p-0 !bg-black/50',
             body: '!p-5'
           }}
           getContainer={() => document.body}
@@ -199,18 +205,18 @@ function WidgetModal(props: {
                 onChange={(key) => {
                   setCateId(key)
                 }}
-                tabPosition="left"
+                tabPlacement="start"
                 className="text-shadow"
                 items={[
                   {
                     id: 'symbol',
                     icon: <StockOutlined />,
-                    name: '股票行情'
+                    name: <span className="hidden md:inline">股票行情</span>
                   },
                   {
                     id: 'stockNews',
                     icon: <ReadOutlined />,
-                    name: '股票资讯'
+                    name: <span className="hidden md:inline">财经资讯</span>
                   }
                 ]?.map((item, index) => ({
                   label: item.name,
@@ -219,9 +225,9 @@ function WidgetModal(props: {
                   disabled: !stockData
                 }))}
               />
-              <div className="flex-1 mt-5 h-full">
+              <div className="flex-1 h-full">
                 <Spin
-                  spinning={!stockData}
+                  spinning={!stockData || loading}
                   rootClassName="!h-full"
                   wrapperClassName="!h-full">
                   <div className="min-h-[160px] w-full h-full">
@@ -239,7 +245,7 @@ function WidgetModal(props: {
                               loading={props.loading}
                               size="small"
                               icon={<ReloadOutlined />}
-                              className="cursor-pointer hover:!text-white text-white"
+                              className="cursor-pointer mr-8 hover:!text-white text-white"
                               onClick={() => props.update(stockType)}
                               title="获取最新数据">
                               刷新
@@ -256,6 +262,7 @@ function WidgetModal(props: {
                         }}
                         onChange={(key) => {
                           setStockType(key)
+                          props.loading && setLoading(true)
                         }}
                         className="text-shadow"
                         items={stockData.map((item, index) => ({
@@ -263,7 +270,7 @@ function WidgetModal(props: {
                           key: item.type,
                           icon: item.icon || <StockOutlined />,
                           children: (
-                            <div className="h-[50vh] overflow-auto">
+                            <div className="h-[60vh] overflow-auto">
                               <TabContent id={'symbol'} data={item.list} />
                             </div>
                           )
@@ -272,7 +279,7 @@ function WidgetModal(props: {
                     ) : (
                       news &&
                       news.length && (
-                        <div className="h-[50vh] overflow-auto">
+                        <div className="h-[65vh] overflow-auto mt-4">
                           <TabContent id={'stock_news'} data={news} />
                         </div>
                       )

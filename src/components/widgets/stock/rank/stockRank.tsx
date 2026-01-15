@@ -84,7 +84,6 @@ export function StockRankPanel(props: {
     {
       title: '名称',
       dataIndex: '股票名称',
-      width: 320,
       key: '名称',
       render: (text: string, record: StockRank) => (
         <div>
@@ -157,50 +156,46 @@ export function StockRankPanel(props: {
 
     return (
       <Spin spinning={!loaded && !props.data?.length}>
-        <div style={{ overflow: 'auto' }}>
-          <Table
-            dataSource={props.data}
-            columns={columns}
-            scroll={{
-              y: props.height || null
-            }}
-            rowKey={(record, index) => record.序号 || index?.toString()}
-            pagination={false}
-            size="small"
-            className="bg-transparent"
-            components={{
-              header: {
-                cell: (props: any) => (
-                  <th
-                    {...props}
-                    className="!bg-transparent !border-b-white/20 !text-white/70"
-                  />
-                )
-              },
-              body: {
-                row: (props: any) => (
-                  <tr
-                    {...props}
-                    className="!bg-transparent hover:!bg-white/5 !border-b-white/10"
-                  />
-                ),
-                cell: (props: any) => (
-                  <td
-                    {...props}
-                    className="!bg-transparent !border-b-white/10 !text-white"
-                  />
-                )
-              }
-            }}
-            locale={{
-              emptyText: (
-                <Empty
-                  description={<span className="!text-white">暂无数据~</span>}
+        <Table
+          dataSource={props.data}
+          columns={columns}
+          scroll={props.height ? { y: props.height } : null}
+          rowKey={(record, index) => record.序号 || index?.toString()}
+          pagination={false}
+          size="small"
+          className="bg-transparent"
+          components={{
+            header: {
+              cell: (props: any) => (
+                <th
+                  {...props}
+                  className="!bg-transparent !border-b-white/20 !text-white/70"
                 />
               )
-            }}
-          />
-        </div>
+            },
+            body: {
+              row: (props: any) => (
+                <tr
+                  {...props}
+                  className="!bg-transparent hover:!bg-white/5 !border-b-white/10"
+                />
+              ),
+              cell: (props: any) => (
+                <td
+                  {...props}
+                  className="!bg-transparent !border-b-white/10 !text-white"
+                />
+              )
+            }
+          }}
+          locale={{
+            emptyText: (
+              <Empty
+                description={<span className="!text-white">暂无数据~</span>}
+              />
+            )
+          }}
+        />
       </Spin>
     )
   }
@@ -231,25 +226,7 @@ export function StockRankPanel(props: {
                 onChange={props.onStockTypeChange}
                 tabBarExtraContent={{
                   right: (
-                    <div className="flex items-center gap-2">
-                      {/* 时间周期选择器放在tabBarExtraContent中 */}
-                      <Select
-                        size="small"
-                        value={props.currentIndicator}
-                        onChange={props.onIndicatorChange}
-                        options={props.indicatorOptions}
-                        className="w-24"
-                        styles={
-                          {
-                            //   popup: {
-                            //     root: {
-                            //       background: 'rgba(0, 0, 0, 0.8)',
-                            //       backdropFilter: 'blur(10px)'
-                            //     }
-                            //   }
-                          }
-                        }
-                      />
+                    <div className="flex items-center gap-2 mr-4">
                       {/* 刷新按钮 */}
                       <Button
                         type="text"
@@ -261,6 +238,22 @@ export function StockRankPanel(props: {
                         title="获取最新数据">
                         刷新
                       </Button>
+                      {/* 时间周期选择器放在tabBarExtraContent中 */}
+                      <Select
+                        size="small"
+                        value={props.currentIndicator}
+                        onChange={props.onIndicatorChange}
+                        options={props.indicatorOptions}
+                        className="w-24"
+                        styles={{
+                          popup: {
+                            root: {
+                              background: 'rgba(0, 0, 0, 0.8)',
+                              backdropFilter: 'blur(10px)'
+                            }
+                          }
+                        }}
+                      />
                     </div>
                   )
                 }}
@@ -274,7 +267,10 @@ export function StockRankPanel(props: {
                   key: item.key,
                   disabled: props.loading,
                   children: (
-                    <TabContent data={props.stockData} height={props.height} />
+                    <TabContent
+                      data={props.stockData?.slice(0, 20)}
+                      height={props.height}
+                    />
                   )
                 }))}
               />
@@ -375,7 +371,21 @@ function StockRankWidget(props: WidgetProp) {
   }
 
   return (
-    <ThemeProvider>
+    <ThemeProvider
+      token={{
+        colorBgContainer: 'rgba(0, 0, 0, 0.5)',
+        // colorText: 'rgba(255, 255, 255, 0.65)',
+        colorTextDisabled: 'rgba(255, 255, 255, 0.35)',
+        Message: {
+          contentBg: 'rgba(0, 0, 0, 0.8)'
+        },
+        Select: {
+          selectorBg: 'rgba(0, 0, 0, 0.65)'
+        },
+        Tabs: {
+          itemColor: 'rgba(255, 255, 255, 0.65)'
+        }
+      }}>
       {/* 小组件卡片 */}
       <Card
         className={`!rounded-xl mx-auto overflow-hidden ${props.withComponents ? sizeMap[props.size || 'mini'] : 'h-full'} !border-none !bg-transparent`}
@@ -406,7 +416,7 @@ function StockRankWidget(props: WidgetProp) {
                   <span className={props.size === 'large' ? '' : 'hidden'}>
                     {item['最新价']}
                   </span>
-                  <span>{item['涨跌额'].toFixed(2)}</span>
+                  <span>{item['涨跌额']?.toFixed(2) || ''}</span>
                   <span
                     className={
                       item.涨跌幅 > 0
@@ -437,8 +447,6 @@ function StockRankWidget(props: WidgetProp) {
                 onUpdate={handleUpdate}
                 onStockTypeChange={handleStockTypeChange}
                 onIndicatorChange={handleIndicatorChange}
-                className="my-custom-class"
-                height="400px"
                 {...props}
               />
             )}
@@ -452,7 +460,7 @@ function StockRankWidget(props: WidgetProp) {
           wrapClassName="!bg-black/30 backdrop-blur-md"
           classNames={{
             header: '!bg-transparent !text-white',
-            content: '!overflow-hidden !rounded-xl !p-0 !bg-black/50',
+            container: '!overflow-hidden !rounded-xl !p-0 !bg-black/50',
             body: '!p-5'
           }}
           getContainer={() => document.body}
@@ -460,7 +468,13 @@ function StockRankWidget(props: WidgetProp) {
           footer={null}
           open={visible}
           closeIcon={<CloseOutlined className="!text-white" />}
-          onCancel={() => setVisible(false)}>
+          onCancel={() => {
+            setVisible(false)
+            props.update({
+              id: props.id,
+              props: { size: props.size, cateId: 'stock_rank' }
+            })
+          }}>
           <StockRankPanel
             loading={loading}
             stockTypes={stockTypes}

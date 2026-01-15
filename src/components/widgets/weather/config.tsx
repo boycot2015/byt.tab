@@ -145,7 +145,7 @@ function WidgetModal(props: {
         <Modal
           title=""
           classNames={{
-            content: `${getWeatherBg(currentWeather?.weather?.condition)} !overflow-hidden !p-0 backdrop-blur-md`,
+            container: `${getWeatherBg(currentWeather?.weather?.condition)} !overflow-hidden !p-0 backdrop-blur-md`,
             body: '!p-0 relative'
           }}
           width={{

@@ -99,7 +99,7 @@ function WidgetModal(props: {
         wrapClassName="!bg-black/30 backdrop-blur-md"
         classNames={{
           header: '!bg-transparent !text-white',
-          content: '!overflow-hidden !rounded-xl !p-0 !bg-black/50',
+          container: '!overflow-hidden !rounded-xl !p-0 !bg-black/50',
           body: '!p-5'
         }}
         getContainer={() => document.body}

@@ -7,6 +7,7 @@ import SettingWidget from './widgets/setting'
 import StockWidget from './widgets/stock'
 import StockNewsWidget from './widgets/stock/news'
 import StockRankWidget from './widgets/stock/rank/stockRank'
+import StockSelfWidget from './widgets/stock/self'
 import TimeWidget from './widgets/time'
 import WallpaperWidget from './widgets/wallpaper'
 import WeatherWidget from './widgets/weather'
@@ -21,7 +22,8 @@ const components = {
   NewsWidget,
   StockWidget,
   StockNewsWidget,
-  StockRankWidget
+  StockRankWidget,
+  StockSelfWidget
 }
 export const renderComponent = (
   componentName,

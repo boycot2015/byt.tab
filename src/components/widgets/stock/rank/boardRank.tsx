@@ -13,7 +13,7 @@ import {
 import {
   App,
   Button,
-  Dropdown,
+  Card,
   Empty,
   Modal,
   Select,
@@ -61,7 +61,6 @@ export function RankPanel(props: {
   className?: string
   height?: string
 }) {
-  const { message } = App.useApp()
   const tabWrapRef = useRef<HTMLDivElement>(null)
 
   // 表格列配置
@@ -124,47 +123,45 @@ export function RankPanel(props: {
 
     return (
       <Spin spinning={!loaded && !props.data?.length}>
-        <div style={{ overflow: 'auto' }}>
-          <Table
-            dataSource={props.data}
-            columns={columns}
-            rowKey={(record, index) => record.序号 || index?.toString()}
-            pagination={false}
-            size="small"
-            className="bg-transparent"
-            components={{
-              header: {
-                cell: (props: any) => (
-                  <th
-                    {...props}
-                    className="!bg-transparent !border-b-white/20 !text-white/70"
-                  />
-                )
-              },
-              body: {
-                row: (props: any) => (
-                  <tr
-                    {...props}
-                    className="!bg-transparent hover:!bg-white/5 !border-b-white/10"
-                  />
-                ),
-                cell: (props: any) => (
-                  <td
-                    {...props}
-                    className="!bg-transparent !border-b-white/10 !text-white"
-                  />
-                )
-              }
-            }}
-            locale={{
-              emptyText: (
-                <Empty
-                  description={<span className="!text-white">暂无数据~</span>}
+        <Table
+          dataSource={props.data}
+          columns={columns}
+          rowKey={(record, index) => record.序号 || index?.toString()}
+          pagination={false}
+          size="small"
+          className="bg-transparent"
+          components={{
+            header: {
+              cell: (props: any) => (
+                <th
+                  {...props}
+                  className="!bg-transparent !border-b-white/20 !text-white/70"
                 />
               )
-            }}
-          />
-        </div>
+            },
+            body: {
+              row: (props: any) => (
+                <tr
+                  {...props}
+                  className="!bg-transparent hover:!bg-white/5 !border-b-white/10"
+                />
+              ),
+              cell: (props: any) => (
+                <td
+                  {...props}
+                  className="!bg-transparent !border-b-white/10 !text-white"
+                />
+              )
+            }
+          }}
+          locale={{
+            emptyText: (
+              <Empty
+                description={<span className="!text-white">暂无数据~</span>}
+              />
+            )
+          }}
+        />
       </Spin>
     )
   }
@@ -173,10 +170,11 @@ export function RankPanel(props: {
     <ThemeProvider
       token={{
         colorBgContainer: 'rgba(0, 0, 0, 0.5)',
-        // colorText: 'rgba(255, 255, 255, 0.65)',
+        colorText: 'rgba(255, 255, 255, 0.65)',
         colorTextDisabled: 'rgba(255, 255, 255, 0.35)',
-        Message: {
-          contentBg: 'rgba(0, 0, 0, 0.8)'
+        colorBgElevated: 'rgba(0, 0, 0, 0.8)',
+        Select: {
+          optionSelectedBg: 'rgba(0, 0, 0, .9)'
         },
         Tabs: {
           itemColor: 'rgba(255, 255, 255, 0.65)'
@@ -194,7 +192,18 @@ export function RankPanel(props: {
                 onChange={props.onBoardTypeChange}
                 tabBarExtraContent={{
                   right: (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mr-4">
+                      {/* 刷新按钮 */}
+                      <Button
+                        type="text"
+                        loading={props.loading}
+                        size="small"
+                        icon={<ReloadOutlined />}
+                        className="cursor-pointer hover:!text-white text-white"
+                        onClick={props.onUpdate}
+                        title="获取最新数据">
+                        刷新
+                      </Button>
                       {/* 时间周期选择器放在tabBarExtraContent中 */}
                       <Select
                         size="small"
@@ -211,17 +220,6 @@ export function RankPanel(props: {
                           }
                         }}
                       />
-                      {/* 刷新按钮 */}
-                      <Button
-                        type="text"
-                        loading={props.loading}
-                        size="small"
-                        icon={<ReloadOutlined />}
-                        className="cursor-pointer hover:!text-white text-white"
-                        onClick={props.onUpdate}
-                        title="获取最新数据">
-                        刷新
-                      </Button>
                     </div>
                   )
                 }}
@@ -235,7 +233,10 @@ export function RankPanel(props: {
                   key: item.key,
                   disabled: props.loading,
                   children: (
-                    <TabContent data={props.boardData} height={props.height} />
+                    <TabContent
+                      data={props.boardData?.slice(0, 20)}
+                      height={props.height}
+                    />
                   )
                 }))}
               />
@@ -346,32 +347,34 @@ function BoardRankWidget(props: WidgetProp) {
         }}>
         <Spin spinning={!boardData.length} wrapperClassName="w-full h-full">
           <div className="h-full w-full min-h-[144px]flex flex-col text-white gap-2">
-            {boardData?.slice(0, 4)?.map((item, index) => (
-              <div
-                className="flex justify-between items-center gap-2 mb-4"
-                key={item.序号 || index}>
-                <div className="flex items-center gap-2 flex-1">
-                  <span className="text-sm opacity-70 w-6 text-center">
-                    {index + 1}
-                  </span>
+            <Card
+              title="板块排行"
+              classNames={{
+                root: '!overflow-hidden !rounded-xl mb-4'
+              }}>
+              {boardData?.slice(0, 8)?.map((item, index) => (
+                <Card.Grid
+                  hoverable={false}
+                  className="flex flex-col !w-[50%] sm:!w-[33.3%] md:!w-[25%] justify-between items-center"
+                  key={item.序号 || index}>
                   <span className="flex-1 line-clamp-1" title={item.名称}>
                     {item.名称}
                   </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={
+                  <div
+                    className={`flex items-center gap-2 ${
                       item.今日涨跌幅 > 0 ? 'text-red-500' : 'text-green-500'
-                    }>
-                    {item.今日涨跌幅 > 0 ? '+' : ''}
-                    {item.今日涨跌幅}%
-                  </span>
-                  <span className="text-sm opacity-70">
-                    {item['今日持股-市值']?.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            ))}
+                    }`}>
+                    <span>
+                      {item.今日涨跌幅 > 0 ? '+' : ''}
+                      {item.今日涨跌幅}%
+                    </span>
+                    <span className="text-sm opacity-70">
+                      {(item['今日主力净流入-净额'] / 100000000)?.toFixed(2)}亿
+                    </span>
+                  </div>
+                </Card.Grid>
+              ))}
+            </Card>
             {!loading && !boardData?.length && (
               <Empty
                 description={<span className="!text-white">暂无数据~</span>}
@@ -401,7 +404,14 @@ function BoardRankWidget(props: WidgetProp) {
       {visible && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-md p-4">
           {/* 排行榜面板 */}
-          <Modal>
+          <Modal
+            onCancel={() => {
+              setVisible(false)
+              props.update({
+                id: props.id,
+                props: { size: props.size, cateId: 'board_rank' }
+              })
+            }}>
             <RankPanel
               loading={loading}
               boardTypes={boardTypes}
@@ -417,11 +427,6 @@ function BoardRankWidget(props: WidgetProp) {
               {...props}
             />
           </Modal>
-          <button
-            onClick={() => setVisible(false)}
-            className="absolute top-4 right-4 text-white text-2xl hover:text-red-400 transition-colors">
-            ×
-          </button>
         </div>
       )}
     </ThemeProvider>

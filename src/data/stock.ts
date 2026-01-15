@@ -76,6 +76,7 @@ const getStockDaily = ({
 enum stock_code {
   stock_zh_a_spot_em = 'stock_zh_a_spot_em',
   stock_sh_a_spot_em = 'stock_sh_a_spot_em',
+  stock_individual_spot_xq = 'stock_individual_spot_xq',
   stock_sz_a_spot_em = 'stock_sz_a_spot_em',
   stock_bj_a_spot_em = 'stock_bj_a_spot_em',
   stock_new_a_spot_em = 'stock_new_a_spot_em',
@@ -88,11 +89,15 @@ enum stock_code {
  * @param symbol string 股票代码
  */
 const getStockRealTime = ({
-  code = stock_code.stock_zh_a_spot_em
+  code = stock_code.stock_zh_a_spot_em,
+  symbol = ''
 }: {
-  code: stock_code
+  code: string
+  symbol?: string
 }) => {
-  return $GET(`${akApiUrl}/${code}`)
+  let url = `${akApiUrl}/${code}`
+  if (symbol) url = `${url}?symbol=${symbol}`
+  return $GET(url)
 }
 
 /**

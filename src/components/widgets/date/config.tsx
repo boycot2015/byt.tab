@@ -972,7 +972,7 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
       <Modal
         title=""
         classNames={{
-          content: '!overflow-hidden !box-radius-md !p-0'
+          container: '!overflow-hidden !box-radius-md !p-0'
         }}
         width={880}
         centered
