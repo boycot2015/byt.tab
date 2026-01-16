@@ -81,6 +81,7 @@ enum stock_code {
   stock_bj_a_spot_em = 'stock_bj_a_spot_em',
   stock_new_a_spot_em = 'stock_new_a_spot_em',
   stock_cy_a_spot_em = 'stock_cy_a_spot_em',
+  stock_bid_ask_em = 'stock_bid_ask_em',
   stock_kc_a_spot_em = 'stock_kc_a_spot_em'
 }
 /**

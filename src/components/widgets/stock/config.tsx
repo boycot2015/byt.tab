@@ -26,7 +26,7 @@ import {
 import dayjs from 'dayjs'
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 
-import type { Stock } from '~components/widgets/stock'
+import type { Stock, StockData } from '~components/widgets/stock'
 import type { News } from '~components/widgets/stock/news'
 import Rank from '~components/widgets/stock/rank/index'
 import { ThemeProvider } from '~layouts'
@@ -51,7 +51,7 @@ function WidgetModal(props: {
     defaultValue: [],
     listenStorageChange: true
   })
-  const [stockData, setStockData] = useLocalStorageState<Stock[]>(
+  const [stockData, setStockData] = useLocalStorageState<StockData[]>(
     'stock_spot_data',
     {
       defaultValue: [],
@@ -70,7 +70,7 @@ function WidgetModal(props: {
 
   const TabContent = (props: {
     id?: string | number
-    data?: Stock['list'] | News['list']
+    data?: Stock[] | News['list']
   }) => {
     const scrollRef = useRef<HTMLDivElement>(null)
     const [loaded, setLoaded] = useState<boolean>(false)

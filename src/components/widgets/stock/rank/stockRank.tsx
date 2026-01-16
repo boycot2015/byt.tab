@@ -25,6 +25,7 @@ export interface StockRank {
   序号: string
   名称: string
   股票名称?: string
+  代码?: string
   最新价: number
   涨跌幅: number
   涨跌额: number
@@ -90,6 +91,7 @@ export function StockRankPanel(props: {
           <div className="text-white font-medium line-clamp-1">
             {record.股票名称 || record.名称}
           </div>
+          <p className="text-[12px] text-white/50">{record.代码 || '--'}</p>
         </div>
       )
     },

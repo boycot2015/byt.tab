@@ -1,8 +1,9 @@
 import {
   CloseOutlined,
   MoreOutlined,
-  ReadOutlined,
+  PlusOutlined,
   ReloadOutlined,
+  SearchOutlined,
   StockOutlined
 } from '@ant-design/icons'
 import {
@@ -11,27 +12,21 @@ import {
   useTimeout,
   useUpdateEffect
 } from 'ahooks'
-import {
-  App,
-  Button,
-  Col,
-  Empty,
-  Modal,
-  Row,
-  Spin,
-  Tabs,
-  Tag,
-  Typography
-} from 'antd'
-import dayjs from 'dayjs'
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { App, Button, Empty, Input, Modal, Space, Spin, Tabs, Tag } from 'antd'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 
-import type { Stock } from '~components/widgets/stock'
+import type {
+  Stock,
+  StockDaily,
+  StockData,
+  StockInfo
+} from '~components/widgets/stock'
 import type { News } from '~components/widgets/stock/news'
+import StockRank from '~components/widgets/stock/rank/stockRank'
 import StockTable from '~components/widgets/stock/self/stockTable'
+import StockInfoComponent from '~components/widgets/stock/stockInfo'
+import { getStockIntraday, getStockRealTime } from '~data/stock'
 import { ThemeProvider } from '~layouts'
-
-const { Paragraph, Text } = Typography
 
 let scrollTop = 0
 
@@ -47,21 +42,35 @@ function WidgetModal(props: {
 }) {
   const { message } = App.useApp()
   const tabWrapRef = useRef<HTMLDivElement>(null)
-  const [stockData] = useLocalStorageState<Stock[]>('stock_spot_data_self', {
-    defaultValue: [],
-    listenStorageChange: true
-  })
+  const [stockData, setStockData] = useLocalStorageState<StockData[]>(
+    'stock_spot_data_self',
+    {
+      defaultValue: [],
+      listenStorageChange: true
+    }
+  )
+  const [searchLoading, setSearchLoading] = useState<boolean>(false)
   const [cateId] = useState<string>(props.cateId || '')
   const [stockType, setStockType] = useState<string>('se')
+  const [symbol, setSymbol] = useState<string>('')
+  const [symbolData, setSymbolData] = useState<{
+    buy_sell_data_list: any[]
+    daily_data_list: StockDaily[]
+    data: Stock
+    data_info: StockInfo
+  }>()
   const [loading, setLoading] = useState<boolean>(false)
-  const rankComponent = useMemo(
-    () => <StockTable size="biggest" />,
+  const stockTableComponent = useMemo(
+    () => <StockTable size="biggest" stockType={stockType} />,
     [stockType]
   )
-
+  const rankComponent = useMemo(
+    () => <StockRank size="biggest" withComponents />,
+    [stockType]
+  )
   const TabContent = (props: {
     id?: string | number
-    data?: Stock['list'] | News['list']
+    data?: Stock[] | News['list']
   }) => {
     const scrollRef = useRef<HTMLDivElement>(null)
     const [loaded, setLoaded] = useState<boolean>(false)
@@ -72,7 +81,7 @@ function WidgetModal(props: {
     return (
       <Spin spinning={!loaded && !props.data?.length}>
         {props.id == 'symbol_self' ? (
-          <div className="min-h-[180px] w-full">{rankComponent}</div>
+          <div className="min-h-[180px] w-full">{stockTableComponent}</div>
         ) : null}
       </Spin>
     )
@@ -81,12 +90,59 @@ function WidgetModal(props: {
     !props.loading && message.success('数据更新成功')
     setLoading(false)
   }, [props.loading])
+  const onSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.value) {
+      setSymbolData(undefined)
+      return
+    }
+    setSymbol(e.target.value)
+    setSearchLoading(true)
+    let res = await getStockRealTime({
+      code: 'stock_bid_ask_em',
+      symbol: e.target.value.substring(2)
+    })
+    let res2 = await getStockRealTime({
+      code: 'stock_individual_info_em',
+      symbol: e.target.value.substring(2)
+    })
+    let res3 = await getStockIntraday({
+      code: 'stock_intraday_em',
+      symbol: e.target.value.substring(2)
+    })
+    if (!res) return
+    let buy_sell_data_list = res.slice(0, 20)
+    let data = {} as Stock
+    let daily_data_list = [] as StockDaily[]
+    let data_info = {} as StockInfo
+    res.slice(20)?.map((item) => {
+      data[item.item] = item.value
+    })
+    res2?.map((item) => {
+      data_info[item.item] = item.value
+    })
+    daily_data_list = res3
+    setSymbolData({
+      buy_sell_data_list,
+      daily_data_list,
+      data,
+      data_info
+    })
+    console.log(
+      data_info,
+      data,
+      daily_data_list,
+      buy_sell_data_list,
+      'stock_bid_ask_em'
+    )
+    setSearchLoading(false)
+  }
   return (
     <ThemeProvider
       token={{
         colorBgContainer: 'rgba(0, 0, 0, 0.5)',
         colorText: 'rgba(255, 255, 255, 0.65)',
         colorTextDisabled: 'rgba(255, 255, 255, 0.35)',
+        placeholderColor: 'rgba(255, 255, 255, 0.35)',
         Tabs: {
           itemColor: 'rgba(255, 255, 255, 0.65)'
         }
@@ -108,7 +164,7 @@ function WidgetModal(props: {
           afterOpenChange={props.afterOpenChange}
           onCancel={() => props.onCancel(cateId)}>
           <div
-            className="flex w-full overflow-hidden"
+            className="flex w-full max-h-[70vh] overflow-y-auto mt-6"
             ref={(el) => (tabWrapRef.current = el)}>
             <div className="w-full h-full">
               <Spin
@@ -116,6 +172,23 @@ function WidgetModal(props: {
                 rootClassName="!h-full"
                 wrapperClassName="!h-full">
                 <div className="min-h-[160px] w-full h-full">
+                  <div className="w-full">
+                    <div className="flex items-center justify-end mb-4 mt-2">
+                      <Space>
+                        <Space.Compact>
+                          <Input
+                            autoFocus
+                            placeholder="请输入股票代码"
+                            style={{ width: '80%' }}
+                            onChange={onSearch}
+                          />
+                          <Button disabled={!symbol} icon={<SearchOutlined />}>
+                            搜索
+                          </Button>
+                        </Space.Compact>
+                      </Space>
+                    </div>
+                  </div>
                   {cateId === 'symbol_self' && stockData?.length ? (
                     <Tabs
                       defaultActiveKey={stockType}
@@ -161,7 +234,32 @@ function WidgetModal(props: {
                         )
                       }))}
                     />
-                  ) : null}
+                  ) : (
+                    <div className="flex flex-col min-h-[160px]">
+                      {symbolData || searchLoading ? (
+                        <Spin spinning={searchLoading}>
+                          {symbolData && (
+                            <StockInfoComponent data={symbolData} />
+                          )}
+                        </Spin>
+                      ) : (
+                        <Empty
+                          styles={{
+                            description: {
+                              color: '#fff'
+                            }
+                          }}
+                          description="暂无自选的股票"
+                        />
+                      )}
+                    </div>
+                  )}
+                  <div className="w-full mt-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3>股票排行</h3>
+                    </div>
+                    {rankComponent}
+                  </div>
                 </div>
               </Spin>
             </div>

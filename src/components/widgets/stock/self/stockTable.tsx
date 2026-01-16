@@ -28,7 +28,9 @@ export interface Stock {
     序号: string
     名称: string
     代码?: string
+    股票代码?: string
     股票名称?: string
+    股票简称?: string
     最新价: number
     涨跌幅: number
     涨跌额: number
@@ -71,23 +73,25 @@ export function StockPanel(props: {
   const columns = [
     {
       title: '名称',
-      dataIndex: '股票名称',
+      dataIndex: '股票简称',
       key: '名称',
       render: (text: string, record: Stock['list'][0]) => (
         <div className="flex flex-col gap-1">
-          <div className="text-white font-bold text-[18px] line-clamp-1">
-            {record.股票名称 || record.名称}
-          </div>
-          <div className="text-white/70 text-sm text-[14px] line-clamp-1">
-            {record.代码 || '--'}
+          <div>
+            <span className="text-white font-bold text-[18px] line-clamp-1">
+              {record.股票简称 || record.名称}
+            </span>
+            <span className="text-white/70 text-sm text-[14px] line-clamp-1">
+              {record.股票代码 || '--'}
+            </span>
           </div>
         </div>
       )
     },
     {
       title: '现价',
-      dataIndex: '最新价',
-      key: '最新价',
+      dataIndex: '最新',
+      key: '最新',
       width: 100,
       align: 'right' as const,
       render: (value: number) => (
@@ -96,8 +100,8 @@ export function StockPanel(props: {
     },
     {
       title: '涨跌幅',
-      dataIndex: '涨跌幅',
-      key: '涨跌幅',
+      dataIndex: '涨幅',
+      key: '涨幅',
       sortable: true,
       width: 100,
       align: 'right' as const,
@@ -147,8 +151,8 @@ export function StockPanel(props: {
     },
     {
       title: '涨跌额',
-      dataIndex: '涨跌额',
-      key: '涨跌额',
+      dataIndex: '涨跌',
+      key: '涨跌',
       width: 100,
       align: 'right' as const,
       render: (value: number) =>
@@ -174,7 +178,6 @@ export function StockPanel(props: {
     const [loaded, setLoaded] = useState<boolean>(false)
 
     useTimeout(() => setLoaded(true), 500)
-
     return (
       <Spin spinning={!loaded && !props.data?.length}>
         <Table
@@ -266,6 +269,11 @@ function StockTableWidget(props: WidgetProp) {
     if (stockData) {
       setCurrentStocks(
         stockData.find((item) => item.type === props.stockType)?.list || []
+      )
+      console.log(
+        props.stockType,
+        stockData.find((item) => item.type === props.stockType)?.list || [],
+        'props.data'
       )
     }
   }, [stockData, props.stockType])

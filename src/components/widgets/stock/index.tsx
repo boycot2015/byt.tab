@@ -16,24 +16,54 @@ import { buildDay } from '~utils'
 
 import WidgetModal from './config'
 
+export interface StockDaily {
+  时间: string
+  成交价: number
+  手数: number
+  买卖盘性质: string
+}
+export type StockInfo = {
+  最新: number
+  股票代码: number
+  股票简称: string
+  总股本: number
+  流通股: number
+  总市值: number
+  流通市值: number
+  行业: string
+  上市时间: number
+}
+
 export interface Stock {
+  序号?: string
+  代码: string
+  名称: string
+  最新价: number
+  涨跌幅: number
+  涨跌额: number
+  振幅?: number
+  最高: number
+  最低: number
+  今开: number
+  昨收: number
+  量比?: number
+  最新: number
+  均价: number
+  涨幅: number
+  涨跌: number
+  总手: number
+  金额: number
+  换手: number
+  涨停: number
+  跌停: number
+  外盘: number
+  内盘: number
+}
+export interface StockData {
   type: 'hk' | 'se' | 'us'
   name: string
   icon?: string
-  list: {
-    序号?: string
-    代码: string
-    名称: string
-    最新价: number
-    涨跌幅: number
-    涨跌额: number
-    振幅?: number
-    最高: number
-    最低: number
-    今开: number
-    昨收: number
-    量比?: number
-  }[]
+  list: Stock[]
 }
 type WidgetProp = {
   withComponents?: boolean
@@ -49,7 +79,7 @@ function Widget(props: WidgetProp) {
   const [page, setPage] = useState(1)
   const hkspots = ['HSTECH', 'HSI', 'HSCEI', 'HSCCI']
   const usspots = ['DJIA', 'IXIC', 'NDX', 'SPX']
-  const fetchData = async (): Promise<Stock[]> => {
+  const fetchData = async (): Promise<StockData[]> => {
     let res = await Promise.all([
       getStockSpot({
         code: 'stock_zh_index_spot_em',
@@ -74,8 +104,8 @@ function Widget(props: WidgetProp) {
       }
     ]
   }
-  const fetchUsData = async (): Promise<Stock[]> => {
-    let res: Stock['list'] = await getStockSpot({
+  const fetchUsData = async (): Promise<StockData[]> => {
+    let res: Stock[] = await getStockSpot({
       code: 'index_global_spot_em'
     })
     return [
@@ -104,7 +134,7 @@ function Widget(props: WidgetProp) {
     cacheKey: 'stock_spot_data_us',
     staleTime: 1000 * 60 * 60 * 12
   })
-  const [stockData, setStockData] = useLocalStorageState<Stock[]>(
+  const [stockData, setStockData] = useLocalStorageState<StockData[]>(
     'stock_spot_data',
     {
       defaultValue: [],
@@ -124,7 +154,7 @@ function Widget(props: WidgetProp) {
     if (type == 'se' || type == 'hk') getSpotData()
     if (type == 'us') getUsData()
   }
-  const [list, setList] = useState<Stock['list']>([])
+  const [list, setList] = useState<Stock[]>([])
   useEffect(() => {
     if (data && data.length > 0) {
       let newdata = stockData && stockData.length ? [...stockData] : data
