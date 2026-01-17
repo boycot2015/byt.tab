@@ -61,53 +61,46 @@ function WidgetModal(props: {
   }>()
   const [loading, setLoading] = useState<boolean>(false)
   const stockTableComponent = useMemo(
-    () => <StockTable size="biggest" stockType={stockType} />,
+    () => (
+      <StockTable
+        size="biggest"
+        ref={tabWrapRef.current}
+        stockType={stockType}
+      />
+    ),
     [stockType]
   )
   const rankComponent = useMemo(
     () => <StockRank size="biggest" withComponents />,
     [stockType]
   )
-  const TabContent = (props: {
-    id?: string | number
-    data?: Stock[] | News['list']
-  }) => {
-    const scrollRef = useRef<HTMLDivElement>(null)
-    const [loaded, setLoaded] = useState<boolean>(false)
-    useEffect(() => {
-      if (scrollRef.current) scrollRef.current.scrollTop = scrollTop
-    }, [])
-    useTimeout(() => setLoaded(true), 500)
-    return (
-      <Spin spinning={!loaded && !props.data?.length}>
-        {props.id == 'symbol_self' ? (
-          <div className="min-h-[180px] w-full">{stockTableComponent}</div>
-        ) : null}
-      </Spin>
-    )
-  }
   useUpdateEffect(() => {
     !props.loading && message.success('数据更新成功')
     setLoading(false)
   }, [props.loading])
   const onSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.value) {
+    if (
+      !e.target.value &&
+      (e.target.value.length === 6 || e.target.value.length === 8)
+    ) {
       setSymbolData(undefined)
       return
     }
-    setSymbol(e.target.value)
+    let symbol =
+      e.target.value.length === 6 ? e.target.value : e.target.value.substring(2)
+    setSymbol(symbol)
     setSearchLoading(true)
     let res = await getStockRealTime({
       code: 'stock_bid_ask_em',
-      symbol: e.target.value.substring(2)
+      symbol
     })
     let res2 = await getStockRealTime({
       code: 'stock_individual_info_em',
-      symbol: e.target.value.substring(2)
+      symbol
     })
     let res3 = await getStockIntraday({
       code: 'stock_intraday_em',
-      symbol: e.target.value.substring(2)
+      symbol
     })
     if (!res) return
     let buy_sell_data_list = res.slice(0, 20)
@@ -127,13 +120,6 @@ function WidgetModal(props: {
       data,
       data_info
     })
-    console.log(
-      data_info,
-      data,
-      daily_data_list,
-      buy_sell_data_list,
-      'stock_bid_ask_em'
-    )
     setSearchLoading(false)
   }
   return (
@@ -164,7 +150,7 @@ function WidgetModal(props: {
           afterOpenChange={props.afterOpenChange}
           onCancel={() => props.onCancel(cateId)}>
           <div
-            className="flex w-full max-h-[70vh] overflow-y-auto mt-6"
+            className="flex w-full max-h-[70vh] overflow-y-auto mt-4 pr-2"
             ref={(el) => (tabWrapRef.current = el)}>
             <div className="w-full h-full">
               <Spin
@@ -173,23 +159,40 @@ function WidgetModal(props: {
                 wrapperClassName="!h-full">
                 <div className="min-h-[160px] w-full h-full">
                   <div className="w-full">
-                    <div className="flex items-center justify-end mb-4 mt-2">
-                      <Space>
-                        <Space.Compact>
-                          <Input
-                            autoFocus
-                            placeholder="请输入股票代码"
-                            style={{ width: '80%' }}
-                            onChange={onSearch}
-                          />
-                          <Button disabled={!symbol} icon={<SearchOutlined />}>
-                            搜索
-                          </Button>
-                        </Space.Compact>
-                      </Space>
+                    <div className="flex items-center w-full justify-center sm:justify-between gap-4 mb-4 mt-2">
+                      <h3 className="hidden sm:inline">股票自选</h3>
+                      <div>
+                        <Space>
+                          <Space.Compact>
+                            <Input
+                              autoFocus
+                              placeholder="请输入股票代码"
+                              style={{ width: '80%' }}
+                              onChange={onSearch}
+                            />
+                            <Button
+                              disabled={!symbol}
+                              icon={<SearchOutlined />}>
+                              搜索
+                            </Button>
+                          </Space.Compact>
+                        </Space>
+                      </div>
                     </div>
+                    {(symbolData || searchLoading) && (
+                      <div className="flex flex-col min-h-[160px]">
+                        <Spin spinning={searchLoading}>
+                          {symbolData && (
+                            <StockInfoComponent data={symbolData} />
+                          )}
+                        </Spin>
+                      </div>
+                    )}
                   </div>
-                  {cateId === 'symbol_self' && stockData?.length ? (
+                  {cateId === 'symbol_self' &&
+                  stockData?.length &&
+                  stockData.find((item) => item.type === stockType)?.list
+                    ?.length ? (
                     <Tabs
                       defaultActiveKey={stockType}
                       indicator={{
@@ -203,7 +206,7 @@ function WidgetModal(props: {
                             loading={props.loading}
                             size="small"
                             icon={<ReloadOutlined />}
-                            className="cursor-pointer mr-8 hover:!text-white text-white"
+                            className="cursor-pointer hover:!text-white text-white"
                             onClick={() => props.update(stockType)}
                             title="获取最新数据">
                             刷新
@@ -227,32 +230,18 @@ function WidgetModal(props: {
                         label: item.name,
                         key: item.type,
                         icon: item.icon || <StockOutlined />,
-                        children: (
-                          <div className="h-[60vh] overflow-auto">
-                            <TabContent id={'symbol_self'} data={item.list} />
-                          </div>
-                        )
+                        children: <div>{stockTableComponent}</div>
                       }))}
                     />
                   ) : (
-                    <div className="flex flex-col min-h-[160px]">
-                      {symbolData || searchLoading ? (
-                        <Spin spinning={searchLoading}>
-                          {symbolData && (
-                            <StockInfoComponent data={symbolData} />
-                          )}
-                        </Spin>
-                      ) : (
-                        <Empty
-                          styles={{
-                            description: {
-                              color: '#fff'
-                            }
-                          }}
-                          description="暂无自选的股票"
-                        />
-                      )}
-                    </div>
+                    <Empty
+                      styles={{
+                        description: {
+                          color: '#fff'
+                        }
+                      }}
+                      description="暂无自选的股票"
+                    />
                   )}
                   <div className="w-full mt-4">
                     <div className="flex items-center justify-between mb-4">

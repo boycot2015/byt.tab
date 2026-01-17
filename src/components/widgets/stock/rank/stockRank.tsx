@@ -75,7 +75,7 @@ export function StockRankPanel(props: {
       title: '排名',
       dataIndex: '序号',
       key: '序号',
-      width: 60,
+      width: 46,
       render: (text: string, record: StockRank, index: number) => (
         <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
           <span className="text-white font-bold">{index + 1}</span>
@@ -85,7 +85,8 @@ export function StockRankPanel(props: {
     {
       title: '名称',
       dataIndex: '股票名称',
-      key: '名称',
+      key: '股票名称',
+      minWidth: 100,
       render: (text: string, record: StockRank) => (
         <div>
           <div className="text-white font-medium line-clamp-1">
@@ -99,18 +100,20 @@ export function StockRankPanel(props: {
       title: '最新价',
       dataIndex: '最新价',
       key: '最新价',
-      width: 100,
+      minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
-        <span className="text-white">{value?.toFixed(2)}</span>
+        <span className="text-white">{value?.toFixed(2) || '--'}</span>
       )
     },
     {
       title: '涨跌幅',
       dataIndex: '涨跌幅',
       key: '涨跌幅',
-      sortable: true,
-      width: 100,
+      sorter: {
+        compare: (a, b) => a.涨跌幅 - b.涨跌幅
+      },
+      minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
         <span
@@ -122,7 +125,7 @@ export function StockRankPanel(props: {
                 : 'text-white'
           }>
           {value > 0 ? '+' : ''}
-          {value}%
+          {value || '--'}%
         </span>
       )
     },
@@ -130,7 +133,10 @@ export function StockRankPanel(props: {
       title: '涨跌额',
       dataIndex: '涨跌额',
       key: '涨跌额',
-      width: 100,
+      sorter: {
+        compare: (a, b) => a.涨跌额 - b.涨跌额
+      },
+      minWidth: 80,
       align: 'right' as const,
       render: (value: number) =>
         value ? (
@@ -161,8 +167,13 @@ export function StockRankPanel(props: {
         <Table
           dataSource={props.data}
           columns={columns}
-          scroll={props.height ? { y: props.height } : null}
-          rowKey={(record, index) => record.序号 || index?.toString()}
+          scroll={
+            props.height
+              ? { y: props.height, x: 'max-content' }
+              : { x: 'max-content' }
+          }
+          sticky={{ offsetHeader: 64, getContainer: () => tabWrapRef.current }}
+          rowKey={(record) => record?.股票名称 || record?.名称}
           pagination={false}
           size="small"
           className="bg-transparent"
@@ -211,6 +222,9 @@ export function StockRankPanel(props: {
         colorBgElevated: 'rgba(0, 0, 0, 0.8)',
         Select: {
           optionSelectedBg: 'rgba(0, 0, 0, .9)'
+        },
+        Table: {
+          stickyScrollBarBg: 'rgba(0, 0, 0, 0.3)'
         },
         Tabs: {
           itemColor: 'rgba(255, 255, 255, 0.65)'
@@ -400,39 +414,40 @@ function StockRankWidget(props: WidgetProp) {
         }}>
         <Spin spinning={!stockData.length} wrapperClassName="w-full h-full">
           <div className="h-full w-full p-4 min-h-[144px] flex flex-col text-white gap-2">
-            {stockData?.slice(0, 4)?.map((item, index) => (
-              <div
-                className={`flex justify-between w-full gap-2 ${props.size === 'large' ? 'flex-row' : 'flex-col'}`}
-                key={item.序号 || index}>
-                <div className="flex justify-between w-full items-center gap-2 flex-1">
-                  <span
-                    className="flex-1 line-clamp-1"
-                    title={item.股票名称 || item.名称}>
-                    {item.股票名称 || item.名称}
-                  </span>
-                  <span className={props.size === 'large' ? 'hidden' : ''}>
-                    {item['最新价']}
-                  </span>
+            {!props.withComponents &&
+              stockData?.slice(0, 4)?.map((item, index) => (
+                <div
+                  className={`flex justify-between w-full gap-2 ${props.size === 'large' ? 'flex-row' : 'flex-col'}`}
+                  key={item.序号 || index}>
+                  <div className="flex justify-between w-full items-center gap-2 flex-1">
+                    <span
+                      className="flex-1 line-clamp-1"
+                      title={item.股票名称 || item.名称}>
+                      {item.股票名称 || item.名称}
+                    </span>
+                    <span className={props.size === 'large' ? 'hidden' : ''}>
+                      {item['最新价']}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={props.size === 'large' ? '' : 'hidden'}>
+                      {item['最新价']}
+                    </span>
+                    <span>{item['涨跌额']?.toFixed(2) || ''}</span>
+                    <span
+                      className={
+                        item.涨跌幅 > 0
+                          ? 'text-red-500'
+                          : item.涨跌幅 < 0
+                            ? 'text-green-500'
+                            : 'text-white'
+                      }>
+                      {item.涨跌幅 > 0 ? '+' : ''}
+                      {item.涨跌幅}%
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={props.size === 'large' ? '' : 'hidden'}>
-                    {item['最新价']}
-                  </span>
-                  <span>{item['涨跌额']?.toFixed(2) || ''}</span>
-                  <span
-                    className={
-                      item.涨跌幅 > 0
-                        ? 'text-red-500'
-                        : item.涨跌幅 < 0
-                          ? 'text-green-500'
-                          : 'text-white'
-                    }>
-                    {item.涨跌幅 > 0 ? '+' : ''}
-                    {item.涨跌幅}%
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
             {!loading && !stockData?.length && (
               <Empty
                 description={<span className="!text-white">暂无数据~</span>}

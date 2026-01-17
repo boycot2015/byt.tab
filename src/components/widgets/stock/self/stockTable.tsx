@@ -1,4 +1,15 @@
-import { CloseOutlined, ReloadOutlined } from '@ant-design/icons'
+import { DeleteOutlined, HolderOutlined } from '@ant-design/icons'
+import type { DragEndEvent } from '@dnd-kit/core'
+import { DndContext } from '@dnd-kit/core'
+import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import {
   useLocalStorageState,
   useRequest,
@@ -16,73 +27,154 @@ import {
   Table,
   Tabs
 } from 'antd'
-import { useEffect, useRef, useState } from 'react'
+import type { TableColumnsType } from 'antd'
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 
+import type {
+  Stock,
+  StockDaily,
+  StockData,
+  StockInfo
+} from '~components/widgets/stock'
 import { getStockBoardRank } from '~data/stock'
 import { sizeMap, ThemeProvider } from '~layouts'
 
-export interface Stock {
-  type: 'se' | 'etf'
-  name: '自选' | 'ETF'
-  list: {
-    序号: string
-    名称: string
-    代码?: string
-    股票代码?: string
-    股票名称?: string
-    股票简称?: string
-    最新价: number
-    涨跌幅: number
-    涨跌额: number
-    成交量: number
-    成交额: number
-    振幅: number
-    换手率: number
-    市盈率: number
-    量比: number
-    市净率: number
-    流通市值: number
-    总市值: number
-    涨速: number
-    '5分钟涨跌': number
-    '60日涨跌幅': number
-    年初至今涨跌幅: number
-  }[]
+interface RowContextProps {
+  setActivatorNodeRef?: (element: HTMLElement | null) => void
+  listeners?: SyntheticListenerMap
 }
-
 type WidgetProp = {
   withComponents?: boolean
   stockType?: string
   cateId?: string
   id?: string
+  ref?: HTMLDivElement
   update?: (args: { id: WidgetProp['id']; props: WidgetProp }) => void
   size?: 'middle' | 'large' | 'biggest'
 }
+const RowContext = React.createContext<RowContextProps>({})
+interface RowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+  'data-row-key': string
+}
+const Row: React.FC<RowProps> = (props) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: props['data-row-key'] })
 
+  const style: React.CSSProperties = {
+    ...props.style,
+    transform: CSS.Translate.toString(transform),
+    transition,
+    ...(isDragging ? { position: 'relative', zIndex: 9999 } : {})
+  }
+
+  const contextValue = useMemo<RowContextProps>(
+    () => ({ setActivatorNodeRef, listeners }),
+    [setActivatorNodeRef, listeners]
+  )
+
+  return (
+    <RowContext.Provider value={contextValue}>
+      <tr
+        {...props}
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        className="!bg-transparent hover:!bg-white/5 !border-b-white/10"
+      />
+    </RowContext.Provider>
+  )
+}
+const DragHandle: React.FC = () => {
+  const { setActivatorNodeRef, listeners } = useContext(RowContext)
+  return (
+    <Button
+      type="text"
+      size="small"
+      icon={<HolderOutlined />}
+      style={{ cursor: 'move' }}
+      ref={setActivatorNodeRef}
+      {...listeners}
+    />
+  )
+}
 // 独立的个股排行面板组件
 export function StockPanel(props: {
   loading?: boolean
   stockType: string
-  stocks: Stock['list']
+  stocks: Stock[]
   className?: string
   height?: string
+  ref?: HTMLDivElement
+  update?: (args: Stock[]) => void
 }) {
   const tabWrapRef = useRef<HTMLDivElement>(null)
-
+  const { message } = App.useApp()
+  const [dataSource, setDataSource] = React.useState<Stock[]>(props.stocks)
+  const [stockData, setStockData] = useLocalStorageState<StockData[]>(
+    'stock_spot_data_self',
+    {
+      defaultValue: [],
+      listenStorageChange: true
+    }
+  )
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (active.id !== over?.id) {
+      setDataSource((prevState) => {
+        const activeIndex = prevState.findIndex(
+          (record) => record.股票代码 === active?.id
+        )
+        const overIndex = prevState.findIndex(
+          (record) => record.股票代码 === over?.id
+        )
+        // console.log(prevState, activeIndex, overIndex, 'onDragEnd')
+        props.update(arrayMove(prevState, activeIndex, overIndex))
+        return arrayMove(prevState, activeIndex, overIndex)
+      })
+    }
+  }
+  const onDelete = (row) => {
+    let newData = [...stockData]
+    newData.map((el) => {
+      el.list = el.list.filter((i) => i.股票代码 !== row?.股票代码)
+    })
+    setStockData(newData)
+    message.success('取消成功', 100000)
+  }
   // 表格列配置 - 针对个股数据
-  const columns = [
+  const columns: TableColumnsType<any> = [
+    {
+      key: 'sort',
+      title: '排序',
+      align: 'center',
+      width: 46,
+      render: () => <DragHandle />
+    },
     {
       title: '名称',
       dataIndex: '股票简称',
+      minWidth: 100,
+      fixed: 'left' as const,
       key: '名称',
-      render: (text: string, record: Stock['list'][0]) => (
+      render: (text: string, record: StockInfo) => (
         <div className="flex flex-col gap-1">
           <div>
-            <span className="text-white font-bold text-[18px] line-clamp-1">
-              {record.股票简称 || record.名称}
+            <span className="text-white font-bold text-[16px] line-clamp-1">
+              {record.股票简称 || '--'}
             </span>
-            <span className="text-white/70 text-sm text-[14px] line-clamp-1">
+            <span className="text-white/70 text-sm text-[14px]">
               {record.股票代码 || '--'}
+              <Button
+                onClick={() => onDelete(record)}
+                type="link"
+                title={'取消自选'}
+                icon={<DeleteOutlined />}></Button>
             </span>
           </div>
         </div>
@@ -92,7 +184,7 @@ export function StockPanel(props: {
       title: '现价',
       dataIndex: '最新',
       key: '最新',
-      width: 100,
+      minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
         <span className="text-white">{value?.toFixed(2)}</span>
@@ -102,8 +194,10 @@ export function StockPanel(props: {
       title: '涨跌幅',
       dataIndex: '涨幅',
       key: '涨幅',
-      sortable: true,
-      width: 100,
+      sorter: {
+        compare: (a, b) => a.涨幅 - b.涨幅
+      },
+      minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
         <span
@@ -120,40 +214,13 @@ export function StockPanel(props: {
       )
     },
     {
-      title: '最低',
-      dataIndex: '最低',
-      key: '最低',
-      width: 100,
-      align: 'right' as const,
-      render: (value: number) => (
-        <span className="text-white">{value?.toFixed(2) || '--'}</span>
-      )
-    },
-    {
-      title: '最高',
-      dataIndex: '最高',
-      key: '最高',
-      width: 100,
-      align: 'right' as const,
-      render: (value: number) => (
-        <span className="text-white">{value?.toFixed(2) || '--'}</span>
-      )
-    },
-    {
-      title: '昨收',
-      dataIndex: '昨收',
-      key: '昨收',
-      width: 100,
-      align: 'right' as const,
-      render: (value: number) => (
-        <span className="text-white">{value?.toFixed(2) || '--'}</span>
-      )
-    },
-    {
       title: '涨跌额',
       dataIndex: '涨跌',
       key: '涨跌',
-      width: 100,
+      minWidth: 100,
+      sorter: {
+        compare: (a, b) => a.涨幅 - b.涨幅
+      },
       align: 'right' as const,
       render: (value: number) =>
         value ? (
@@ -171,66 +238,68 @@ export function StockPanel(props: {
         ) : (
           '--'
         )
+    },
+    {
+      title: '最高',
+      dataIndex: '最高',
+      key: '最高',
+      minWidth: 80,
+      align: 'right' as const,
+      render: (value: number) => (
+        <span className="text-white">{value?.toFixed(2) || '--'}</span>
+      )
+    },
+    {
+      title: '最低',
+      dataIndex: '最低',
+      key: '最低',
+      minWidth: 80,
+      align: 'right' as const,
+      render: (value: number) => (
+        <span className="text-white">{value?.toFixed(2) || '--'}</span>
+      )
+    },
+    {
+      title: '今开',
+      dataIndex: '今开',
+      key: '今开',
+      minWidth: 80,
+      align: 'right' as const,
+      render: (value: number) => (
+        <span className="text-white">{value?.toFixed(2) || '--'}</span>
+      )
+    },
+    {
+      title: '昨收',
+      dataIndex: '昨收',
+      key: '昨收',
+      minWidth: 80,
+      align: 'right' as const,
+      render: (value: number) => (
+        <span className="text-white">{value?.toFixed(2) || '--'}</span>
+      )
     }
   ]
 
-  const TabContent = (props: { data?: Stock['list']; height?: string }) => {
-    const [loaded, setLoaded] = useState<boolean>(false)
-
-    useTimeout(() => setLoaded(true), 500)
-    return (
-      <Spin spinning={!loaded && !props.data?.length}>
-        <Table
-          dataSource={props.data}
-          columns={columns}
-          scroll={props.height ? { y: props.height } : null}
-          rowKey={(record, index) => record.序号 || index?.toString()}
-          pagination={false}
-          size="small"
-          className="bg-transparent"
-          components={{
-            header: {
-              cell: (props: any) => (
-                <th
-                  {...props}
-                  className="!bg-transparent !border-b-white/20 !text-white/70"
-                />
-              )
-            },
-            body: {
-              row: (props: any) => (
-                <tr
-                  {...props}
-                  className="!bg-transparent hover:!bg-white/5 !border-b-white/10"
-                />
-              ),
-              cell: (props: any) => (
-                <td
-                  {...props}
-                  className="!bg-transparent !border-b-white/10 !text-white"
-                />
-              )
-            }
-          }}
-          locale={{
-            emptyText: (
-              <Empty
-                description={<span className="!text-white">暂无数据~</span>}
-              />
-            )
-          }}
-        />
-      </Spin>
-    )
-  }
-
+  const [loaded, setLoaded] = useState<boolean>(false)
+  useTimeout(() => setLoaded(true), 500)
+  useEffect(() => {
+    if (props.stocks) {
+      setDataSource(props.stocks)
+    }
+  }, [props.stocks])
   return (
     <ThemeProvider
       token={{
         colorBgContainer: 'rgba(0, 0, 0, 0.5)',
-        colorText: 'rgba(255, 255, 255, 0.65)',
+        colorText: 'rgba(0, 0, 0, 0.5)',
+        colorSplit: 'rgba(0, 0, 0, 0.3)',
+        messageContentBg: 'rgba(0, 0, 0, 0.8)',
         colorTextDisabled: 'rgba(255, 255, 255, 0.35)',
         colorBgElevated: 'rgba(0, 0, 0, 0.8)',
+        Message: {
+          contentBg: 'rgba(0, 0, 0, 0.8)'
+        },
         Select: {
           optionSelectedBg: 'rgba(0, 0, 0, .9)'
         },
@@ -238,75 +307,119 @@ export function StockPanel(props: {
           itemColor: 'rgba(255, 255, 255, 0.65)'
         }
       }}>
-      <App>
-        <div
-          className={`flex w-full overflow-hidden ${props.className || ''}`}
-          ref={(el) => (tabWrapRef.current = el)}>
-          <div className="flex flex-col w-full">
-            <div className="min-h-[160px] w-full h-full">
-              <TabContent
-                data={props.stocks?.slice(0, 20)}
-                height={props.height}
-              />
-            </div>
+      <div
+        className={`flex w-full overflow-hidden ${props.className || ''}`}
+        ref={(el) => (tabWrapRef.current = el)}>
+        <div className="flex flex-col w-full">
+          <div className="w-full h-full">
+            <Spin spinning={!loaded && !props.stocks?.length}>
+              <DndContext
+                modifiers={[restrictToVerticalAxis]}
+                onDragEnd={onDragEnd}>
+                <SortableContext
+                  items={dataSource.map((i) => i.股票代码)}
+                  strategy={verticalListSortingStrategy}>
+                  <Table
+                    dataSource={dataSource}
+                    columns={columns}
+                    sticky={{
+                      offsetHeader: 0,
+                      getContainer: () => props.ref
+                    }}
+                    scroll={
+                      props.height
+                        ? { y: props.height, x: 'max-content' }
+                        : { x: 'max-content' }
+                    }
+                    rowKey={(record: Stock) => record?.股票代码 || record?.名称}
+                    pagination={false}
+                    size="small"
+                    className="bg-transparent"
+                    components={{
+                      header: {
+                        cell: (props: any) => (
+                          <th
+                            {...props}
+                            className="!bg-transparent !border-b-white/20 !text-white/70"
+                          />
+                        )
+                      },
+                      body: {
+                        row: Row,
+                        cell: (props: any) => (
+                          <td
+                            {...props}
+                            className="!bg-transparent !border-b-white/10 !text-white"
+                          />
+                        )
+                      }
+                    }}
+                    locale={{
+                      emptyText: (
+                        <Empty
+                          description={
+                            <span className="!text-white">暂无数据~</span>
+                          }
+                        />
+                      )
+                    }}
+                  />
+                </SortableContext>
+              </DndContext>
+            </Spin>
           </div>
         </div>
-      </App>
+      </div>
     </ThemeProvider>
   )
 }
 
 // 个股排行小组件
 function StockTableWidget(props: WidgetProp) {
-  const [visible, setVisible] = useState(false)
-  const [show, setShow] = useState(false)
-  const [currentStocks, setCurrentStocks] = useState<Stock['list']>([])
-  const [stockData] = useLocalStorageState<Stock[]>('stock_spot_data_self', {
-    defaultValue: [],
-    listenStorageChange: true
-  })
+  const [currentStocks, setCurrentStocks] = useState<Stock[]>([])
+  const [stockData, setStockData] = useLocalStorageState<StockData[]>(
+    'stock_spot_data_self',
+    {
+      defaultValue: [],
+      listenStorageChange: true
+    }
+  )
   useEffect(() => {
     if (stockData) {
       setCurrentStocks(
         stockData.find((item) => item.type === props.stockType)?.list || []
       )
-      console.log(
-        props.stockType,
-        stockData.find((item) => item.type === props.stockType)?.list || [],
-        'props.data'
-      )
     }
   }, [stockData, props.stockType])
   return (
-    <ThemeProvider
-      token={{
-        colorBgContainer: 'rgba(0, 0, 0, 0.5)',
-        // colorText: 'rgba(255, 255, 255, 0.65)',
-        colorTextDisabled: 'rgba(255, 255, 255, 0.35)',
-        Message: {
-          contentBg: 'rgba(0, 0, 0, 0.8)'
-        },
-        Select: {
-          selectorBg: 'rgba(0, 0, 0, 0.65)'
-        },
-        Tabs: {
-          itemColor: 'rgba(255, 255, 255, 0.65)'
-        }
-      }}>
-      <Spin spinning={!stockData.length} wrapperClassName="w-full h-full">
-        <div className="h-full w-full px-2 min-h-[144px] flex flex-col text-white gap-2">
-          {!stockData?.length && (
-            <Empty
-              description={<span className="!text-white">暂无数据~</span>}
+    <ThemeProvider>
+      <App>
+        <Spin spinning={!stockData.length} wrapperClassName="w-full h-full">
+          <div className="h-full w-full min-h-[144px] flex flex-col text-white gap-2">
+            {!stockData && (
+              <Empty
+                description={<span className="!text-white">暂无数据~</span>}
+              />
+            )}
+            <StockPanel
+              stockType={props.stockType}
+              stocks={currentStocks}
+              {...props}
+              update={(stocks) => {
+                setStockData((prev) => {
+                  const index = prev.findIndex(
+                    (item) => item.type === props.stockType
+                  )
+                  if (index !== -1) {
+                    prev[index].list = stocks
+                  }
+                  return prev
+                })
+              }}
             />
-          )}
-          <StockPanel
-            stockType={props.stockType}
-            stocks={currentStocks}
-            {...props}
-          />
-        </div>
-      </Spin>
+          </div>
+        </Spin>
+      </App>
     </ThemeProvider>
   )
 }

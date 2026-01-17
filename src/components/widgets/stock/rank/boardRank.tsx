@@ -69,7 +69,7 @@ export function RankPanel(props: {
       title: '排名',
       dataIndex: '序号',
       key: '序号',
-      width: 60,
+      minWidth: 46,
       render: (text: string, record: BoardRank, index: number) => (
         <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
           <span className="text-white font-bold">{index + 1}</span>
@@ -79,6 +79,7 @@ export function RankPanel(props: {
     {
       title: '板块名称',
       dataIndex: '名称',
+      minWidth: 100,
       key: '名称',
       render: (text: string, record: BoardRank) => (
         <div>
@@ -91,8 +92,10 @@ export function RankPanel(props: {
       title: '涨跌幅',
       dataIndex: '今日涨跌幅',
       key: '今日涨跌幅',
-      sortable: true,
-      width: 100,
+      sorter: {
+        compare: (a, b) => a.今日涨跌幅 - b.今日涨跌幅
+      },
+      minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
         <span className={value > 0 ? 'text-red-400' : 'text-green-400'}>
@@ -105,8 +108,10 @@ export function RankPanel(props: {
       title: '资金流入',
       dataIndex: '今日主力净流入-净额',
       key: '今日主力净流入-净额',
-      sortable: true,
-      width: 120,
+      sorter: {
+        compare: (a, b) => a['今日主力净流入-净额'] - b['今日主力净流入-净额']
+      },
+      minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
         <div className={`${value > 0 ? 'text-red-400' : 'text-green-400'}`}>
@@ -126,10 +131,16 @@ export function RankPanel(props: {
         <Table
           dataSource={props.data}
           columns={columns}
-          rowKey={(record, index) => record.序号 || index?.toString()}
+          rowKey={(record) => record?.名称}
           pagination={false}
           size="small"
           className="bg-transparent"
+          sticky={{ offsetHeader: 64, getContainer: () => tabWrapRef.current }}
+          scroll={
+            props.height
+              ? { y: props.height, x: 'max-content' }
+              : { x: 'max-content' }
+          }
           components={{
             header: {
               cell: (props: any) => (
@@ -391,8 +402,6 @@ function BoardRankWidget(props: WidgetProp) {
                 onUpdate={handleUpdate}
                 onBoardTypeChange={handleBoardTypeChange}
                 onIndicatorChange={handleIndicatorChange}
-                className="my-custom-class"
-                height="400px"
                 {...props}
               />
             )}

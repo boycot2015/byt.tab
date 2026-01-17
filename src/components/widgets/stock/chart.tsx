@@ -66,16 +66,14 @@ const baseOptions = {
 export const weather_icon_url = 'https://d.scggqx.com/forecast/img'
 const HoursChart = (props: Record<string, any>) => {
   const chartRef = useRef(null)
-  const filterData =
-    props.data?.list
-      ?.map((item: any) => {
-        item.时间 = item.时间.split(':').pop()
-        return item
-      })
-      .filter(
-        (item: any, index: number, self: any[]) =>
-          self.findLastIndex((i: any) => i.时间 === item.时间) === index
-      ) || []
+  const filterData = props.data?.list?.map((item: any) => {
+    item.时间 = item.时间.split(':').pop()
+    return item
+  })
+  // .filter(
+  //   (item: any, index: number, self: any[]) =>
+  //     self.findLastIndex((i: any) => i.时间 === item.时间) === index
+  // ) || []
   const [weather_echarts, setWeatherEcharts] = useState({
     ...baseOptions,
     xAxis: [

@@ -24,7 +24,7 @@ export interface StockDaily {
 }
 export type StockInfo = {
   最新: number
-  股票代码: number
+  股票代码: string
   股票简称: string
   总股本: number
   流通股: number
@@ -36,7 +36,8 @@ export type StockInfo = {
 
 export interface Stock {
   序号?: string
-  代码: string
+  代码?: string
+  股票代码?: string
   名称: string
   最新价: number
   涨跌幅: number
