@@ -79,7 +79,7 @@ export function RankPanel(props: {
     {
       title: '板块名称',
       dataIndex: '名称',
-      minWidth: 100,
+      // minWidth: 100,
       key: '名称',
       render: (text: string, record: BoardRank) => (
         <div>
@@ -95,7 +95,7 @@ export function RankPanel(props: {
       sorter: {
         compare: (a, b) => a.今日涨跌幅 - b.今日涨跌幅
       },
-      minWidth: 80,
+      // minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
         <span className={value > 0 ? 'text-red-400' : 'text-green-400'}>
@@ -111,7 +111,7 @@ export function RankPanel(props: {
       sorter: {
         compare: (a, b) => a['今日主力净流入-净额'] - b['今日主力净流入-净额']
       },
-      minWidth: 80,
+      // minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
         <div className={`${value > 0 ? 'text-red-400' : 'text-green-400'}`}>
@@ -182,6 +182,7 @@ export function RankPanel(props: {
       token={{
         colorBgContainer: 'rgba(0, 0, 0, 0.5)',
         colorText: 'rgba(255, 255, 255, 0.65)',
+        colorSplit: 'rgba(0, 0, 0, 0.3)',
         colorTextDisabled: 'rgba(255, 255, 255, 0.35)',
         colorBgElevated: 'rgba(0, 0, 0, 0.8)',
         Select: {
@@ -193,7 +194,7 @@ export function RankPanel(props: {
       }}>
       <App>
         <div
-          className={`flex w-full overflow-hidden bg-black/50 backdrop-blur-md rounded-xl p-5 ${props.className || ''}`}
+          className={`flex w-full overflow-hidden bg-black/50 backdrop-blur-md rounded-xl px-5 ${props.className || ''}`}
           ref={(el) => (tabWrapRef.current = el)}>
           <div className="flex flex-col w-full">
             {/* 使用Tabs组件替代下拉筛选 */}

@@ -7,9 +7,9 @@ import {
   StockOutlined
 } from '@ant-design/icons'
 import {
+  useDebounceFn,
   useLocalStorageState,
   useRequest,
-  useTimeout,
   useUpdateEffect
 } from 'ahooks'
 import { App, Button, Empty, Input, Modal, Space, Spin, Tabs, Tag } from 'antd'
@@ -28,7 +28,97 @@ import StockInfoComponent from '~components/widgets/stock/stockInfo'
 import { getStockIntraday, getStockRealTime } from '~data/stock'
 import { ThemeProvider } from '~layouts'
 
-let scrollTop = 0
+const SearchComponent = () => {
+  const [searchLoading, setSearchLoading] = useState<boolean>(false)
+  const [symbol, setSymbol] = useState<string>('')
+  const fetchSearchData = async (value: string) => {
+    value = value || symbol.trim()
+    if (!value) {
+      setSymbolData(undefined)
+      setSymbol('')
+      return
+    }
+    if (value.length === 6 || value.length === 8) {
+      let symbol = value.length === 6 ? value : value.substring(2)
+      setSymbol(symbol)
+      setSearchLoading(true)
+      let res = await getStockRealTime({
+        code: 'stock_bid_ask_em',
+        symbol
+      })
+      let res2 = await getStockRealTime({
+        code: 'stock_individual_info_em',
+        symbol
+      })
+      let res3 = await getStockIntraday({
+        code: 'stock_intraday_em',
+        symbol
+      })
+      if (!res) return
+      let buy_sell_data_list = res.slice(0, 20)
+      let data = {} as Stock
+      let daily_data_list = [] as StockDaily[]
+      let data_info = {} as StockInfo
+      res.slice(20)?.map((item) => {
+        data[item.item] = item.value
+      })
+      res2?.map((item) => {
+        data_info[item.item] = item.value
+      })
+      daily_data_list = res3
+      setSymbolData({
+        buy_sell_data_list,
+        daily_data_list,
+        data,
+        data_info
+      })
+      setSearchLoading(false)
+    }
+  }
+  const [symbolData, setSymbolData] = useState<{
+    buy_sell_data_list: any[]
+    daily_data_list: StockDaily[]
+    data: Stock
+    data_info: StockInfo
+  }>()
+  const { run: onSearch } = useDebounceFn(fetchSearchData, {
+    leading: true,
+    wait: 500
+  })
+  const { run: onSearchRefresh } = useRequest(fetchSearchData, {
+    cacheTime: 1000 * 5
+  })
+  return (
+    <div className="w-full">
+      <div className="flex items-center w-full justify-center sm:justify-between gap-4 mb-4 mt-2">
+        <h3 className="hidden sm:inline">股票自选</h3>
+        <div>
+          <Space>
+            <Space.Compact>
+              <Input
+                autoFocus
+                placeholder="请输入股票代码"
+                style={{ width: '100%' }}
+                allowClear
+                onChange={(e) => onSearch(e.target.value)}
+              />
+              <Button disabled={!symbol} icon={<SearchOutlined />}>
+                搜索
+              </Button>
+            </Space.Compact>
+          </Space>
+        </div>
+      </div>
+      {(symbolData || searchLoading) && (
+        <div className="flex flex-col min-h-[160px]">
+          <Spin spinning={searchLoading}>
+            {symbolData && <StockInfoComponent data={symbolData} />}
+          </Spin>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function WidgetModal(props: {
   visible: boolean
@@ -49,25 +139,11 @@ function WidgetModal(props: {
       listenStorageChange: true
     }
   )
-  const [searchLoading, setSearchLoading] = useState<boolean>(false)
   const [cateId] = useState<string>(props.cateId || '')
   const [stockType, setStockType] = useState<string>('se')
-  const [symbol, setSymbol] = useState<string>('')
-  const [symbolData, setSymbolData] = useState<{
-    buy_sell_data_list: any[]
-    daily_data_list: StockDaily[]
-    data: Stock
-    data_info: StockInfo
-  }>()
   const [loading, setLoading] = useState<boolean>(false)
   const stockTableComponent = useMemo(
-    () => (
-      <StockTable
-        size="biggest"
-        ref={tabWrapRef.current}
-        stockType={stockType}
-      />
-    ),
+    () => <StockTable size="biggest" stockType={stockType} />,
     [stockType]
   )
   const rankComponent = useMemo(
@@ -78,50 +154,6 @@ function WidgetModal(props: {
     !props.loading && message.success('数据更新成功')
     setLoading(false)
   }, [props.loading])
-  const onSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (
-      !e.target.value &&
-      (e.target.value.length === 6 || e.target.value.length === 8)
-    ) {
-      setSymbolData(undefined)
-      return
-    }
-    let symbol =
-      e.target.value.length === 6 ? e.target.value : e.target.value.substring(2)
-    setSymbol(symbol)
-    setSearchLoading(true)
-    let res = await getStockRealTime({
-      code: 'stock_bid_ask_em',
-      symbol
-    })
-    let res2 = await getStockRealTime({
-      code: 'stock_individual_info_em',
-      symbol
-    })
-    let res3 = await getStockIntraday({
-      code: 'stock_intraday_em',
-      symbol
-    })
-    if (!res) return
-    let buy_sell_data_list = res.slice(0, 20)
-    let data = {} as Stock
-    let daily_data_list = [] as StockDaily[]
-    let data_info = {} as StockInfo
-    res.slice(20)?.map((item) => {
-      data[item.item] = item.value
-    })
-    res2?.map((item) => {
-      data_info[item.item] = item.value
-    })
-    daily_data_list = res3
-    setSymbolData({
-      buy_sell_data_list,
-      daily_data_list,
-      data,
-      data_info
-    })
-    setSearchLoading(false)
-  }
   return (
     <ThemeProvider
       token={{
@@ -158,37 +190,7 @@ function WidgetModal(props: {
                 rootClassName="!h-full"
                 wrapperClassName="!h-full">
                 <div className="min-h-[160px] w-full h-full">
-                  <div className="w-full">
-                    <div className="flex items-center w-full justify-center sm:justify-between gap-4 mb-4 mt-2">
-                      <h3 className="hidden sm:inline">股票自选</h3>
-                      <div>
-                        <Space>
-                          <Space.Compact>
-                            <Input
-                              autoFocus
-                              placeholder="请输入股票代码"
-                              style={{ width: '80%' }}
-                              onChange={onSearch}
-                            />
-                            <Button
-                              disabled={!symbol}
-                              icon={<SearchOutlined />}>
-                              搜索
-                            </Button>
-                          </Space.Compact>
-                        </Space>
-                      </div>
-                    </div>
-                    {(symbolData || searchLoading) && (
-                      <div className="flex flex-col min-h-[160px]">
-                        <Spin spinning={searchLoading}>
-                          {symbolData && (
-                            <StockInfoComponent data={symbolData} />
-                          )}
-                        </Spin>
-                      </div>
-                    )}
-                  </div>
+                  <SearchComponent />
                   {cateId === 'symbol_self' &&
                   stockData?.length &&
                   stockData.find((item) => item.type === stockType)?.list

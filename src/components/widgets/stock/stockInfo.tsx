@@ -12,7 +12,7 @@ import {
   useTimeout,
   useUpdateEffect
 } from 'ahooks'
-import { App, Button, Col, Empty, Row, Space, Spin, Tabs, Tag } from 'antd'
+import { App, Button, Col, Empty, Row, Spin, Tabs, Tag } from 'antd'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import type {
@@ -21,17 +21,141 @@ import type {
   StockData,
   StockInfo
 } from '~components/widgets/stock'
-import { DailyChart, HoursChart } from '~components/widgets/stock/chart'
+import { HoursChart, TradingChart } from '~components/widgets/stock/chart'
 import type { BoardRank } from '~components/widgets/stock/rank/boardRank'
 import { ThemeProvider } from '~layouts'
 
-const formatNumber = (num: number, unit = '亿') => {
+const formatNumber = (num: number, unit = '亿', precision = 1) => {
   const tempObj = {
     万: 10000,
     亿: 100000000
   }
   if (!num) return '0.00'
-  return (num / tempObj[unit]).toFixed(2) + unit
+  return (num / (tempObj[unit] || 1)).toFixed(precision) + unit
+}
+const covertData = (data = []) => {
+  const tempArr = []
+  const tempArr2 = []
+  const list = []
+  let maxBuyCount = 0
+  let maxSellCount = 0
+  data.map((el, index) => {
+    if (!el.item) return
+    let temp = { name: index < 10 ? '卖' : '买' } as any
+    if (el.item.includes('vol')) {
+      temp.vol = el.value.toString().replace(/-/g, '') ? el.value : '-'
+      tempArr2.push(temp)
+    } else {
+      temp.value = el.value.toString()?.replace(/-/g, '')
+        ? el.value
+        : '----------'
+      tempArr.push(temp)
+    }
+  })
+  tempArr.map((el, index) => {
+    list.push({ ...el, ...tempArr2[index] })
+  })
+  maxSellCount = Math.max(
+    ...list
+      .filter((el) => el.name == '卖' && el.vol != '-')
+      .map((item) => item.vol)
+  )
+  maxBuyCount = Math.max(
+    ...list
+      .filter((el) => el.name == '买' && el.vol != '-')
+      .map((item) => item.vol)
+  )
+  list.map((item) => {
+    if (!item.vol || item.vol == '-') {
+      item.percent = 0
+      return
+    }
+    item.percent =
+      item.name == '买' ? item.vol / maxBuyCount : item.vol / maxSellCount
+    item.percent = (item.percent * 100).toFixed(2)
+    const totalSellVol = list
+      .filter((el) => el.name == '卖' && el.vol != '-')
+      .reduce((prev, cur) => prev + Number(cur.vol), 0)
+    const totalBuyVol = list
+      .filter((el) => el.name == '卖' && el.vol != '-')
+      .reduce((prev, cur) => prev + Number(cur.vol), 0)
+    item.total = totalSellVol + totalBuyVol
+    item.totalBuyVol = totalBuyVol || 0
+    item.totalSellVol = totalSellVol || 0
+    item.totalSellVolPercent = ((totalSellVol / item.total) * 100).toFixed(2)
+    item.totalBuyVolPercent = (100 - item.totalSellVolPercent).toFixed(2)
+  })
+  list.map((item) => {
+    item.vol =
+      item.vol && item.vol != '-' ? formatNumber(item.vol, '万') : '----------'
+  })
+  console.log(list, 'list')
+
+  return list
+}
+const BuySellComponent = (props: { data: any[] }) => {
+  const [state, setState] = useState([])
+  useEffect(() => {
+    setState(covertData(props.data))
+  }, [props.data])
+  return (
+    <div>
+      {state.map((item, index) => (
+        <div
+          key={index}
+          style={{
+            marginBottom: index == 4 ? '10px' : ''
+          }}
+          className="flex relative justify-between w-full text-xs">
+          <div>
+            {item.name}{index > 4 ? index - 4 : index + 1} {item.value}
+          </div>
+          <div>{item.vol}</div>
+          <div
+            style={{
+              width: item.percent + '%'
+            }}
+            className={`absolute w-full h-full top-0 right-0 ${index < 5 ? 'bg-[rgba(0,255,0,0.2)]' : 'bg-[rgba(255,0,0,0.2)]'}`}></div>
+          {index == 4 && (
+            <div className="h-[2px] absolute bottom-[-7px] left-0 rounded flex w-full">
+              <div
+                style={{ width: item.totalSellVolPercent + '%' }}
+                className={`h-full bg-[rgba(0,255,0,0.2)]`}></div>
+              <div
+                style={{ width: item.totalBuyVolPercent + '%' }}
+                className={`h-full bg-[rgba(255,0,0,0.2)]`}></div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+const TradingComponent = (props) => {
+  return (
+    <Tabs
+      defaultActiveKey="1"
+      items={[
+        {
+          label: '五档',
+          key: '1',
+          children: <BuySellComponent data={props.data.buy_sell_data_list} />
+        },
+        {
+          label: '成交量',
+          key: '2',
+          children: (
+            <TradingChart
+              data={{
+                list: covertData(props.data.buy_sell_data_list),
+                data: { ...props.data, ...props.data_info }
+              }}
+            />
+          )
+        }
+      ]}
+    />
+  )
 }
 const StockInfoComponent = (props: {
   data: {
@@ -76,7 +200,7 @@ const StockInfoComponent = (props: {
         ?.find((item) => item.type === 'se')
         ?.list?.find((i) => i.股票代码 === data.data_info?.股票代码)
     )
-  }, [data])
+  }, [data, stockData])
   const onEdit = () => {
     if (hasSelf) {
       let newData = [...stockData]
@@ -102,12 +226,12 @@ const StockInfoComponent = (props: {
     setHasSelf({ ...data.data, ...data.data_info })
   }
   return (
-    <ThemeProvider>
+    <ThemeProvider token={{ Tabs: {} }}>
       <div className="flex w-full flex-col">
         {data ? (
           <div className="flex flex-col gap-4">
             <div className="flex gap-2 relative justify-between items-center md:hidden pb-1">
-              <div>
+              <div className="flex gap-2 items-center">
                 {data.data_info?.股票简称 || '-'}
                 <span className="text-[12px] text-white/50 ">
                   {data.data_info?.股票代码 || '-'}
@@ -121,11 +245,9 @@ const StockInfoComponent = (props: {
               </span>
               <div className="h-[1px] absolute bottom-0 left-0 w-full bg-[var(--byt-color-border-secondary)]"></div>
             </div>
-            <Row
-              gutter={[10, 10]}
-              className="flex justify-between items-center w-full">
-              <Col span={0} md={6}>
-                <div className="flex gap-2 flex-col md:flex-row">
+            <Row gutter={[10, 10]} className="w-full">
+              <Col span={0} sm={8} md={6}>
+                <div className="flex gap-2 flex-row">
                   {data.data_info?.股票简称 || '-'}
                   <span className="text-[14px] text-white/50 ">
                     {data.data_info?.股票代码 || '-'}
@@ -138,14 +260,14 @@ const StockInfoComponent = (props: {
                   </span>
                 </span>
               </Col>
-              <Col className={`flex flex-col ${styles}`}>
+              <Col span={8} md={6} lg={3} className={`flex flex-col ${styles}`}>
                 {data.data_info?.最新 || '-'}
                 <div className={`flex gap-2 `}>
+                  <span>{data.data?.涨跌 || '-'}</span>
                   <span>{data.data?.涨幅 || '-'}%</span>
-                  <span>{data.data?.涨跌 || '-'}%</span>
                 </div>
               </Col>
-              <Col className="flex flex-col">
+              <Col span={8} md={6} lg={3} className="flex flex-col">
                 <div className={`flex gap-4 ${styles}`}>
                   <span>最高</span>
                   <span>{data.data?.最高 || '-'}</span>
@@ -155,7 +277,7 @@ const StockInfoComponent = (props: {
                   <span>{data.data?.最低 || '-'}</span>
                 </div>
               </Col>
-              <Col className="flex flex-col">
+              <Col span={8} md={6} lg={3} className="flex flex-col">
                 <div className={`flex gap-4 ${styles}`}>
                   <span>今开</span>
                   <span>{data.data?.今开 || '-'}</span>
@@ -165,17 +287,21 @@ const StockInfoComponent = (props: {
                   <span>{data.data?.昨收 || '-'}</span>
                 </div>
               </Col>
-              <Col className="flex flex-col">
+              <Col span={8} md={6} lg={3} className="flex flex-col">
                 <div className={`flex gap-4`}>
                   <span>金额</span>
-                  <span>{formatNumber(data.data?.金额 || 0)}</span>
+                  <span className="flex-1 text-[12px]">
+                    {formatNumber(data.data?.金额 || 0)}
+                  </span>
                 </div>
                 <div className={`flex gap-4`}>
                   <span>市值</span>
-                  <span>{formatNumber(data.data_info?.总市值 || 0)}</span>
+                  <span className="flex-1 text-[12px]">
+                    {formatNumber(data.data_info?.总市值 || 0)}
+                  </span>
                 </div>
               </Col>
-              <Col className="flex flex-col">
+              <Col span={8} md={6} lg={3} className="flex flex-col">
                 <div className={`flex gap-4`}>
                   <span>换手</span>
                   <span>{data.data?.换手 || 0}%</span>
@@ -185,24 +311,29 @@ const StockInfoComponent = (props: {
                   <span>{data.data?.量比 || 0}</span>
                 </div>
               </Col>
-              <Col className="flex gap-2">
+              <Col span={8} md={6} lg={3} className="flex items-center">
                 <Button
                   onClick={onEdit}
                   type="link"
-                  title={hasSelf ? '取消自选' : '添加自选'}
+                  title={hasSelf ? '取消自选' : '加自选'}
                   icon={hasSelf ? <CheckOutlined /> : <PlusOutlined />}>
-                  {hasSelf ? '已添加' : '添加自选'}
+                  {hasSelf ? '已添加' : '加自选'}
                 </Button>
               </Col>
             </Row>
-            {data.daily_data_list && (
-              <HoursChart
-                data={{
-                  list: data.daily_data_list,
-                  data: { ...data.data, ...data.data_info }
-                }}
-              />
-            )}
+            <div className="flex">
+              <div className="flex-1">
+                <HoursChart
+                  data={{
+                    list: data.daily_data_list,
+                    data: { ...data.data, ...data.data_info }
+                  }}
+                />
+              </div>
+              <div>
+                <TradingComponent data={data} />
+              </div>
+            </div>
           </div>
         ) : (
           <Empty

@@ -1,4 +1,4 @@
-import { CloseOutlined, ReloadOutlined } from '@ant-design/icons'
+import { CloseOutlined, CopyOutlined, ReloadOutlined } from '@ant-design/icons'
 import {
   useLocalStorageState,
   useRequest,
@@ -86,13 +86,21 @@ export function StockRankPanel(props: {
       title: '名称',
       dataIndex: '股票名称',
       key: '股票名称',
-      minWidth: 100,
+      // minWidth: 100,
       render: (text: string, record: StockRank) => (
         <div>
           <div className="text-white font-medium line-clamp-1">
             {record.股票名称 || record.名称}
           </div>
-          <p className="text-[12px] text-white/50">{record.代码 || '--'}</p>
+          <p className="text-[12px] text-white/50">
+            {record.代码 || '--'}
+            <Button
+              onClick={() => {
+                navigator.clipboard.writeText(record.代码)
+              }}
+              type="link"
+              icon={<CopyOutlined />}></Button>
+          </p>
         </div>
       )
     },
@@ -100,7 +108,7 @@ export function StockRankPanel(props: {
       title: '最新价',
       dataIndex: '最新价',
       key: '最新价',
-      minWidth: 80,
+      // minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
         <span className="text-white">{value?.toFixed(2) || '--'}</span>
@@ -113,7 +121,7 @@ export function StockRankPanel(props: {
       sorter: {
         compare: (a, b) => a.涨跌幅 - b.涨跌幅
       },
-      minWidth: 80,
+      // minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
         <span
@@ -136,7 +144,7 @@ export function StockRankPanel(props: {
       sorter: {
         compare: (a, b) => a.涨跌额 - b.涨跌额
       },
-      minWidth: 80,
+      // minWidth: 80,
       align: 'right' as const,
       render: (value: number) =>
         value ? (
@@ -218,6 +226,7 @@ export function StockRankPanel(props: {
       token={{
         colorBgContainer: 'rgba(0, 0, 0, 0.5)',
         colorText: 'rgba(255, 255, 255, 0.65)',
+        colorSplit: 'rgba(0, 0, 0, 0.3)',
         colorTextDisabled: 'rgba(255, 255, 255, 0.35)',
         colorBgElevated: 'rgba(0, 0, 0, 0.8)',
         Select: {
@@ -234,7 +243,7 @@ export function StockRankPanel(props: {
         <div
           className={`flex w-full overflow-hidden ${props.className || ''}`}
           ref={(el) => (tabWrapRef.current = el)}>
-          <div className="flex flex-col w-full">
+          <div className="flex flex-col w-full !px-4">
             {/* 使用Tabs组件展示个股排行类型 */}
             <div className="min-h-[160px] w-full h-full">
               <Tabs
@@ -413,7 +422,8 @@ function StockRankWidget(props: WidgetProp) {
           !props.withComponents && setShow(true)
         }}>
         <Spin spinning={!stockData.length} wrapperClassName="w-full h-full">
-          <div className="h-full w-full p-4 min-h-[144px] flex flex-col text-white gap-2">
+          <div
+            className={`h-full w-full ${!props.withComponents ? 'p-4' : ''} min-h-[144px] flex flex-col text-white gap-2`}>
             {!props.withComponents &&
               stockData?.slice(0, 4)?.map((item, index) => (
                 <div
@@ -478,7 +488,7 @@ function StockRankWidget(props: WidgetProp) {
           classNames={{
             header: '!bg-transparent !text-white',
             container: '!overflow-hidden !rounded-xl !p-0 !bg-black/50',
-            body: '!p-5'
+            body: '!py-5'
           }}
           getContainer={() => document.body}
           width={1000}

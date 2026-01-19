@@ -70,11 +70,7 @@ const HoursChart = (props: Record<string, any>) => {
     item.时间 = item.时间.split(':').pop()
     return item
   })
-  // .filter(
-  //   (item: any, index: number, self: any[]) =>
-  //     self.findLastIndex((i: any) => i.时间 === item.时间) === index
-  // ) || []
-  const [weather_echarts, setWeatherEcharts] = useState({
+  const [echarts, setEcharts] = useState({
     ...baseOptions,
     xAxis: [
       {
@@ -121,46 +117,98 @@ const HoursChart = (props: Record<string, any>) => {
   const [hourilyEcharts, setHourilyEcharts] = useState<any>(null)
   useEffect(() => {
     if (hourilyEcharts && document.getElementById(id)) {
-      setWeatherEcharts({
-        ...weather_echarts,
+      setEcharts({
+        ...echarts,
         xAxis: [
           {
-            ...weather_echarts.xAxis[0],
+            ...echarts.xAxis[0],
             data: filterData?.map((item: any) => item.时间) || []
           }
         ],
         yAxis: {
-          ...weather_echarts.yAxis,
+          ...echarts.yAxis,
           min: Math.min(...(filterData?.map((item: any) => item.成交价) || [])),
           max: Math.max(...(filterData?.map((item: any) => item.成交价) || []))
         },
         series: [
           {
-            ...weather_echarts.series[0],
+            ...echarts.series[0],
             data: filterData?.map((item: any) => item.成交价) || []
           }
         ]
       })
-      hourilyEcharts?.setOption(weather_echarts, true, true)
+      hourilyEcharts?.setOption(echarts, true, true)
     } else {
-      setHourilyEcharts(EchartsInit(chartRef.current, weather_echarts))
+      setHourilyEcharts(EchartsInit(chartRef.current, echarts))
       hourilyEcharts?.resize()
     }
     window.addEventListener('resize', () => {
       hourilyEcharts?.resize()
     })
-    const observer = new ResizeObserver(() => hourilyEcharts?.resize())
-    observer.observe(chartRef?.current)
-    return () => {
-      observer.disconnect()
+  }, [props])
+  return <div id={id} ref={chartRef} className="!h-[200px] w-full"></div>
+}
+const TradingChart = (props: Record<string, any>) => {
+  const chartRef = useRef(null)
+  const [echarts, setEcharts] = useState({
+    series: [
+      {
+        type: 'pie',
+        name: '涨跌幅',
+        data: [],
+        symbol: 'circle',
+        symbolSize: 6,
+        showSymbol: false,
+        smooth: false,
+        itemStyle: {
+          color: (params) =>
+            params.value > 0 ? 'red' : params.value < 0 ? 'green' : 'white'
+        },
+        label: {
+          show: false,
+          position: 'top',
+          color: 'white',
+          formatter: '{c}%'
+        },
+        lineStyle: {
+          width: 1,
+          color: 'white'
+        },
+        areaStyle: {
+          opacity: 1,
+          color: 'transparent'
+        }
+      }
+    ]
+  })
+  const id = props.id || 'stock-echarts-pie'
+  const [pieEcharts, setPieEcharts] = useState<any>(null)
+  useEffect(() => {
+    if (pieEcharts && document.getElementById(id)) {
+      setEcharts({
+        ...echarts,
+        series: [
+          {
+            ...echarts.series[0],
+            data: props.data?.list || []
+          }
+        ]
+      })
+      pieEcharts?.setOption(echarts, true, true)
+    } else {
+      setPieEcharts(EchartsInit(chartRef.current, echarts))
+      pieEcharts?.resize()
     }
-  }, [props.data])
+    window.addEventListener('resize', () => {
+      pieEcharts?.resize()
+    })
+  }, [props])
   return <div id={id} ref={chartRef} className="!h-[100px] w-full"></div>
 }
 const DailyChart = (props: Record<string, any>) => {
   const chartRef = useRef(null)
   const [dailyEcharts, setDailyEcharts] = useState<any>(null)
-  const [weather_echarts, setWeatherEcharts] = useState({
+  const [echarts, setEcharts] = useState({
     ...baseOptions,
     xAxis: [
       {
@@ -205,33 +253,33 @@ const DailyChart = (props: Record<string, any>) => {
   const id = props.id || 'weather-echarts-daily'
   useEffect(() => {
     if (!dailyEcharts || !document.getElementById(id)) {
-      setDailyEcharts(EchartsInit(chartRef.current, weather_echarts))
+      setDailyEcharts(EchartsInit(chartRef.current, echarts))
     } else {
-      setWeatherEcharts({
-        ...weather_echarts,
+      setEcharts({
+        ...echarts,
         xAxis: [
           {
-            ...weather_echarts.xAxis[0],
+            ...echarts.xAxis[0],
             data: props.data?.map((item: any) => item.date) || []
           }
         ],
         yAxis: {
-          ...weather_echarts.yAxis,
+          ...echarts.yAxis,
           min: Math.min(...(props.data?.map((item: any) => item.成交价) || [])),
           max: Math.max(...(props.data?.map((item: any) => item.成交价) || []))
         },
         series: [
           {
-            ...weather_echarts.series[0],
+            ...echarts.series[0],
             data: props.data?.map((item: any) => item.成交价) || []
           },
           {
-            ...weather_echarts.series[1],
+            ...echarts.series[1],
             data: props.data?.map((item: any) => item.成交价) || []
           }
         ]
       })
-      dailyEcharts.setOption(weather_echarts, true, true)
+      dailyEcharts.setOption(echarts, true, true)
       dailyEcharts?.resize()
     }
     window.addEventListener('resize', () => {
@@ -250,4 +298,4 @@ const DailyChart = (props: Record<string, any>) => {
       className="!h-[120px] w-full min-w-[800px]"></div>
   )
 }
-export { HoursChart, DailyChart }
+export { HoursChart, TradingChart, DailyChart }

@@ -1,4 +1,4 @@
-import { DeleteOutlined, HolderOutlined } from '@ant-design/icons'
+import { CopyOutlined, DeleteOutlined, HolderOutlined } from '@ant-design/icons'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { DndContext } from '@dnd-kit/core'
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
@@ -86,6 +86,9 @@ const Row: React.FC<RowProps> = (props) => {
         ref={setNodeRef}
         style={style}
         {...attributes}
+        onClick={(ev) => {
+          props.onClick?.(ev)
+        }}
         className="!bg-transparent hover:!bg-white/5 !border-b-white/10"
       />
     </RowContext.Provider>
@@ -97,7 +100,7 @@ const DragHandle: React.FC = () => {
     <Button
       type="text"
       size="small"
-      icon={<HolderOutlined />}
+      icon={<HolderOutlined className="!text-white" />}
       style={{ cursor: 'move' }}
       ref={setActivatorNodeRef}
       {...listeners}
@@ -145,7 +148,7 @@ export function StockPanel(props: {
       el.list = el.list.filter((i) => i.股票代码 !== row?.股票代码)
     })
     setStockData(newData)
-    message.success('取消成功', 100000)
+    message.success('取消成功')
   }
   // 表格列配置 - 针对个股数据
   const columns: TableColumnsType<any> = [
@@ -159,9 +162,9 @@ export function StockPanel(props: {
     {
       title: '名称',
       dataIndex: '股票简称',
-      minWidth: 100,
+      // minWidth: 100,
       fixed: 'left' as const,
-      key: '名称',
+      key: '股票代码',
       render: (text: string, record: StockInfo) => (
         <div className="flex flex-col gap-1">
           <div>
@@ -169,10 +172,18 @@ export function StockPanel(props: {
               {record.股票简称 || '--'}
             </span>
             <span className="text-white/70 text-sm text-[14px]">
-              {record.股票代码 || '--'}
+              {record.股票代码 || '--'}{' '}
+              <Button
+                onClick={() => {
+                  navigator.clipboard.writeText(record.股票代码)
+                  message.success('复制成功')
+                }}
+                type="link"
+                icon={<CopyOutlined />}></Button>
               <Button
                 onClick={() => onDelete(record)}
                 type="link"
+                danger
                 title={'取消自选'}
                 icon={<DeleteOutlined />}></Button>
             </span>
@@ -184,10 +195,10 @@ export function StockPanel(props: {
       title: '现价',
       dataIndex: '最新',
       key: '最新',
-      minWidth: 80,
+      // minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
-        <span className="text-white">{value?.toFixed(2)}</span>
+        <span className="text-white">{value || '--'}</span>
       )
     },
     {
@@ -197,7 +208,7 @@ export function StockPanel(props: {
       sorter: {
         compare: (a, b) => a.涨幅 - b.涨幅
       },
-      minWidth: 80,
+      // minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
         <span
@@ -217,7 +228,7 @@ export function StockPanel(props: {
       title: '涨跌额',
       dataIndex: '涨跌',
       key: '涨跌',
-      minWidth: 100,
+      // minWidth: 100,
       sorter: {
         compare: (a, b) => a.涨幅 - b.涨幅
       },
@@ -243,40 +254,40 @@ export function StockPanel(props: {
       title: '最高',
       dataIndex: '最高',
       key: '最高',
-      minWidth: 80,
+      // minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
-        <span className="text-white">{value?.toFixed(2) || '--'}</span>
+        <span className="text-white">{value || '--'}</span>
       )
     },
     {
       title: '最低',
       dataIndex: '最低',
       key: '最低',
-      minWidth: 80,
+      // minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
-        <span className="text-white">{value?.toFixed(2) || '--'}</span>
+        <span className="text-white">{value || '--'}</span>
       )
     },
     {
       title: '今开',
       dataIndex: '今开',
       key: '今开',
-      minWidth: 80,
+      // minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
-        <span className="text-white">{value?.toFixed(2) || '--'}</span>
+        <span className="text-white">{value || '--'}</span>
       )
     },
     {
       title: '昨收',
       dataIndex: '昨收',
       key: '昨收',
-      minWidth: 80,
+      // minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
-        <span className="text-white">{value?.toFixed(2) || '--'}</span>
+        <span className="text-white">{value || '--'}</span>
       )
     }
   ]

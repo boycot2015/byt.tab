@@ -78,7 +78,7 @@ function Widget(props: WidgetProp) {
     loading
   } = useRequest(fetchData, {
     cacheKey: 'stock_spot_data_self',
-    staleTime: 1000 * 10
+    staleTime: 1000 * 5
   })
   const [stockData, setStockData] = useLocalStorageState<StockData[]>(
     'stock_spot_data_self',
@@ -182,7 +182,7 @@ function Widget(props: WidgetProp) {
                     </span>
                   )}
                   <span
-                    className={`text-right flex gap-2 ${item['涨跌幅'] > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    className={`text-right flex gap-2 ${(item['涨跌幅'] || item['涨幅']) > 0 ? 'text-red-500' : 'text-green-500'}`}>
                     <span className={props.size === 'large' ? '' : 'hidden'}>
                       {item['最新价'] || item['最新']}
                     </span>
