@@ -36,12 +36,12 @@ const SearchComponent = () => {
     if (!value) {
       setSymbolData(undefined)
       setSymbol('')
+      setSearchLoading(false)
       return
     }
     if (value.length === 6 || value.length === 8) {
       let symbol = value.length === 6 ? value : value.substring(2)
       setSymbol(symbol)
-      setSearchLoading(true)
       let res = await getStockRealTime({
         code: 'stock_bid_ask_em',
         symbol
@@ -66,13 +66,12 @@ const SearchComponent = () => {
         data_info[item.item] = item.value
       })
       daily_data_list = res3
-      setSymbolData({
+      return {
         buy_sell_data_list,
         daily_data_list,
         data,
         data_info
-      })
-      setSearchLoading(false)
+      }
     }
   }
   const [symbolData, setSymbolData] = useState<{
@@ -81,13 +80,30 @@ const SearchComponent = () => {
     data: Stock
     data_info: StockInfo
   }>()
-  const { run: onSearch } = useDebounceFn(fetchSearchData, {
-    leading: true,
-    wait: 500
-  })
-  const { run: onSearchRefresh } = useRequest(fetchSearchData, {
+  const { run: onSearch } = useDebounceFn(
+    async (value) => {
+      setSearchLoading(true)
+      let data = await fetchSearchData(value)
+      data && setSymbolData(data)
+      setSearchLoading(false)
+    },
+    {
+      leading: true,
+      wait: 500
+    }
+  )
+  const { data, run: onSearchRefresh } = useRequest(fetchSearchData, {
+    cacheKey: symbol,
     cacheTime: 1000 * 5
   })
+  useEffect(() => {
+    if (!data) {
+      setSearchLoading(false)
+      return
+    }
+    setSymbolData(data)
+    setSearchLoading(false)
+  }, [data])
   return (
     <div className="w-full">
       <div className="flex items-center w-full justify-center sm:justify-between gap-4 mb-4 mt-2">
@@ -102,7 +118,10 @@ const SearchComponent = () => {
                 allowClear
                 onChange={(e) => onSearch(e.target.value)}
               />
-              <Button disabled={!symbol} icon={<SearchOutlined />}>
+              <Button
+                onClick={() => onSearch(symbol)}
+                disabled={!symbol}
+                icon={<SearchOutlined />}>
                 搜索
               </Button>
             </Space.Compact>
@@ -112,7 +131,7 @@ const SearchComponent = () => {
       {(symbolData || searchLoading) && (
         <div className="flex flex-col min-h-[160px]">
           <Spin spinning={searchLoading}>
-            {symbolData && <StockInfoComponent data={symbolData} />}
+            <StockInfoComponent data={symbolData || ({} as any)} />
           </Spin>
         </div>
       )}

@@ -66,10 +66,7 @@ const baseOptions = {
 export const weather_icon_url = 'https://d.scggqx.com/forecast/img'
 const HoursChart = (props: Record<string, any>) => {
   const chartRef = useRef(null)
-  const filterData = props.data?.list?.map((item: any) => {
-    item.时间 = item.时间.split(':').pop()
-    return item
-  })
+  const filterData = [...(props.data?.list || [])]
   const [echarts, setEcharts] = useState({
     ...baseOptions,
     xAxis: [
@@ -94,7 +91,11 @@ const HoursChart = (props: Record<string, any>) => {
         smooth: false,
         itemStyle: {
           color: (params) =>
-            params.value > 0 ? 'red' : params.value < 0 ? 'green' : 'white'
+            props.data.最新 && params.value
+              ? params.value > props.data.最新
+                ? 'red'
+                : 'green'
+              : 'white'
         },
         label: {
           show: false,
@@ -104,7 +105,12 @@ const HoursChart = (props: Record<string, any>) => {
         },
         lineStyle: {
           width: 1,
-          color: 'white'
+          color: (params) =>
+            props.data.最新 && params.value
+              ? params.value > props.data.最新
+                ? 'red'
+                : 'green'
+              : 'white'
         },
         areaStyle: {
           opacity: 1,
@@ -145,24 +151,47 @@ const HoursChart = (props: Record<string, any>) => {
     window.addEventListener('resize', () => {
       hourilyEcharts?.resize()
     })
+    const observer = new ResizeObserver(() => hourilyEcharts?.resize())
+    observer.observe(chartRef?.current)
+    return () => {
+      observer.disconnect()
+    }
   }, [props])
-  return <div id={id} ref={chartRef} className="!h-[200px] w-full"></div>
+  return <div id={id} ref={chartRef} className="!h-[140px] w-full"></div>
 }
 const TradingChart = (props: Record<string, any>) => {
   const chartRef = useRef(null)
   const [echarts, setEcharts] = useState({
+    visualMap: {
+      show: false,
+      min: 80,
+      max: 600,
+      inRange: {
+        colorLightness: [0.3, 1]
+      }
+    },
     series: [
       {
         type: 'pie',
-        name: '涨跌幅',
+        name: '交易',
         data: [],
         symbol: 'circle',
-        symbolSize: 6,
+        radius: '90%',
         showSymbol: false,
         smooth: false,
         itemStyle: {
-          color: (params) =>
-            params.value > 0 ? 'red' : params.value < 0 ? 'green' : 'white'
+          color: (params) => {
+            let buyArr = props.data?.list
+              ?.filter((item: any) => item.name == '买')
+              .sort((a: any, b: any) => a.percent - b.percent)
+            let currentIndex = buyArr?.findIndex(
+              (item: any) => item.name === params.name
+            )
+            let isBuy = currentIndex > -1
+            return isBuy ? '#f00' : '#0f0'
+          },
+          shadowBlur: 200,
+          shadowColor: 'rgba(0, 0, 0, 0.5)'
         },
         label: {
           show: false,
@@ -190,7 +219,24 @@ const TradingChart = (props: Record<string, any>) => {
         series: [
           {
             ...echarts.series[0],
-            data: props.data?.list || []
+            itemStyle: {
+              ...echarts.series[0].itemStyle,
+              color: (params) => {
+                let buyArr = props.data?.list
+                  ?.filter((item: any) => item.name == '买')
+                  .sort((a: any, b: any) => a.percent - b.percent)
+                let currentIndex = buyArr?.findIndex(
+                  (item: any) => item.name === params.name
+                )
+                let isBuy = currentIndex > -1
+                return isBuy ? '#f00' : '#0f0'
+              }
+            },
+            data:
+              props.data?.list.map((el) => ({
+                ...el,
+                value: parseFloat(el.percent)
+              })) || []
           }
         ]
       })
@@ -202,7 +248,7 @@ const TradingChart = (props: Record<string, any>) => {
     window.addEventListener('resize', () => {
       pieEcharts?.resize()
     })
-  }, [props])
+  }, [props.data])
   return <div id={id} ref={chartRef} className="!h-[100px] w-full"></div>
 }
 const DailyChart = (props: Record<string, any>) => {
@@ -226,6 +272,32 @@ const DailyChart = (props: Record<string, any>) => {
         name: '成交价',
         type: 'line',
         data: props.data?.map((item: any) => item.成交价) || [],
+        symbol: 'circle',
+        symbolSize: 6,
+        showSymbol: true,
+        smooth: true,
+        itemStyle: {
+          color: '#fff'
+        },
+        label: {
+          show: true,
+          position: 'top',
+          color: 'white',
+          formatter: '{c}元'
+        },
+        lineStyle: {
+          width: 1,
+          color: 'white'
+        },
+        areaStyle: {
+          opacity: 1,
+          color: 'transparent'
+        }
+      },
+      {
+        name: '成交量',
+        type: 'bar',
+        data: props.data?.map((item: any) => item.手数) || [],
         symbol: 'circle',
         symbolSize: 6,
         showSymbol: true,
@@ -291,11 +363,101 @@ const DailyChart = (props: Record<string, any>) => {
       observer.disconnect()
     }
   }, [props.data])
-  return (
-    <div
-      id={id}
-      ref={chartRef}
-      className="!h-[120px] w-full min-w-[800px]"></div>
-  )
+  return <div id={id} ref={chartRef} className="!h-[120px] w-full"></div>
 }
-export { HoursChart, TradingChart, DailyChart }
+const DailyVolChart = (props: Record<string, any>) => {
+  const chartRef = useRef(null)
+  const [dailyEcharts, setDailyEcharts] = useState<any>(null)
+  const [echarts, setEcharts] = useState({
+    ...baseOptions,
+    xAxis: [
+      {
+        ...baseOptions.xAxis[0],
+        data: props.data?.map((item: any) => item.时间) || []
+      }
+    ],
+    yAxis: {
+      ...baseOptions.yAxis
+    },
+    series: [
+      {
+        name: '成交量',
+        type: 'bar',
+        data: props.data?.map((item: any) => item.手数) || [],
+        symbol: 'circle',
+        symbolSize: 6,
+        showSymbol: true,
+        smooth: true,
+        color: (params) =>
+          params.name
+            ? params.name.includes('买')
+              ? 'red'
+              : 'green'
+            : 'white',
+        label: {
+          show: false,
+          position: 'top',
+          color: 'white',
+          formatter: '{c}元'
+        },
+        lineStyle: {
+          width: 1,
+          color: 'white'
+        },
+        areaStyle: {
+          opacity: 1,
+          color: 'transparent'
+        }
+      }
+    ]
+  })
+  const id = props.id || 'stock-echarts-daily-vol'
+  useEffect(() => {
+    if (!dailyEcharts || !document.getElementById(id)) {
+      setDailyEcharts(EchartsInit(chartRef.current, echarts))
+    } else {
+      setEcharts((prev) => {
+        let options = {
+          ...prev,
+          xAxis: [
+            {
+              ...prev.xAxis[0],
+              data: props.data?.map((item: any) => item.时间) || []
+            }
+          ],
+          yAxis: {
+            ...prev.yAxis,
+            min: Math.min(...(props.data?.map((item: any) => item.手数) || [])),
+            max: Math.max(...(props.data?.map((item: any) => item.手数) || []))
+          },
+          series: [
+            {
+              ...prev.series[0],
+              color: (params) =>
+                params.name
+                  ? params.name.includes('买')
+                    ? 'red'
+                    : 'green'
+                  : 'white',
+              data: props.data?.map((item: any) => item.手数) || []
+            }
+          ]
+        }
+        dailyEcharts.setOption(options, true, true)
+        dailyEcharts?.resize()
+        console.log(props.data, options, 'DailyVolChart')
+        return options
+      })
+    }
+    window.addEventListener('resize', () => {
+      dailyEcharts?.resize()
+    })
+    const observer = new ResizeObserver(() => dailyEcharts?.resize())
+    observer.observe(chartRef?.current)
+    return () => {
+      observer.disconnect()
+    }
+  }, [props.data])
+  return <div id={id} ref={chartRef} className="!h-[80px] w-full"></div>
+}
+export { HoursChart, TradingChart, DailyChart, DailyVolChart }

@@ -9,7 +9,8 @@ import {
   LegendComponent,
   TitleComponent,
   TooltipComponent,
-  TransformComponent
+  TransformComponent,
+  VisualMapComponent
 } from 'echarts/components'
 import * as echarts from 'echarts/core'
 // 引入特性和渲染器
@@ -18,6 +19,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 
 // 注册需要的组件
 echarts.use([
+  VisualMapComponent,
   TitleComponent,
   TooltipComponent,
   GridComponent,

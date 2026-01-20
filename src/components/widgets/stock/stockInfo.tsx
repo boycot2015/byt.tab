@@ -21,7 +21,11 @@ import type {
   StockData,
   StockInfo
 } from '~components/widgets/stock'
-import { HoursChart, TradingChart } from '~components/widgets/stock/chart'
+import {
+  DailyVolChart,
+  HoursChart,
+  TradingChart
+} from '~components/widgets/stock/chart'
 import type { BoardRank } from '~components/widgets/stock/rank/boardRank'
 import { ThemeProvider } from '~layouts'
 
@@ -46,9 +50,7 @@ const covertData = (data = []) => {
       temp.vol = el.value.toString().replace(/-/g, '') ? el.value : '-'
       tempArr2.push(temp)
     } else {
-      temp.value = el.value.toString()?.replace(/-/g, '')
-        ? el.value
-        : '----------'
+      temp.value = el.value.toString()?.replace(/-/g, '') ? el.value : '-'
       tempArr.push(temp)
     }
   })
@@ -77,7 +79,7 @@ const covertData = (data = []) => {
       .filter((el) => el.name == '卖' && el.vol != '-')
       .reduce((prev, cur) => prev + Number(cur.vol), 0)
     const totalBuyVol = list
-      .filter((el) => el.name == '卖' && el.vol != '-')
+      .filter((el) => el.name == '买' && el.vol != '-')
       .reduce((prev, cur) => prev + Number(cur.vol), 0)
     item.total = totalSellVol + totalBuyVol
     item.totalBuyVol = totalBuyVol || 0
@@ -86,11 +88,8 @@ const covertData = (data = []) => {
     item.totalBuyVolPercent = (100 - item.totalSellVolPercent).toFixed(2)
   })
   list.map((item) => {
-    item.vol =
-      item.vol && item.vol != '-' ? formatNumber(item.vol, '万') : '----------'
+    item.vol = item.vol && item.vol != '-' ? formatNumber(item.vol, '万') : '-'
   })
-  console.log(list, 'list')
-
   return list
 }
 const BuySellComponent = (props: { data: any[] }) => {
@@ -108,7 +107,8 @@ const BuySellComponent = (props: { data: any[] }) => {
           }}
           className="flex relative justify-between w-full text-xs">
           <div>
-            {item.name}{index > 4 ? index - 4 : index + 1} {item.value}
+            {item.name}
+            {index > 4 ? index - 4 : index + 1} {item.value}
           </div>
           <div>{item.vol}</div>
           <div
@@ -139,10 +139,12 @@ const TradingComponent = (props) => {
         {
           label: '五档',
           key: '1',
+          forceRender: true,
           children: <BuySellComponent data={props.data.buy_sell_data_list} />
         },
         {
           label: '成交量',
+          forceRender: true,
           key: '2',
           children: (
             <TradingChart
@@ -165,7 +167,6 @@ const StockInfoComponent = (props: {
     data: Stock
   }
 }) => {
-  const { data } = props
   const [boardData, setBoardData] = useLocalStorageState<BoardRank[]>(
     'stock_board_rank',
     {
@@ -189,18 +190,18 @@ const StockInfoComponent = (props: {
   const [currentBoardData, setCurrentBoardData] = useState<BoardRank>()
   useEffect(() => {
     const currentBoard = boardData.find(
-      (item) => item.名称 === data.data_info?.行业
+      (item) => item.名称 === props.data.data_info?.行业
     )
     setCurrentBoardData(currentBoard)
   }, [boardData])
   useEffect(() => {
-    setStyles(getPriceStyles(data.data?.涨幅))
+    setStyles(getPriceStyles(props.data.data?.涨幅))
     setHasSelf(
       stockData
         ?.find((item) => item.type === 'se')
-        ?.list?.find((i) => i.股票代码 === data.data_info?.股票代码)
+        ?.list?.find((i) => i.股票代码 === props.data.data_info?.股票代码)
     )
-  }, [data, stockData])
+  }, [props.data, stockData])
   const onEdit = () => {
     if (hasSelf) {
       let newData = [...stockData]
@@ -215,7 +216,7 @@ const StockInfoComponent = (props: {
         type: 'se',
         name: '自选',
         list: [
-          { ...data.data, ...data.data_info },
+          { ...props.data.data, ...props.data.data_info },
           ...(stockData?.find((item) => item.type === 'se')?.list || [])
         ].filter(
           (item, index, arr) =>
@@ -223,22 +224,22 @@ const StockInfoComponent = (props: {
         )
       }
     ])
-    setHasSelf({ ...data.data, ...data.data_info })
+    setHasSelf({ ...props.data.data, ...props.data.data_info })
   }
   return (
     <ThemeProvider token={{ Tabs: {} }}>
       <div className="flex w-full flex-col">
-        {data ? (
+        {props.data ? (
           <div className="flex flex-col gap-4">
             <div className="flex gap-2 relative justify-between items-center md:hidden pb-1">
               <div className="flex gap-2 items-center">
-                {data.data_info?.股票简称 || '-'}
+                {props.data.data_info?.股票简称 || '-'}
                 <span className="text-[12px] text-white/50 ">
-                  {data.data_info?.股票代码 || '-'}
+                  {props.data.data_info?.股票代码 || '-'}
                 </span>
               </div>
               <span className="flex gap-2">
-                <Tag>{data.data_info?.行业 || '-'}</Tag>
+                <Tag>{props.data.data_info?.行业 || '-'}</Tag>
                 <span className={`flex flex-col ${styles}`}>
                   {currentBoardData?.今日涨跌幅 || '-'}%
                 </span>
@@ -248,67 +249,67 @@ const StockInfoComponent = (props: {
             <Row gutter={[10, 10]} className="w-full">
               <Col span={0} sm={8} md={6}>
                 <div className="flex gap-2 flex-row">
-                  {data.data_info?.股票简称 || '-'}
+                  {props.data.data_info?.股票简称 || '-'}
                   <span className="text-[14px] text-white/50 ">
-                    {data.data_info?.股票代码 || '-'}
+                    {props.data.data_info?.股票代码 || '-'}
                   </span>
                 </div>
                 <span className="flex gap-2">
-                  <Tag>{data.data_info?.行业 || '-'}</Tag>
+                  <Tag>{props.data.data_info?.行业 || '-'}</Tag>
                   <span className={`flex flex-col ${styles}`}>
                     {currentBoardData?.今日涨跌幅 || '-'}%
                   </span>
                 </span>
               </Col>
               <Col span={8} md={6} lg={3} className={`flex flex-col ${styles}`}>
-                {data.data_info?.最新 || '-'}
+                {props.data.data_info?.最新 || '-'}
                 <div className={`flex gap-2 `}>
-                  <span>{data.data?.涨跌 || '-'}</span>
-                  <span>{data.data?.涨幅 || '-'}%</span>
+                  <span>{props.data.data?.涨跌 || '-'}</span>
+                  <span>{props.data.data?.涨幅 || '-'}%</span>
                 </div>
               </Col>
               <Col span={8} md={6} lg={3} className="flex flex-col">
                 <div className={`flex gap-4 ${styles}`}>
                   <span>最高</span>
-                  <span>{data.data?.最高 || '-'}</span>
+                  <span>{props.data.data?.最高 || '-'}</span>
                 </div>
                 <div className={`flex gap-4 ${styles}`}>
                   <span>最低</span>
-                  <span>{data.data?.最低 || '-'}</span>
+                  <span>{props.data.data?.最低 || '-'}</span>
                 </div>
               </Col>
               <Col span={8} md={6} lg={3} className="flex flex-col">
                 <div className={`flex gap-4 ${styles}`}>
                   <span>今开</span>
-                  <span>{data.data?.今开 || '-'}</span>
+                  <span>{props.data.data?.今开 || '-'}</span>
                 </div>
                 <div className={`flex gap-4`}>
                   <span>昨收</span>
-                  <span>{data.data?.昨收 || '-'}</span>
+                  <span>{props.data.data?.昨收 || '-'}</span>
                 </div>
               </Col>
               <Col span={8} md={6} lg={3} className="flex flex-col">
                 <div className={`flex gap-4`}>
                   <span>金额</span>
                   <span className="flex-1 text-[12px]">
-                    {formatNumber(data.data?.金额 || 0)}
+                    {formatNumber(props.data.data?.金额 || 0)}
                   </span>
                 </div>
                 <div className={`flex gap-4`}>
                   <span>市值</span>
                   <span className="flex-1 text-[12px]">
-                    {formatNumber(data.data_info?.总市值 || 0)}
+                    {formatNumber(props.data.data_info?.总市值 || 0)}
                   </span>
                 </div>
               </Col>
               <Col span={8} md={6} lg={3} className="flex flex-col">
                 <div className={`flex gap-4`}>
                   <span>换手</span>
-                  <span>{data.data?.换手 || 0}%</span>
+                  <span>{props.data.data?.换手 || 0}%</span>
                 </div>
                 <div className={`flex gap-4`}>
                   <span>量比</span>
-                  <span>{data.data?.量比 || 0}</span>
+                  <span>{props.data.data?.量比 || 0}</span>
                 </div>
               </Col>
               <Col span={8} md={6} lg={3} className="flex items-center">
@@ -321,17 +322,18 @@ const StockInfoComponent = (props: {
                 </Button>
               </Col>
             </Row>
-            <div className="flex">
-              <div className="flex-1">
+            <div className="flex w-full gap-4">
+              <div className="flex-1 flex flex-col gap-4">
                 <HoursChart
                   data={{
-                    list: data.daily_data_list,
-                    data: { ...data.data, ...data.data_info }
+                    list: props.data.daily_data_list,
+                    data: { ...props.data.data, ...props.data.data_info }
                   }}
                 />
+                <DailyVolChart data={props.data.daily_data_list || []} />
               </div>
               <div>
-                <TradingComponent data={data} />
+                <TradingComponent data={props.data || ({} as any)} />
               </div>
             </div>
           </div>
