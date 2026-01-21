@@ -14,7 +14,7 @@ import {
 } from 'echarts/components'
 import * as echarts from 'echarts/core'
 // 引入特性和渲染器
-import { LabelLayout, UniversalTransition } from 'echarts/features'
+import { AxisBreak, LabelLayout, UniversalTransition } from 'echarts/features'
 import { CanvasRenderer } from 'echarts/renderers'
 
 // 注册需要的组件
@@ -30,6 +30,7 @@ echarts.use([
   BarChart,
   LabelLayout,
   UniversalTransition,
+  AxisBreak,
   CanvasRenderer,
   LegendComponent
 ])

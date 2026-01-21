@@ -139,12 +139,17 @@ const getStockHistory = ({
  */
 const getStockIntraday = ({
   code = 'stock_intraday_sina',
-  symbol = 'sh000300'
+  symbol = 'sh000300',
+  date = ''
 }: {
   code: string
   symbol: string
+  date?: string
 }) => {
-  return $GET(`${akApiUrl}/${code}?symbol=${symbol}`)
+  let url = `${akApiUrl}/${code}`
+  if (symbol) url = `${url}?symbol=${symbol}`
+  if (date) url = `${url}&date=${date}`
+  return $GET(url)
 }
 /**
  * 分时数据

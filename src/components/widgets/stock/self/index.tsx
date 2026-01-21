@@ -37,7 +37,7 @@ function Widget(props: WidgetProp) {
       stockData.map(async (item) => {
         let list = await Promise.all(
           item.list
-            .filter((child) => child.股票代码)
+            ?.filter((child) => child.股票代码)
             .map(async (child): Promise<Stock> => {
               let res = await getStockRealTime({
                 code: 'stock_bid_ask_em',

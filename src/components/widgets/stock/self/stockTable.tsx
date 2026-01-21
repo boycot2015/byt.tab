@@ -36,7 +36,7 @@ import type {
   StockData,
   StockInfo
 } from '~components/widgets/stock'
-import { getStockBoardRank } from '~data/stock'
+import { SearchContext } from '~components/widgets/stock/self/config'
 import { sizeMap, ThemeProvider } from '~layouts'
 
 interface RowContextProps {
@@ -86,9 +86,6 @@ const Row: React.FC<RowProps> = (props) => {
         ref={setNodeRef}
         style={style}
         {...attributes}
-        onClick={(ev) => {
-          props.onClick?.(ev)
-        }}
         className="!bg-transparent hover:!bg-white/5 !border-b-white/10"
       />
     </RowContext.Provider>
@@ -119,6 +116,7 @@ export function StockPanel(props: {
 }) {
   const tabWrapRef = useRef<HTMLDivElement>(null)
   const { message } = App.useApp()
+  const { symbol, setSymbol } = useContext(SearchContext)
   const [dataSource, setDataSource] = React.useState<Stock[]>(props.stocks)
   const [stockData, setStockData] = useLocalStorageState<StockData[]>(
     'stock_spot_data_self',
@@ -174,14 +172,18 @@ export function StockPanel(props: {
             <span className="text-white/70 text-sm text-[14px]">
               {record.股票代码 || '--'}{' '}
               <Button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation()
                   navigator.clipboard.writeText(record.股票代码)
                   message.success('复制成功')
                 }}
                 type="link"
                 icon={<CopyOutlined />}></Button>
               <Button
-                onClick={() => onDelete(record)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(record)
+                }}
                 type="link"
                 danger
                 title={'取消自选'}
@@ -244,7 +246,7 @@ export function StockPanel(props: {
                   : 'text-white'
             }>
             {value > 0 ? '+' : ''}
-            {value?.toFixed(2)}
+            {value}
           </span>
         ) : (
           '--'
@@ -333,10 +335,10 @@ export function StockPanel(props: {
                   <Table
                     dataSource={dataSource}
                     columns={columns}
-                    sticky={{
-                      offsetHeader: 0,
-                      getContainer: () => props.ref
-                    }}
+                    // sticky={{
+                    //   offsetHeader: 0,
+                    //   getContainer: () => props.ref
+                    // }}
                     scroll={
                       props.height
                         ? { y: props.height, x: 'max-content' }
@@ -373,6 +375,13 @@ export function StockPanel(props: {
                           }
                         />
                       )
+                    }}
+                    onRow={(record) => {
+                      return {
+                        onDoubleClick: () => {
+                          setSymbol?.(record.股票代码)
+                        }
+                      }
                     }}
                   />
                 </SortableContext>

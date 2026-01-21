@@ -135,7 +135,7 @@ export function RankPanel(props: {
           pagination={false}
           size="small"
           className="bg-transparent"
-          sticky={{ offsetHeader: 64, getContainer: () => tabWrapRef.current }}
+          // sticky={{ offsetHeader: 64, getContainer: () => tabWrapRef.current }}
           scroll={
             props.height
               ? { y: props.height, x: 'max-content' }

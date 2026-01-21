@@ -13,7 +13,7 @@ import {
   useUpdateEffect
 } from 'ahooks'
 import { App, Button, Empty, Input, Modal, Space, Spin, Tabs, Tag } from 'antd'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 
 import type {
   Stock,
@@ -28,116 +28,10 @@ import StockInfoComponent from '~components/widgets/stock/stockInfo'
 import { getStockIntraday, getStockRealTime } from '~data/stock'
 import { ThemeProvider } from '~layouts'
 
-const SearchComponent = () => {
-  const [searchLoading, setSearchLoading] = useState<boolean>(false)
-  const [symbol, setSymbol] = useState<string>('')
-  const fetchSearchData = async (value: string) => {
-    value = value || symbol.trim()
-    if (!value) {
-      setSymbolData(undefined)
-      setSymbol('')
-      setSearchLoading(false)
-      return
-    }
-    if (value.length === 6 || value.length === 8) {
-      let symbol = value.length === 6 ? value : value.substring(2)
-      setSymbol(symbol)
-      let res = await getStockRealTime({
-        code: 'stock_bid_ask_em',
-        symbol
-      })
-      let res2 = await getStockRealTime({
-        code: 'stock_individual_info_em',
-        symbol
-      })
-      let res3 = await getStockIntraday({
-        code: 'stock_intraday_em',
-        symbol
-      })
-      if (!res) return
-      let buy_sell_data_list = res.slice(0, 20)
-      let data = {} as Stock
-      let daily_data_list = [] as StockDaily[]
-      let data_info = {} as StockInfo
-      res.slice(20)?.map((item) => {
-        data[item.item] = item.value
-      })
-      res2?.map((item) => {
-        data_info[item.item] = item.value
-      })
-      daily_data_list = res3
-      return {
-        buy_sell_data_list,
-        daily_data_list,
-        data,
-        data_info
-      }
-    }
-  }
-  const [symbolData, setSymbolData] = useState<{
-    buy_sell_data_list: any[]
-    daily_data_list: StockDaily[]
-    data: Stock
-    data_info: StockInfo
-  }>()
-  const { run: onSearch } = useDebounceFn(
-    async (value) => {
-      setSearchLoading(true)
-      let data = await fetchSearchData(value)
-      data && setSymbolData(data)
-      setSearchLoading(false)
-    },
-    {
-      leading: true,
-      wait: 500
-    }
-  )
-  const { data, run: onSearchRefresh } = useRequest(fetchSearchData, {
-    cacheKey: symbol,
-    cacheTime: 1000 * 5
-  })
-  useEffect(() => {
-    if (!data) {
-      setSearchLoading(false)
-      return
-    }
-    setSymbolData(data)
-    setSearchLoading(false)
-  }, [data])
-  return (
-    <div className="w-full">
-      <div className="flex items-center w-full justify-center sm:justify-between gap-4 mb-4 mt-2">
-        <h3 className="hidden sm:inline">股票自选</h3>
-        <div>
-          <Space>
-            <Space.Compact>
-              <Input
-                autoFocus
-                placeholder="请输入股票代码"
-                style={{ width: '100%' }}
-                allowClear
-                onChange={(e) => onSearch(e.target.value)}
-              />
-              <Button
-                onClick={() => onSearch(symbol)}
-                disabled={!symbol}
-                icon={<SearchOutlined />}>
-                搜索
-              </Button>
-            </Space.Compact>
-          </Space>
-        </div>
-      </div>
-      {(symbolData || searchLoading) && (
-        <div className="flex flex-col min-h-[160px]">
-          <Spin spinning={searchLoading}>
-            <StockInfoComponent data={symbolData || ({} as any)} />
-          </Spin>
-        </div>
-      )}
-    </div>
-  )
-}
+export const SearchContext = React.createContext<{
+  symbol?: string
+  setSymbol?: (symbol: string) => void
+}>({})
 
 function WidgetModal(props: {
   visible: boolean
@@ -151,13 +45,14 @@ function WidgetModal(props: {
 }) {
   const { message } = App.useApp()
   const tabWrapRef = useRef<HTMLDivElement>(null)
-  const [stockData, setStockData] = useLocalStorageState<StockData[]>(
+  const [stockData] = useLocalStorageState<StockData[]>(
     'stock_spot_data_self',
     {
       defaultValue: [],
       listenStorageChange: true
     }
   )
+  const [symbol, setSymbol] = useState<string>('')
   const [cateId] = useState<string>(props.cateId || '')
   const [stockType, setStockType] = useState<string>('se')
   const [loading, setLoading] = useState<boolean>(false)
@@ -173,110 +68,240 @@ function WidgetModal(props: {
     !props.loading && message.success('数据更新成功')
     setLoading(false)
   }, [props.loading])
-  return (
-    <ThemeProvider
-      token={{
-        colorBgContainer: 'rgba(0, 0, 0, 0.5)',
-        colorText: 'rgba(255, 255, 255, 0.65)',
-        colorTextDisabled: 'rgba(255, 255, 255, 0.35)',
-        placeholderColor: 'rgba(255, 255, 255, 0.35)',
-        Tabs: {
-          itemColor: 'rgba(255, 255, 255, 0.65)'
+  const SearchComponent = () => {
+    const [searchLoading, setSearchLoading] = useState<boolean>(false)
+    const { symbol, setSymbol } = useContext(SearchContext)
+    const fetchSearchData = async (value: string) => {
+      value = value || symbol.trim()
+      if (!value) {
+        setSymbolData(undefined)
+        setSymbol('')
+        setSearchLoading(false)
+        return
+      }
+      if (value.length === 6 || value.length === 8) {
+        let symbol = value.length === 6 ? value : value.substring(2)
+        setSymbol(symbol)
+        let res = await getStockRealTime({
+          code: 'stock_bid_ask_em',
+          symbol
+        })
+        let res2 = await getStockRealTime({
+          code: 'stock_individual_info_em',
+          symbol
+        })
+        let res3 = await getStockIntraday({
+          code: 'stock_intraday_em', // stock_intraday_sina ｜ stock_intraday_em
+          // date: dayjs().format('YYYYMMDD'),
+          symbol
+        })
+        if (!res) return
+        let buy_sell_data_list = res.slice(0, 20)
+        let data = {} as Stock
+        let daily_data_list = [] as StockDaily[]
+        let data_info = {} as StockInfo
+        res.slice(20)?.map((item) => {
+          data[item.item] = item.value
+        })
+        res2?.map((item) => {
+          data_info[item.item] = item.value
+        })
+        let kindMap = {
+          U: '买盘',
+          E: '中性盘',
+          D: '卖盘'
         }
-      }}>
-      <App>
-        <Modal
-          // title={<span className=" !text-white">新闻动态</span>}
-          wrapClassName="!bg-black/30 backdrop-blur-md"
-          classNames={{
-            header: '!bg-transparent !text-white',
-            container: '!overflow-hidden !rounded-xl !p-0 !bg-black/50',
-            body: '!p-5'
-          }}
-          getContainer={() => document.body}
-          width={1000}
-          footer={null}
-          open={props.visible}
-          closeIcon={<CloseOutlined className="!text-white" />}
-          afterOpenChange={props.afterOpenChange}
-          onCancel={() => props.onCancel(cateId)}>
-          <div
-            className="flex w-full max-h-[70vh] overflow-y-auto mt-4 pr-2"
-            ref={(el) => (tabWrapRef.current = el)}>
-            <div className="w-full h-full">
-              <Spin
-                spinning={!stockData || loading}
-                rootClassName="!h-full"
-                wrapperClassName="!h-full">
-                <div className="min-h-[160px] w-full h-full">
-                  <SearchComponent />
-                  {cateId === 'symbol_self' &&
-                  stockData?.length &&
-                  stockData.find((item) => item.type === stockType)?.list
-                    ?.length ? (
-                    <Tabs
-                      defaultActiveKey={stockType}
-                      indicator={{
-                        align: 'start',
-                        size: (origin) => origin * 1
-                      }}
-                      tabBarExtraContent={{
-                        right: (
-                          <Button
-                            type="text"
-                            loading={props.loading}
-                            size="small"
-                            icon={<ReloadOutlined />}
-                            className="cursor-pointer hover:!text-white text-white"
-                            onClick={() => props.update(stockType)}
-                            title="获取最新数据">
-                            刷新
-                          </Button>
-                        )
-                      }}
-                      more={{
-                        trigger: 'click',
-                        getPopupContainer: () => tabWrapRef.current,
-                        overlayStyle: {
-                          background: 'rgba(0, 0, 0, 0.5)'
-                        },
-                        icon: <MoreOutlined className="!text-white" />
-                      }}
-                      onChange={(key) => {
-                        setStockType(key)
-                        props.loading && setLoading(true)
-                      }}
-                      className="text-shadow"
-                      items={stockData.map((item, index) => ({
-                        label: item.name,
-                        key: item.type,
-                        icon: item.icon || <StockOutlined />,
-                        children: <div>{stockTableComponent}</div>
-                      }))}
-                    />
-                  ) : (
-                    <Empty
-                      styles={{
-                        description: {
-                          color: '#fff'
-                        }
-                      }}
-                      description="暂无自选的股票"
-                    />
-                  )}
-                  <div className="w-full mt-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3>股票排行</h3>
-                    </div>
-                    {rankComponent}
-                  </div>
-                </div>
-              </Spin>
-            </div>
+        daily_data_list = res3.map((el) => ({
+          时间: el.ticktime || el.时间,
+          成交价: el.price || el.成交价,
+          手数: el.volume || el.手数,
+          买卖盘性质: kindMap[el.kind] || el.买卖盘性质
+        }))
+        return {
+          buy_sell_data_list,
+          daily_data_list,
+          data,
+          data_info
+        }
+      }
+    }
+    const [symbolData, setSymbolData] = useState<{
+      buy_sell_data_list: any[]
+      daily_data_list: StockDaily[]
+      data: Stock
+      data_info: StockInfo
+    }>()
+    const { run: onSearch } = useDebounceFn(
+      async (value) => {
+        setSearchLoading(true)
+        let data = await fetchSearchData(value)
+        data && setSymbolData(data)
+        setSearchLoading(false)
+      },
+      {
+        leading: true,
+        wait: 500
+      }
+    )
+    const { data, run: onSearchRefresh } = useRequest(fetchSearchData, {
+      cacheKey: symbol,
+      cacheTime: 1000 * 5
+    })
+    useEffect(() => {
+      if (!data) {
+        setSearchLoading(false)
+        return
+      }
+      setSymbolData(data)
+      setSearchLoading(false)
+    }, [data])
+    useEffect(() => {
+      symbol && onSearch(symbol)
+      tabWrapRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }, [symbol])
+    return (
+      <div className="w-full">
+        <div className="flex items-center w-full justify-center sm:justify-between gap-4 mb-4 mt-2">
+          <h3 className="hidden sm:inline">股票自选</h3>
+          <div>
+            <Space>
+              <Space.Compact>
+                <Input
+                  autoFocus
+                  placeholder="请输入股票代码"
+                  style={{ width: '100%' }}
+                  allowClear
+                  onChange={(e) => onSearch(e.target.value)}
+                />
+                <Button
+                  onClick={() => onSearch(symbol)}
+                  disabled={!symbol}
+                  icon={<SearchOutlined />}>
+                  搜索
+                </Button>
+              </Space.Compact>
+            </Space>
           </div>
-        </Modal>
-      </App>
-    </ThemeProvider>
+        </div>
+        {(symbolData || searchLoading) && (
+          <div className="flex flex-col min-h-[160px]">
+            <Spin spinning={searchLoading}>
+              <StockInfoComponent data={symbolData || ({} as any)} />
+            </Spin>
+          </div>
+        )}
+      </div>
+    )
+  }
+  return (
+    <SearchContext.Provider value={{ symbol, setSymbol }}>
+      <ThemeProvider
+        token={{
+          colorBgContainer: 'rgba(0, 0, 0, 0.5)',
+          colorText: 'rgba(255, 255, 255, 0.65)',
+          colorTextDisabled: 'rgba(255, 255, 255, 0.35)',
+          placeholderColor: 'rgba(255, 255, 255, 0.35)',
+          Tabs: {
+            itemColor: 'rgba(255, 255, 255, 0.65)'
+          }
+        }}>
+        <App>
+          <Modal
+            // title={<span className=" !text-white">新闻动态</span>}
+            wrapClassName="!bg-black/30 backdrop-blur-md"
+            classNames={{
+              header: '!bg-transparent !text-white',
+              container: '!overflow-hidden !rounded-xl !p-0 !bg-black/50',
+              body: '!p-5'
+            }}
+            getContainer={() => document.body}
+            width={1000}
+            footer={null}
+            open={props.visible}
+            closeIcon={<CloseOutlined className="!text-white" />}
+            afterOpenChange={props.afterOpenChange}
+            onCancel={() => props.onCancel(cateId)}>
+            <div
+              className="flex w-full max-h-[70vh] overflow-y-auto mt-4 pr-2"
+              ref={(el) => (tabWrapRef.current = el)}>
+              <div className="w-full h-full">
+                <Spin
+                  spinning={!stockData || loading}
+                  rootClassName="!h-full"
+                  wrapperClassName="!h-full">
+                  <div className="min-h-[160px] w-full h-full">
+                    <SearchComponent />
+                    {cateId === 'symbol_self' &&
+                    stockData?.length &&
+                    stockData.find((item) => item.type === stockType)?.list
+                      ?.length ? (
+                      <Tabs
+                        defaultActiveKey={stockType}
+                        indicator={{
+                          align: 'start',
+                          size: (origin) => origin * 1
+                        }}
+                        tabBarExtraContent={{
+                          right: (
+                            <Button
+                              type="text"
+                              loading={props.loading}
+                              size="small"
+                              icon={<ReloadOutlined />}
+                              className="cursor-pointer hover:!text-white text-white"
+                              onClick={() => props.update(stockType)}
+                              title="获取最新数据">
+                              刷新
+                            </Button>
+                          )
+                        }}
+                        more={{
+                          trigger: 'click',
+                          getPopupContainer: () => tabWrapRef.current,
+                          overlayStyle: {
+                            background: 'rgba(0, 0, 0, 0.5)'
+                          },
+                          icon: <MoreOutlined className="!text-white" />
+                        }}
+                        onChange={(key) => {
+                          setStockType(key)
+                          props.loading && setLoading(true)
+                        }}
+                        className="text-shadow"
+                        items={stockData.map((item, index) => ({
+                          label: item.name,
+                          key: item.type,
+                          icon: item.icon || <StockOutlined />,
+                          children: <div>{stockTableComponent}</div>
+                        }))}
+                      />
+                    ) : (
+                      <Empty
+                        styles={{
+                          description: {
+                            color: '#fff'
+                          }
+                        }}
+                        description="暂无自选的股票"
+                      />
+                    )}
+                    <div className="w-full mt-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3>股票排行</h3>
+                      </div>
+                      {rankComponent}
+                    </div>
+                  </div>
+                </Spin>
+              </div>
+            </div>
+          </Modal>
+        </App>
+      </ThemeProvider>
+    </SearchContext.Provider>
   )
 }
 

@@ -34,7 +34,9 @@ const formatNumber = (num: number, unit = '亿', precision = 1) => {
     万: 10000,
     亿: 100000000
   }
-  if (!num) return '0.00'
+  if (tempObj[unit] && num > tempObj[unit]) unit = '亿'
+  if (tempObj[unit] && num < tempObj[unit]) unit = '万'
+  if (!num || isNaN(Number(num))) return '0.00'
   return (num / (tempObj[unit] || 1)).toFixed(precision) + unit
 }
 const covertData = (data = []) => {
@@ -324,12 +326,14 @@ const StockInfoComponent = (props: {
             </Row>
             <div className="flex w-full gap-4">
               <div className="flex-1 flex flex-col gap-4">
-                <HoursChart
-                  data={{
-                    list: props.data.daily_data_list,
-                    data: { ...props.data.data, ...props.data.data_info }
-                  }}
-                />
+                {
+                  <HoursChart
+                    data={{
+                      list: props.data.daily_data_list,
+                      data: { ...props.data.data, ...props.data.data_info }
+                    }}
+                  />
+                }
                 <DailyVolChart data={props.data.daily_data_list || []} />
               </div>
               <div>

@@ -712,6 +712,7 @@ function IndexTab() {
         className="sm:h-[100vh] overflow-hidden relative"
         onDoubleClick={(e) => {
           e.stopPropagation()
+          e.preventDefault()
           if (isEdit) return
           setToggleClass(toggleClass === 'simple' ? '' : 'simple')
         }}>

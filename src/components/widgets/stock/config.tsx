@@ -87,12 +87,7 @@ function WidgetModal(props: {
                 ?.filter((item) => item['名称'])
                 ?.slice(0, 8)
                 .map((item, index) => (
-                  <Col
-                    key={item['代码'] || index}
-                    span={24}
-                    sm={12}
-                    md={8}
-                    lg={6}>
+                  <Col key={item['代码'] || index} span={12} md={8} lg={6}>
                     <div
                       className={`rounded-xl py-2 shadow-md overflow-hidden ${
                         item['涨跌幅'] > 0
@@ -187,8 +182,8 @@ function WidgetModal(props: {
           <div
             className="flex w-full overflow-hidden"
             ref={(el) => (tabWrapRef.current = el)}>
-            <div className="flex w-full">
-              <Tabs
+            <div className="w-full">
+              {/* <Tabs
                 defaultActiveKey={cateId || 'symbol'}
                 indicator={{
                   align: 'start',
@@ -224,7 +219,7 @@ function WidgetModal(props: {
                   icon: item.icon,
                   disabled: !stockData
                 }))}
-              />
+              /> */}
               <div className="flex-1 h-full">
                 <Spin
                   spinning={!stockData || loading}

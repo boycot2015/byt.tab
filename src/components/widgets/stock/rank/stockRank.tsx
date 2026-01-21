@@ -16,8 +16,9 @@ import {
   Table,
   Tabs
 } from 'antd'
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
+import { SearchContext } from '~components/widgets/stock/self/config'
 import { getStockBoardRank } from '~data/stock'
 import { sizeMap, ThemeProvider } from '~layouts'
 
@@ -68,7 +69,7 @@ export function StockRankPanel(props: {
   height?: string
 }) {
   const tabWrapRef = useRef<HTMLDivElement>(null)
-
+  const { symbol, setSymbol } = React.useContext(SearchContext)
   // 表格列配置 - 针对个股数据
   const columns = [
     {
@@ -111,7 +112,7 @@ export function StockRankPanel(props: {
       // minWidth: 80,
       align: 'right' as const,
       render: (value: number) => (
-        <span className="text-white">{value?.toFixed(2) || '--'}</span>
+        <span className="text-white">{value || '--'}</span>
       )
     },
     {
@@ -157,7 +158,7 @@ export function StockRankPanel(props: {
                   : 'text-white'
             }>
             {value > 0 ? '+' : ''}
-            {value?.toFixed(2)}
+            {value}
           </span>
         ) : (
           '--'
@@ -180,7 +181,7 @@ export function StockRankPanel(props: {
               ? { y: props.height, x: 'max-content' }
               : { x: 'max-content' }
           }
-          sticky={{ offsetHeader: 64, getContainer: () => tabWrapRef.current }}
+          // sticky={{ offsetHeader: 64, getContainer: () => tabWrapRef.current }}
           rowKey={(record) => record?.股票名称 || record?.名称}
           pagination={false}
           size="small"
@@ -215,6 +216,13 @@ export function StockRankPanel(props: {
                 description={<span className="!text-white">暂无数据~</span>}
               />
             )
+          }}
+          onRow={(record) => {
+            return {
+              onDoubleClick: () => {
+                setSymbol?.(record.代码)
+              }
+            }
           }}
         />
       </Spin>
