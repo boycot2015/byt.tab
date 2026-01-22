@@ -221,6 +221,9 @@ export function StockRankPanel(props: {
             return {
               onDoubleClick: () => {
                 setSymbol?.(record.代码)
+              },
+              onClick: () => {
+                setSymbol?.(record.代码)
               }
             }
           }}

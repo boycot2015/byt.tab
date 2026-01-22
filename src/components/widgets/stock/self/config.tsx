@@ -1,7 +1,6 @@
 import {
   CloseOutlined,
   MoreOutlined,
-  PlusOutlined,
   ReloadOutlined,
   SearchOutlined,
   StockOutlined
@@ -13,6 +12,7 @@ import {
   useUpdateEffect
 } from 'ahooks'
 import { App, Button, Empty, Input, Modal, Space, Spin, Tabs, Tag } from 'antd'
+import dayjs from 'dayjs'
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 
 import type {
@@ -25,6 +25,7 @@ import type { News } from '~components/widgets/stock/news'
 import StockRank from '~components/widgets/stock/rank/stockRank'
 import StockTable from '~components/widgets/stock/self/stockTable'
 import StockInfoComponent from '~components/widgets/stock/stockInfo'
+import daily_data from '~data/daily.json'
 import { getStockIntraday, getStockRealTime } from '~data/stock'
 import { ThemeProvider } from '~layouts'
 
@@ -32,6 +33,131 @@ export const SearchContext = React.createContext<{
   symbol?: string
   setSymbol?: (symbol: string) => void
 }>({})
+const SearchComponent = ({ onScroll }: { onScroll: () => void }) => {
+  const [searchKey, setSearchKey] = useState<string>('')
+  const { symbol } = useContext(SearchContext)
+  const fetchSearchData = async (value: string) => {
+    value = value || searchKey.trim()
+    if (value.length === 6 || value.length === 8) {
+      let searchKey = value.length === 6 ? value : value.substring(2)
+      setSearchKey(searchKey)
+      let res = await getStockRealTime({
+        code: 'stock_bid_ask_em',
+        symbol: searchKey
+      })
+      let res2 = await getStockRealTime({
+        code: 'stock_individual_info_em',
+        symbol: searchKey
+      })
+      let res3 = [] as StockDaily[]
+      let daily_data_list = [] as StockDaily[]
+      try {
+        res3 = await getStockIntraday({
+          code: 'stock_intraday_em', // stock_intraday_sina ｜ stock_intraday_em
+          // date: dayjs().format('YYYYMMDD'),
+          symbol: searchKey
+        })
+      } catch (error) {
+        res3 = daily_data as StockDaily[]
+      }
+      res3 = res3 || (daily_data as StockDaily[])
+      if (!res) return
+      let buy_sell_data_list = res.slice(0, 20)
+      let data = {} as Stock
+      let data_info = {} as StockInfo
+      res.slice(20)?.map((item) => {
+        data[item.item] = item.value
+      })
+      res2?.map((item) => {
+        data_info[item.item] = item.value
+      })
+      let kindMap = {
+        U: '买盘',
+        E: '中性盘',
+        D: '卖盘'
+      }
+      if (res3 && res3.length > 0) {
+        daily_data_list = res3.map((el) => ({
+          时间: el.ticktime || el.时间,
+          成交价: el.price || el.成交价,
+          手数: el.volume || el.手数,
+          买卖盘性质: kindMap[el.kind] || el.买卖盘性质
+        }))
+      }
+      return {
+        buy_sell_data_list,
+        daily_data_list,
+        data,
+        data_info
+      }
+    }
+    return null
+  }
+  const [symbolData, setSymbolData] = useState<{
+    buy_sell_data_list: any[]
+    daily_data_list: StockDaily[]
+    data: Stock
+    data_info: StockInfo
+  }>()
+  const onSearch = (value) => {
+    if (!value || !value.trim()) {
+      setSearchKey('')
+      return
+    }
+    setSearchKey(value.trim())
+    onSearchRefresh(value)
+  }
+  const {
+    data,
+    loading: searchLoading,
+    run: onSearchRefresh
+  } = useRequest(fetchSearchData, {
+    cacheKey: symbol,
+    throttleWait: 500,
+    cacheTime: 1000 * 15
+  })
+  useUpdateEffect(() => {
+    data && setSymbolData(data)
+  }, [data])
+  useUpdateEffect(() => {
+    symbol && onSearch(symbol)
+    onScroll()
+  }, [symbol])
+  return (
+    <div className="w-full">
+      <div className="flex items-center w-full justify-center sm:justify-between gap-4 mb-4 mt-2">
+        <h3 className="hidden sm:inline">股票自选</h3>
+        <div>
+          <Space>
+            <Space.Compact>
+              <Input
+                autoFocus
+                value={searchKey}
+                placeholder="请输入股票代码"
+                style={{ width: '100%' }}
+                allowClear
+                onChange={(e) => onSearch(e.target.value)}
+              />
+              <Button
+                onClick={() => onSearch(symbol)}
+                disabled={!searchKey}
+                icon={<SearchOutlined />}>
+                搜索
+              </Button>
+            </Space.Compact>
+          </Space>
+        </div>
+      </div>
+      {(symbolData || searchLoading) && (
+        <div className="flex flex-col min-h-[160px]">
+          <Spin spinning={searchLoading}>
+            <StockInfoComponent data={symbolData || ({} as any)} />
+          </Spin>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function WidgetModal(props: {
   visible: boolean
@@ -68,134 +194,6 @@ function WidgetModal(props: {
     !props.loading && message.success('数据更新成功')
     setLoading(false)
   }, [props.loading])
-  const SearchComponent = () => {
-    const [searchLoading, setSearchLoading] = useState<boolean>(false)
-    const { symbol, setSymbol } = useContext(SearchContext)
-    const fetchSearchData = async (value: string) => {
-      value = value || symbol.trim()
-      if (!value) {
-        setSymbolData(undefined)
-        setSymbol('')
-        setSearchLoading(false)
-        return
-      }
-      if (value.length === 6 || value.length === 8) {
-        let symbol = value.length === 6 ? value : value.substring(2)
-        setSymbol(symbol)
-        let res = await getStockRealTime({
-          code: 'stock_bid_ask_em',
-          symbol
-        })
-        let res2 = await getStockRealTime({
-          code: 'stock_individual_info_em',
-          symbol
-        })
-        let res3 = await getStockIntraday({
-          code: 'stock_intraday_em', // stock_intraday_sina ｜ stock_intraday_em
-          // date: dayjs().format('YYYYMMDD'),
-          symbol
-        })
-        if (!res) return
-        let buy_sell_data_list = res.slice(0, 20)
-        let data = {} as Stock
-        let daily_data_list = [] as StockDaily[]
-        let data_info = {} as StockInfo
-        res.slice(20)?.map((item) => {
-          data[item.item] = item.value
-        })
-        res2?.map((item) => {
-          data_info[item.item] = item.value
-        })
-        let kindMap = {
-          U: '买盘',
-          E: '中性盘',
-          D: '卖盘'
-        }
-        daily_data_list = res3.map((el) => ({
-          时间: el.ticktime || el.时间,
-          成交价: el.price || el.成交价,
-          手数: el.volume || el.手数,
-          买卖盘性质: kindMap[el.kind] || el.买卖盘性质
-        }))
-        return {
-          buy_sell_data_list,
-          daily_data_list,
-          data,
-          data_info
-        }
-      }
-    }
-    const [symbolData, setSymbolData] = useState<{
-      buy_sell_data_list: any[]
-      daily_data_list: StockDaily[]
-      data: Stock
-      data_info: StockInfo
-    }>()
-    const { run: onSearch } = useDebounceFn(
-      async (value) => {
-        setSearchLoading(true)
-        let data = await fetchSearchData(value)
-        data && setSymbolData(data)
-        setSearchLoading(false)
-      },
-      {
-        leading: true,
-        wait: 500
-      }
-    )
-    const { data, run: onSearchRefresh } = useRequest(fetchSearchData, {
-      cacheKey: symbol,
-      cacheTime: 1000 * 5
-    })
-    useEffect(() => {
-      if (!data) {
-        setSearchLoading(false)
-        return
-      }
-      setSymbolData(data)
-      setSearchLoading(false)
-    }, [data])
-    useEffect(() => {
-      symbol && onSearch(symbol)
-      tabWrapRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      })
-    }, [symbol])
-    return (
-      <div className="w-full">
-        <div className="flex items-center w-full justify-center sm:justify-between gap-4 mb-4 mt-2">
-          <h3 className="hidden sm:inline">股票自选</h3>
-          <div>
-            <Space>
-              <Space.Compact>
-                <Input
-                  autoFocus
-                  placeholder="请输入股票代码"
-                  style={{ width: '100%' }}
-                  allowClear
-                  onChange={(e) => onSearch(e.target.value)}
-                />
-                <Button
-                  onClick={() => onSearch(symbol)}
-                  disabled={!symbol}
-                  icon={<SearchOutlined />}>
-                  搜索
-                </Button>
-              </Space.Compact>
-            </Space>
-          </div>
-        </div>
-        {(symbolData || searchLoading) && (
-          <div className="flex flex-col min-h-[160px]">
-            <Spin spinning={searchLoading}>
-              <StockInfoComponent data={symbolData || ({} as any)} />
-            </Spin>
-          </div>
-        )}
-      </div>
-    )
-  }
   return (
     <SearchContext.Provider value={{ symbol, setSymbol }}>
       <ThemeProvider
@@ -233,7 +231,16 @@ function WidgetModal(props: {
                   rootClassName="!h-full"
                   wrapperClassName="!h-full">
                   <div className="min-h-[160px] w-full h-full">
-                    <SearchComponent />
+                    <SearchComponent
+                      onScroll={() => {
+                        console.log(tabWrapRef.current, 'tabWrapRef.current')
+                        tabWrapRef.current?.scrollTo({
+                          left: 0,
+                          top: 0,
+                          behavior: 'smooth'
+                        })
+                      }}
+                    />
                     {cateId === 'symbol_self' &&
                     stockData?.length &&
                     stockData.find((item) => item.type === stockType)?.list

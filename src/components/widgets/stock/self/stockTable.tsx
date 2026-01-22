@@ -380,6 +380,9 @@ export function StockPanel(props: {
                       return {
                         onDoubleClick: () => {
                           setSymbol?.(record.股票代码)
+                        },
+                        onClick: () => {
+                          setSymbol?.(record.股票代码)
                         }
                       }
                     }}

@@ -21,6 +21,10 @@ export interface StockDaily {
   成交价: number
   手数: number
   买卖盘性质: string
+  ticktime?: string
+  price?: number
+  volume?: number
+  kind?: string
 }
 export type StockInfo = {
   最新: number
