@@ -131,12 +131,20 @@ function Widget(props: WidgetProp) {
       }
     ]
   }
+  const [shouldQuery, setShouldQuery] = useLocalStorageState('shouldQueryStock', {
+    defaultValue: false,
+    listenStorageChange: true
+  })
   const { data, run: getSpotData } = useRequest(fetchData, {
     cacheKey: 'stock_spot_data_se_hk',
-    staleTime: 1000 * 5
+    refreshDeps: [shouldQuery],
+    pollingInterval: shouldQuery ? 5000 : 0,
+    staleTime: 1000 * 5 * 6
   })
   const { data: usData, run: getUsData } = useRequest(fetchUsData, {
     cacheKey: 'stock_spot_data_us',
+    refreshDeps: [shouldQuery],
+    pollingInterval: shouldQuery ? 5000 : 0,
     staleTime: 1000 * 60 * 60 * 12
   })
   const [stockData, setStockData] = useLocalStorageState<StockData[]>(
@@ -150,7 +158,6 @@ function Widget(props: WidgetProp) {
     defaultValue: [],
     listenStorageChange: true
   })
-  const [shouldQuery, setShouldQuery] = useState(false)
   const [loading, setLoading] = useState(false)
   const updateData = (type) => {
     setLoading(true)
@@ -199,22 +206,19 @@ function Widget(props: WidgetProp) {
     }
   }, [usData])
   const getJobs = useCallback(() => getCurrentJobs(jobs, buildDay()), [])
-  useInterval(
-    () => {
-      setPage((page) => {
-        if (!stockData) return 0
-        let data =
-          stockData
-            ?.find((item) => item.type === 'se')
-            ?.list?.slice(page * pageSize, (page + 1) * pageSize) || []
-        data.length && setList(data)
-        return data.length ? page + 1 : 0
-      })
-      getSpotData()
-      getUsData()
-    },
-    shouldQuery ? 1000 * 15 : undefined
-  )
+  useInterval(() => {
+    setPage((page) => {
+      if (!stockData) return 0
+      let data =
+        stockData
+          ?.find((item) => item.type === 'se')
+          ?.list?.slice(page * pageSize, (page + 1) * pageSize) || []
+      data.length && setList(data)
+      return data.length ? page + 1 : 0
+    })
+    getSpotData()
+    getUsData()
+  }, 1000 * 15)
   // 数据清除自动获取
   useUpdateEffect(() => {
     if (!stockData) {

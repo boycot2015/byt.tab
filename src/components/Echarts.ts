@@ -1,10 +1,11 @@
 // 引入 ECharts 核心模块
 
 // 引入常用图表类型
-import { BarChart, LineChart, PieChart } from 'echarts/charts'
+import { BarChart, CandlestickChart, LineChart, PieChart } from 'echarts/charts'
 // 引入组件
 import {
   DatasetComponent,
+  DataZoomComponent,
   GridComponent,
   LegendComponent,
   TitleComponent,
@@ -25,9 +26,11 @@ echarts.use([
   GridComponent,
   DatasetComponent,
   TransformComponent,
+  DataZoomComponent,
   LineChart,
   PieChart,
   BarChart,
+  CandlestickChart,
   LabelLayout,
   UniversalTransition,
   AxisBreak,

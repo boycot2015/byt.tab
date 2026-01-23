@@ -31,6 +31,10 @@ function Widget(props: WidgetProp) {
   const [show, setShow] = useState(false)
   const pageSize = props.size == 'large' ? 4 : 2
   const [page, setPage] = useState(1)
+  const [shouldQuery] = useLocalStorageState('shouldQueryStock', {
+    defaultValue: false,
+    listenStorageChange: true
+  })
   const fetchData = async (): Promise<StockData[]> => {
     if (!stockData || !stockData.length) return []
     let res = await Promise.all(
@@ -78,7 +82,8 @@ function Widget(props: WidgetProp) {
     loading
   } = useRequest(fetchData, {
     cacheKey: 'stock_spot_data_self',
-    staleTime: 1000 * 5
+    pollingInterval: shouldQuery ? 3000 : 0,
+    staleTime: 1000 * 10
   })
   const [stockData, setStockData] = useLocalStorageState<StockData[]>(
     'stock_spot_data_self',
@@ -121,7 +126,7 @@ function Widget(props: WidgetProp) {
       data.length && setList(data)
       return data.length ? page + 1 : 0
     })
-    // getSpotData()
+    getSpotData()
   }, 1000 * 5)
   // 数据清除自动获取
   useUpdateEffect(() => {

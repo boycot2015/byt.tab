@@ -1,8 +1,9 @@
-import { useUpdateEffect } from 'ahooks'
+import { useSize } from 'ahooks'
 import dayjs from 'dayjs'
 import React, { useEffect, useRef, useState } from 'react'
 
 import EchartsInit from '~components/Echarts'
+import kdata from '~data/kdata.json'
 
 const colors = {
   特单卖盘: '#006926',
@@ -14,7 +15,7 @@ const colors = {
   中单买盘: 'rgba(240, 95, 95, 1)',
   小单买盘: 'rgba(237, 145, 145, 1)'
 }
-const baseOptions = {
+const baseOption = {
   useUTC: false,
   textStyle: {
     fontFamily: 'CangErYuYang, OPPOSans, KaiTi, serif'
@@ -74,7 +75,7 @@ const baseOptions = {
   }
 }
 // export const weather_icon_url = 'https://d.scggqx.com/forecast/img'
-const DailyKChart = (props: Record<string, any>) => {
+const HoursKChart = (props: Record<string, any>) => {
   const chartRef = useRef(null)
   const filterData = [...(props.data?.list || [])]
   const covert = (item = {} as any) => {
@@ -112,279 +113,422 @@ const DailyKChart = (props: Record<string, any>) => {
     }
   }
   const _data = generateData(filterData)
-  // console.log(new Date(_data.seriesData[0][0]), '_data')
-
-  const [echarts, setEcharts] = useState({
-    ...baseOptions,
-    tooltip: {
-      show: true,
-      trigger: 'axis'
-    },
-    xAxis: {
-      type: 'time',
-      boundaryGap: false,
-      interval: 1000 * 60 * 30,
-      axisLabel: {
-        showMinLabel: true,
-        showMaxLabel: true,
-        formatter: (value, index, extra) => {
-          if (!extra || !extra.break) {
-            // The third parameter is `useUTC: true`.
-            return dayjs(value).format('HH:mm')
-          }
-          // Only render the label on break start, but not on break end.
-          if (extra.break.type === 'start') {
-            return (
-              dayjs(extra.break.start).format('HH:mm') +
-              '/' +
-              dayjs(extra.break.end).format('HH:mm')
-            )
-          }
-          return ''
-        }
-      },
-      breakLabelLayout: {
-        // Disable auto move of break labels if overlapping,
-        // and use `axisLabel.formatter` to control the label display.
-        moveOverlap: false
-      },
-      breaks: [
-        {
-          start: _data.breakStart,
-          end: _data.breakEnd,
-          gap: 0
-        }
-      ],
-      breakArea: {
-        expandOnClick: false,
-        zigzagAmplitude: 0,
-        zigzagZ: 200
-      }
-    },
-    yAxis: {
-      type: 'value',
-      show: false
-    },
-    series: [
-      {
-        name: '涨跌幅',
-        type: 'line',
-        data: [],
-        symbolSize: 0,
-        smooth: false
-      }
-    ]
-  } as any)
   const id = props.id || 'stock-echarts-hours'
   const [hourilyEcharts, setHourilyEcharts] = useState<any>(null)
-  useUpdateEffect(() => {
+  useEffect(() => {
     if (props.data && props.data.data) {
-      if (hourilyEcharts && document.getElementById(id)) {
-        setEcharts({
-          ...echarts,
-          visualMap: [
+      const option = {
+        ...baseOption,
+        visualMap: [
+          {
+            show: false,
+            dimension: 1, // 按Y轴值分段
+            pieces: [
+              { lt: covert(props.data.data) || 0, color: 'green' },
+              { value: 0, color: 'white' },
+              { value: 10, color: 'red' },
+              { gte: 9.96, color: 'red' },
+              { value: -10, color: 'green' },
+              { lte: -9.96, color: 'green' },
+              { gt: (covert(props.data.data) || 0) + 0.01, color: 'red' }
+            ]
+          }
+        ],
+        tooltip: {
+          show: true,
+          trigger: 'axis'
+        },
+        xAxis: {
+          type: 'time',
+          boundaryGap: false,
+          // interval: 1000 * 60 * 60,
+          min: function (value) {
+            return value.min - 200
+          },
+          axisLabel: {
+            showMinLabel: true,
+            showMaxLabel: true,
+            formatter: (value, index, extra) => {
+              if (!extra || !extra.break) {
+                // The third parameter is `useUTC: true`.
+                return dayjs(value).format('HH:mm')
+              }
+              // Only render the label on break start, but not on break end.
+              if (extra.break.type === 'start') {
+                return (
+                  dayjs(extra.break.start).format('HH:mm') +
+                  '/' +
+                  dayjs(extra.break.end).format('HH:mm')
+                )
+              }
+              return ''
+            }
+          },
+          breakLabelLayout: {
+            // Disable auto move of break labels if overlapping,
+            // and use `axisLabel.formatter` to control the label display.
+            moveOverlap: false
+          },
+          breaks: [
             {
-              show: false,
-              dimension: 1, // 按Y轴值分段
-              pieces: [
-                { lt: covert(props.data.data) || 0, color: 'green' },
-                { value: 0, color: 'white' },
-                { value: 10, color: 'red' },
-                { gte: 9.96, color: 'red' },
-                { value: -10, color: 'green' },
-                { lte: -9.96, color: 'green' },
-                { gt: (covert(props.data.data) || 0) + 0.01, color: 'red' }
-              ]
+              start: _data.breakStart,
+              end: _data.breakEnd,
+              gap: 0
             }
           ],
-          xAxis: {
-            ...echarts.xAxis,
-            data:
-              filterData?.map((item: any) =>
-                new Date().setHours(
-                  Number(item.时间.split(':')[0]),
-                  Number(item.时间.split(':')[1]),
-                  Number(item.时间.split(':')[2]),
-                  0
-                )
-              ) || []
+          breakArea: {
+            expandOnClick: false,
+            zigzagAmplitude: 0,
+            zigzagZ: 200
           },
-          yAxis: {
-            ...echarts.yAxis,
-            min: Math.min(...(filterData?.map(covert) || [])),
-            max: Math.max(...(filterData?.map(covert) || []))
-          },
-          series: [
-            {
-              ...echarts.series[0],
-              data: _data.seriesData || []
-            }
-          ]
-        })
-        hourilyEcharts?.setOption(echarts, true, true)
+          data:
+            filterData?.map((item: any) =>
+              new Date().setHours(
+                Number(item.时间.split(':')[0]),
+                Number(item.时间.split(':')[1]),
+                Number(item.时间.split(':')[2]),
+                0
+              )
+            ) || []
+        },
+        yAxis: {
+          type: 'value',
+          show: false,
+          min: Math.min(...(filterData?.map(covert) || [])),
+          max: Math.max(...(filterData?.map(covert) || []))
+        },
+        series: [
+          {
+            name: '涨跌幅',
+            type: 'line',
+            symbolSize: 0,
+            smooth: false,
+            data: _data.seriesData || []
+          }
+        ]
+      }
+      if (hourilyEcharts && document.getElementById(id)) {
+        hourilyEcharts?.setOption(option, true, true)
       } else {
-        setHourilyEcharts(EchartsInit(chartRef.current, echarts))
+        setHourilyEcharts(EchartsInit(chartRef.current, option))
         hourilyEcharts?.resize()
       }
     }
     window.addEventListener('resize', () => {
       hourilyEcharts?.resize()
     })
-    const observer = new ResizeObserver(() => hourilyEcharts?.resize())
-    observer.observe(chartRef?.current)
-    return () => {
-      observer.disconnect()
-    }
+    // const observer = new ResizeObserver(() => hourilyEcharts?.resize())
+    // observer.observe(chartRef?.current)
+    // return () => {
+    //   observer.disconnect()
+    //   // hourilyEcharts?.dispose()
+    // }
   }, [props.data])
   return <div id={id} ref={chartRef} className="!h-[140px] w-full"></div>
 }
+const DailyKChart = (props: Record<string, any>) => {
+  const chartRef = useRef(null)
+  type DataItem = (number | string)[]
+  // prettier-ignore
+  const rawData = kdata.reverse();
+
+  function calculateMA(dayCount: number, data: DataItem[]) {
+    var result = []
+    for (var i = 0, len = data.length; i < len; i++) {
+      if (i < dayCount) {
+        result.push('-')
+        continue
+      }
+      var sum = 0
+      for (var j = 0; j < dayCount; j++) {
+        sum += +data[i - j][1]
+      }
+      result.push(sum / dayCount)
+    }
+    return result
+  }
+
+  const dates = rawData.map(function (item) {
+    return item[0]
+  })
+
+  const data = rawData.map(function (item) {
+    return [+item[1], +item[2], +item[5], +item[6]]
+  })
+
+  const id = props.id || 'stock-echarts-daily'
+  const [dailyEcharts, setDailyEcharts] = useState<any>(null)
+  useEffect(() => {
+    if (props.data && props.data.data) {
+      const option = {
+        legend: {
+          data: ['日K', 'MA5', 'MA10', 'MA20', 'MA30'],
+          inactiveColor: '#777',
+          top: 10,
+          right: 0
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            animation: false,
+            type: 'cross',
+            lineStyle: {
+              color: '#376df4',
+              width: 2,
+              opacity: 1
+            }
+          }
+        },
+        xAxis: {
+          type: 'category',
+          data: dates,
+          axisLine: { lineStyle: { color: '#8392A5' } }
+        },
+        yAxis: {
+          scale: true,
+          axisLine: { lineStyle: { color: '#8392A5' } },
+          splitLine: { show: false }
+        },
+        grid: {
+          top: 20,
+          left: 0,
+          right: 0,
+          bottom: 0
+        },
+        dataZoom: [
+          {
+            textStyle: {
+              color: '#8392A5'
+            },
+            show: false,
+            start: 80,
+            end: 100,
+            minSpan: 20,
+            maxSpan: 80,
+            handleIcon:
+              'path://M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
+            dataBackground: {
+              areaStyle: {
+                color: '#8392A5'
+              },
+              lineStyle: {
+                opacity: 0.8,
+                color: '#8392A5'
+              }
+            },
+            brushSelect: true
+          },
+          {
+            type: 'inside'
+          }
+        ],
+        series: [
+          {
+            type: 'candlestick',
+            name: 'Day',
+            data: data,
+            itemStyle: {
+              color: '#f00',
+              color0: '#0f0',
+              borderColor: '#f00',
+              borderColor0: '#0f0'
+            }
+          },
+          {
+            name: 'MA5',
+            type: 'line',
+            data: calculateMA(5, data),
+            smooth: true,
+            showSymbol: false,
+            lineStyle: {
+              width: 1
+            }
+          },
+          {
+            name: 'MA10',
+            type: 'line',
+            data: calculateMA(10, data),
+            smooth: true,
+            showSymbol: false,
+            lineStyle: {
+              width: 1
+            }
+          },
+          {
+            name: 'MA20',
+            type: 'line',
+            data: calculateMA(20, data),
+            smooth: true,
+            showSymbol: false,
+            lineStyle: {
+              width: 1
+            }
+          },
+          {
+            name: 'MA30',
+            type: 'line',
+            data: calculateMA(30, data),
+            smooth: true,
+            showSymbol: false,
+            lineStyle: {
+              width: 1
+            }
+          }
+        ]
+      }
+      if (dailyEcharts && document.getElementById(id)) {
+        dailyEcharts?.setOption(option, true, true)
+      } else {
+        setDailyEcharts(EchartsInit(chartRef.current, option))
+        dailyEcharts?.resize()
+      }
+    }
+    window.addEventListener('resize', () => {
+      dailyEcharts?.resize()
+    })
+    // const observer = new ResizeObserver(() => dailyEcharts?.resize())
+    // observer.observe(chartRef?.current)
+    // return () => {
+    //   observer.disconnect()
+    //   // dailyEcharts?.dispose()
+    // }
+  }, [props.data])
+  const size = useSize(chartRef.current)
+  return <div id={id} ref={chartRef} className="!h-[280px] w-full"></div>
+}
 const TradingChart = (props: Record<string, any>) => {
   const chartRef = useRef(null)
-  const [echarts, setEcharts] = useState<any>({
-    tooltip: {
-      trigger: 'item',
-      formatter: '{b} <br/> {c} 手（{d}%）',
-      backgroundColor: '#002260',
-      borderColor: '#0984F3',
-      borderWidth: 1,
-      padding: [5, 15],
-      textStyle: {
-        color: '#fff'
-      }
-    },
-    // visualMap: {
-    //   show: false,
-    //   min: 0,
-    //   max: 6000,
-    //   inRange: {
-    //     colorLightness: [0.3, 1]
-    //   }
-    // },
-    legend: {
-      show: true,
-      orient: 'vertical',
-      bottom: 0,
-      itemWidth: 70,
-      itemGap: 1,
-      itemHeight: 12,
-      formatter: function (name) {
-        return name.substring(0, 2)
-      }
-    },
-    series: [
-      {
-        type: 'pie',
-        name: '交易',
-        data: [],
-        radius: '70%',
-        center: ['50%', '22%'],
-        itemStyle: {
-          shadowBlur: 200,
-          shadowColor: 'rgba(0, 0, 0, 0.5)'
-        },
-        label: {
-          show: false
-        },
-        labelLine: {
-          show: false
-          // length: 10,
-          // length2: 10
-        }
-      }
-    ]
-  })
   const id = props.id || 'stock-echarts-pie'
   const [pieEcharts, setPieEcharts] = useState<any>(null)
-  useUpdateEffect(() => {
+  useEffect(() => {
     if (props.data && props.data.list && props.data.list.length > 0) {
-      if (pieEcharts && document.getElementById(id)) {
-        setEcharts({
-          ...echarts,
-          series: [
-            {
-              ...echarts.series[0],
-              itemStyle: {
-                ...echarts.series[0].itemStyle,
-                color: (params) => colors[params.name] || 'green'
+      const option = {
+        tooltip: {
+          trigger: 'item',
+          formatter: '{b} <br/> {c} 手（{d}%）',
+          backgroundColor: '#002260',
+          borderColor: '#0984F3',
+          borderWidth: 1,
+          padding: [5, 15],
+          textStyle: {
+            color: '#fff'
+          }
+        },
+        legend: {
+          show: true,
+          orient: 'vertical',
+          bottom: 0,
+          left: 'left',
+          itemWidth: 3,
+          itemGap: 1,
+          itemHeight: 12,
+          textStyle: {
+            color: '#687F96',
+            rich: {
+              name: {
+                //legend左边的文字
+                fontSize: 10,
+                color: 'white',
+                padding: [0, 0, 0, 0] //1.左边的文字添加右边距10(可自己调整)
               },
-              data: props.data?.list || []
+              value: {
+                //legend右边的值:10.09%、59.62%...
+                fontSize: 10,
+                color: 'white',
+                backgroundColor: 'transparent', //2.右边的值添加背景色
+                align: 'right', //3.右对齐
+                padding: [0, -88, 0, 0] //4.设置右边距为-100(-70/-80..可自己调整)
+              },
+              percent: {
+                //legend右边的值:10.09%、59.62%...
+                fontSize: 10,
+                color: 'white',
+                backgroundColor: 'transparent', //2.右边的值添加背景色
+                align: 'left', //3.右对齐
+                padding: [0, 0, 0, 0] //4.设置右边距为-100(-70/-80..可自己调整)
+              }
             }
-          ]
-        })
-        pieEcharts?.setOption(echarts, true, true)
+          },
+          formatter: function (name) {
+            let current = props?.data?.list?.find((el) => el.name == name) || {}
+            // ${current?.value}  ${Number(current?.percent || 0).toFixed(1)}%
+            return `{name|${name.substring(0, 2)}} {percent|${current?.value}} {value|${Number(current?.percent || 0).toFixed(0) + '%'}}`
+          }
+        },
+        series: [
+          {
+            type: 'pie',
+            name: '交易',
+            radius: '70%',
+            center: ['52%', '22%'],
+            label: {
+              show: false
+            },
+            labelLine: {
+              show: false
+              // length: 10,
+              // length2: 10
+            },
+            itemStyle: {
+              shadowBlur: 200,
+              shadowColor: 'rgba(0, 0, 0, 0.5)',
+              color: (params) => colors[params.name] || 'green'
+            },
+            data: props.data?.list || []
+          }
+        ]
+      }
+      if (pieEcharts && document.getElementById(id)) {
+        pieEcharts?.setOption(option, true, true)
       } else {
-        setPieEcharts(EchartsInit(chartRef.current, echarts))
+        setPieEcharts(EchartsInit(chartRef.current, option))
         pieEcharts?.resize()
       }
     }
     window.addEventListener('resize', () => {
       pieEcharts?.resize()
     })
+    // const observer = new ResizeObserver(() => pieEcharts?.resize())
+    // observer.observe(chartRef?.current)
+    // return () => {
+    //   observer.disconnect()
+    //   // pieEcharts?.dispose()
+    // }
   }, [props.data])
-  return <div id={id} ref={chartRef} className="!h-[190px] w-full"></div>
+  return <div id={id} ref={chartRef} className="!h-[192px] w-full"></div>
 }
 const DailyVolChart = (props: Record<string, any>) => {
   const chartRef = useRef(null)
   const [dailyEcharts, setDailyEcharts] = useState<any>(null)
-  const [echarts, setEcharts] = useState({
-    ...baseOptions,
-    tooltip: {
-      show: true,
-      formatter: '{b}<br />{a}{c}万元',
-      trigger: 'axis'
-    },
-    xAxis: {
-      ...baseOptions.xAxis,
-      data: props.data?.map((item: any) => item.时间) || []
-    },
-    yAxis: {
-      ...baseOptions.yAxis
-    },
-    series: [
-      {
-        name: '成交量',
-        type: 'bar',
-        data: props.data?.map((item: any) => item.手数) || [],
-        // color: (params) =>
-        //   params.name
-        //     ? params.name.includes('买')
-        //       ? 'red'
-        //       : 'green'
-        //     : 'white',
-        label: {
-          show: false,
-          position: 'top',
-          color: 'white',
-          formatter: '{c}万元'
-        },
-        lineStyle: {
-          width: 1,
-          color: 'white'
-        },
-        areaStyle: {
-          opacity: 1,
-          color: 'transparent'
-        }
-      }
-    ]
-  })
   const id = props.id || 'stock-echarts-daily-vol'
-  useUpdateEffect(() => {
+  useEffect(() => {
     if (props.data && props.data.length) {
-      const options = {
-        ...echarts,
+      const option = {
+        ...baseOption,
+        tooltip: {
+          show: true,
+          formatter: '{b}<br />{a}{c}万元',
+          trigger: 'axis'
+        },
         xAxis: {
-          ...echarts.xAxis,
+          ...baseOption.xAxis,
           data: props.data?.map((item: any) => item.时间) || []
         },
         yAxis: {
-          ...echarts.yAxis,
+          ...baseOption.yAxis,
           min: Math.min(...(props.data?.map((item: any) => item.手数) || [])),
           max: Math.max(...(props.data?.map((item: any) => item.手数) || []))
         },
         series: [
           {
-            ...echarts.series[0],
+            name: '成交量',
+            type: 'bar',
+            data:
+              props.data?.map((item: any) => ({
+                value: item.手数,
+                name: item.时间,
+                kind: item.买卖盘性质
+              })) || [],
             itemStyle: {
               color: (params) => {
                 return params.data
@@ -396,32 +540,40 @@ const DailyVolChart = (props: Record<string, any>) => {
                   : 'white'
               }
             },
-            data:
-              props.data?.map((item: any) => ({
-                value: item.手数,
-                name: item.时间,
-                kind: item.买卖盘性质
-              })) || []
+            label: {
+              show: false,
+              position: 'top',
+              color: 'white',
+              formatter: '{c}万元'
+            },
+            lineStyle: {
+              width: 1,
+              color: 'white'
+            },
+            areaStyle: {
+              opacity: 1,
+              color: 'transparent'
+            }
           }
         ]
       }
       if (dailyEcharts && document.getElementById(id)) {
-        setEcharts(options)
-        dailyEcharts.setOption(echarts, true, true)
+        dailyEcharts.setOption(option, true, true)
       } else {
-        setDailyEcharts(EchartsInit(chartRef.current, options))
+        setDailyEcharts(EchartsInit(chartRef.current, option))
         dailyEcharts?.resize()
       }
     }
     window.addEventListener('resize', () => {
       dailyEcharts?.resize()
     })
-    const observer = new ResizeObserver(() => dailyEcharts?.resize())
-    observer.observe(chartRef?.current)
-    return () => {
-      observer.disconnect()
-    }
+    // const observer = new ResizeObserver(() => dailyEcharts?.resize())
+    // observer.observe(chartRef?.current)
+    // return () => {
+    //   observer.disconnect()
+    //   // dailyEcharts?.dispose()
+    // }
   }, [props.data])
   return <div id={id} ref={chartRef} className="!h-[80px] w-full"></div>
 }
-export { DailyKChart, TradingChart, DailyVolChart }
+export { HoursKChart, DailyKChart, TradingChart, DailyVolChart }

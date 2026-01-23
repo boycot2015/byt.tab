@@ -24,6 +24,7 @@ import type {
 import {
   DailyKChart,
   DailyVolChart,
+  HoursKChart,
   TradingChart
 } from '~components/widgets/stock/chart'
 import type { BoardRank } from '~components/widgets/stock/rank/boardRank'
@@ -36,6 +37,7 @@ const formatNumber = (num: number, unit = '亿', precision = 1) => {
   }
   if (tempObj[unit] && num > tempObj[unit]) unit = '亿'
   if (tempObj[unit] && num < tempObj[unit]) unit = '万'
+  if (num > 10000000) unit = '亿'
   if (!num || isNaN(Number(num))) return '0.00'
   return (num / (tempObj[unit] || 1)).toFixed(precision) + unit
 }
@@ -72,11 +74,11 @@ const covertData = (data = []) => {
   list.map((item) => {
     if (!item.vol || item.vol == '-') {
       item.percent = 0
-      return
+    } else {
+      item.percent =
+        item.name == '买' ? item.vol / maxBuyCount : item.vol / maxSellCount
+      item.percent = (item.percent * 100).toFixed(2)
     }
-    item.percent =
-      item.name == '买' ? item.vol / maxBuyCount : item.vol / maxSellCount
-    item.percent = (item.percent * 100).toFixed(2)
     const totalSellVol = list
       .filter((el) => el.name == '卖' && el.vol != '-')
       .reduce((prev, cur) => prev + Number(cur.vol), 0)
@@ -100,7 +102,7 @@ const BuySellComponent = (props: { data: any[] }) => {
     setState(covertData(props.data))
   }, [props.data])
   return (
-    <div>
+    <div className="flex flex-col gap-[2px]">
       {state.map((item, index) => (
         <div
           key={index}
@@ -121,10 +123,16 @@ const BuySellComponent = (props: { data: any[] }) => {
           {index == 4 && (
             <div className="h-[2px] absolute bottom-[-6px] left-0 rounded flex w-full">
               <div
-                style={{ width: item.totalSellVolPercent + '%' }}
+                style={{
+                  width:
+                    (item.totalSellVolPercent || (item.value ? 100 : 0)) + '%'
+                }}
                 className={`h-full bg-[rgba(0,255,0,0.2)]`}></div>
               <div
-                style={{ width: item.totalBuyVolPercent + '%' }}
+                style={{
+                  width:
+                    (item.totalBuyVolPercent || (item.value ? 100 : 0)) + '%'
+                }}
                 className={`h-full bg-[rgba(255,0,0,0.2)]`}></div>
             </div>
           )}
@@ -182,7 +190,7 @@ const TradingComponent = (props) => {
           key: '1',
           forceRender: true,
           children: (
-            <div className="mt-4">
+            <div className="mt-1">
               <BuySellComponent data={props.data.buy_sell_data_list} />
             </div>
           )
@@ -192,12 +200,20 @@ const TradingComponent = (props) => {
           forceRender: true,
           key: '2',
           children: (
-            <TradingChart
-              data={{
-                list: covert([...(props.data.daily_data_list || [])]),
-                data: { ...props.data, ...props.data_info }
-              }}
-            />
+            <div className="relative mt-0">
+              <div className="absolute top-[10px] left-0 w-[12px] text-[rgba(0,255,0,1)]">
+                主动卖
+              </div>
+              <div className="absolute top-[10px] right-0 w-[12px] text-[rgba(255,0,0,1)]">
+                主动买
+              </div>
+              <TradingChart
+                data={{
+                  list: covert([...(props.data.daily_data_list || [])]),
+                  data: { ...props.data, ...props.data_info }
+                }}
+              />
+            </div>
           )
         }
       ]}
@@ -383,22 +399,72 @@ const StockInfoComponent = (props: {
                 </Button>
               </Col>
             </Row>
-            <div className="flex w-full gap-4">
-              <div className="flex-1 flex flex-col gap-4">
+            <Tabs
+              defaultActiveKey="1"
+              items={[
                 {
-                  <DailyKChart
-                    data={{
-                      list: props.data.daily_data_list,
-                      data: { ...props.data.data, ...props.data.data_info }
-                    }}
-                  />
+                  label: `分时`,
+                  key: '今日',
+                  children: (
+                    <div className="flex w-full gap-4 mt-2">
+                      <div className="flex-1 flex flex-col gap-4">
+                        {
+                          <HoursKChart
+                            data={{
+                              list: props.data.daily_data_list,
+                              data: {
+                                ...props.data.data,
+                                ...props.data.data_info
+                              }
+                            }}
+                          />
+                        }
+                        <DailyVolChart
+                          data={props.data.daily_data_list || []}
+                        />
+                      </div>
+                      <div>
+                        <TradingComponent data={props.data || ({} as any)} />
+                      </div>
+                    </div>
+                  )
+                },
+                {
+                  label: `五日`,
+                  key: '5日',
+                  children: (
+                    <div className="mt-2">
+                      <HoursKChart
+                        data={{
+                          list: props.data.daily_data_list,
+                          data: {
+                            ...props.data.data,
+                            ...props.data.data_info
+                          }
+                        }}
+                      />
+                    </div>
+                  )
+                },
+                {
+                  label: `日K`,
+                  key: '10日',
+                  children: (
+                    <div className="mt-2">
+                      <DailyKChart
+                        data={{
+                          list: props.data.daily_data_list,
+                          data: {
+                            ...props.data.data,
+                            ...props.data.data_info
+                          }
+                        }}
+                      />
+                    </div>
+                  )
                 }
-                <DailyVolChart data={props.data.daily_data_list || []} />
-              </div>
-              <div>
-                <TradingComponent data={props.data || ({} as any)} />
-              </div>
-            </div>
+              ]}
+            />
           </div>
         ) : (
           <Empty

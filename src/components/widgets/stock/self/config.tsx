@@ -36,6 +36,10 @@ export const SearchContext = React.createContext<{
 const SearchComponent = ({ onScroll }: { onScroll: () => void }) => {
   const [searchKey, setSearchKey] = useState<string>('')
   const { symbol } = useContext(SearchContext)
+  const [shouldQuery] = useLocalStorageState('shouldQueryStock', {
+    defaultValue: false,
+    listenStorageChange: true
+  })
   const fetchSearchData = async (value: string) => {
     value = value || searchKey.trim()
     if (value.length === 6 || value.length === 8) {
@@ -77,12 +81,29 @@ const SearchComponent = ({ onScroll }: { onScroll: () => void }) => {
         D: '卖盘'
       }
       if (res3 && res3.length > 0) {
-        daily_data_list = res3.map((el) => ({
-          时间: el.ticktime || el.时间,
-          成交价: el.price || el.成交价,
-          手数: el.volume || el.手数,
-          买卖盘性质: kindMap[el.kind] || el.买卖盘性质
-        }))
+        daily_data_list = res3
+          .map((el) => ({
+            时间: el.ticktime || el.时间,
+            成交价: el.price || el.成交价,
+            手数: el.volume || el.手数,
+            买卖盘性质: kindMap[el.kind] || el.买卖盘性质
+          }))
+          .filter((item) => {
+            let startTime = new Date().setHours(9, 30, 0, 0)
+            let breakStart = new Date().setHours(11, 30, 0, 0)
+            let breakEnd = new Date().setHours(13, 0, 0, 0)
+            let endTime = new Date().setHours(15, 0, 0, 0)
+            let time = new Date().setHours(
+              Number(item.时间.split(':')[0]),
+              Number(item.时间.split(':')[1]),
+              Number(item.时间.split(':')[2]),
+              0
+            )
+            return (
+              (time >= startTime && time <= breakStart) ||
+              (time >= breakEnd && time <= endTime)
+            )
+          })
       }
       return {
         buy_sell_data_list,
@@ -104,6 +125,7 @@ const SearchComponent = ({ onScroll }: { onScroll: () => void }) => {
       setSearchKey('')
       return
     }
+    setSymbolData(undefined)
     setSearchKey(value.trim())
     onSearchRefresh(value)
   }
@@ -114,7 +136,9 @@ const SearchComponent = ({ onScroll }: { onScroll: () => void }) => {
   } = useRequest(fetchSearchData, {
     cacheKey: symbol,
     throttleWait: 500,
-    cacheTime: 1000 * 15
+    pollingInterval: shouldQuery ? 3000 : 0,
+    cacheTime: 1000 * 15,
+    pollingErrorRetryCount: 3
   })
   useUpdateEffect(() => {
     data && setSymbolData(data)
@@ -150,7 +174,7 @@ const SearchComponent = ({ onScroll }: { onScroll: () => void }) => {
       </div>
       {(symbolData || searchLoading) && (
         <div className="flex flex-col min-h-[160px]">
-          <Spin spinning={searchLoading}>
+          <Spin spinning={searchLoading && !symbolData}>
             <StockInfoComponent data={symbolData || ({} as any)} />
           </Spin>
         </div>
@@ -191,7 +215,7 @@ function WidgetModal(props: {
     [stockType]
   )
   useUpdateEffect(() => {
-    !props.loading && message.success('数据更新成功')
+    // !props.loading && message.success('数据更新成功')
     setLoading(false)
   }, [props.loading])
   return (
@@ -233,7 +257,6 @@ function WidgetModal(props: {
                   <div className="min-h-[160px] w-full h-full">
                     <SearchComponent
                       onScroll={() => {
-                        console.log(tabWrapRef.current, 'tabWrapRef.current')
                         tabWrapRef.current?.scrollTo({
                           left: 0,
                           top: 0,
