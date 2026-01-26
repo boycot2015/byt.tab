@@ -114,10 +114,10 @@ const getStockRealTime = ({
 const getStockHistory = ({
   code = 'stock_zh_a_hist',
   symbol = 'sh600006',
-  start_date = dayjs('2026-01-01 09:30:00').format('YYYYMMDD'), // 开始日期
-  end_date = dayjs('2026-12-31 09:30:00').format('YYYYMMDD'), // 结束日期
-  period = '1d',
-  adjust = 'hfq'
+  start_date = '', // 开始日期
+  end_date = '', // 结束日期
+  period = '',
+  adjust = ''
 }: {
   code: string
   symbol: string
@@ -126,9 +126,13 @@ const getStockHistory = ({
   period?: string // 时间周期
   adjust?: string // 复权类型
 }) => {
-  return $GET(
-    `${akApiUrl}/${code}?symbol=${symbol}&period=${period}&adjust=${adjust}&start_date=${start_date || ''}&end_date=${end_date || ''}`
-  )
+  let url = `${akApiUrl}/${code}`
+  if (symbol) url = `${url}?symbol=${symbol}`
+  if (start_date) url = `${url}&start_date=${start_date}`
+  if (end_date) url = `${url}&end_date=${end_date}`
+  if (period) url = `${url}&period=${period}`
+  if (adjust) url = `${url}&adjust=${adjust}`
+  return $GET(url)
 }
 
 /**

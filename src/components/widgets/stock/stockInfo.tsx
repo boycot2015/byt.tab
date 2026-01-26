@@ -13,7 +13,8 @@ import {
   useUpdateEffect
 } from 'ahooks'
 import { App, Button, Col, Empty, Row, Spin, Tabs, Tag } from 'antd'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import dayjs from 'dayjs'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 import type {
   Stock,
@@ -24,10 +25,12 @@ import type {
 import {
   DailyKChart,
   DailyVolChart,
+  DayHoursChart,
   HoursKChart,
   TradingChart
 } from '~components/widgets/stock/chart'
 import type { BoardRank } from '~components/widgets/stock/rank/boardRank'
+import { getStockHistory, getStockHoursMinis } from '~data/stock'
 import { ThemeProvider } from '~layouts'
 
 const formatNumber = (num: number, unit = '亿', precision = 1) => {
@@ -243,12 +246,109 @@ const StockInfoComponent = (props: {
     }
   )
   const [styles, setStyles] = useState<any>()
+  const [dayhours, setDayhours] = useState<any>()
+  const [daykData, setDaykData] = useState<any>()
   const [hasSelf, setHasSelf] = useState<any>()
   const getPriceStyles = useCallback((num: number) => {
     if (!num) return ''
     return num < 0 ? 'text-[#00ff00]' : 'text-[#ff0000]'
   }, [])
+  const {
+    loading: dayHoursLoading,
+    run: fetch5daykData,
+    data
+  } = useRequest(
+    async () => {
+      return await getStockHoursMinis({
+        code: 'stock_zh_a_hist_min_em', // stock_zh_a_hist_tx
+        symbol: props.data.data_info?.股票代码 || '',
+        period: '1'
+        // start_date: dayjs().subtract(5, 'day').format('YYYYMMDD'),
+        // end_date: dayjs().format('YYYYMMDD')
+      })
+    },
+    {
+      manual: true
+    }
+  )
+  const {
+    loading: kLoading,
+    run: fetchkData,
+    data: kData
+  } = useRequest(
+    async () => {
+      return await getStockHistory({
+        code: 'stock_zh_a_hist',
+        symbol: props.data.data_info?.股票代码 || ''
+        // period: 'daily',
+        // start_date: dayjs().subtract(5, 'day').format('YYYYMMDD'),
+        // end_date: dayjs().format('YYYYMMDD')
+      })
+    },
+    {
+      manual: true
+    }
+  )
   const [currentBoardData, setCurrentBoardData] = useState<BoardRank>()
+  const renderDailyKChart = useMemo(() => {
+    return (
+      <Spin spinning={kLoading}>
+        <DailyKChart
+          data={{
+            list: daykData,
+            data: {
+              ...props.data.data,
+              ...props.data.data_info
+            }
+          }}
+        />
+      </Spin>
+    )
+  }, [])
+  const renderDayHoursChart = useMemo(() => {
+    let maxminPercent = 0
+    const covert = (item = {} as any, index: number) => {
+      let price = item.均价 > item.最高 ? item.最高 : item.最低
+      let basePrice = dayhours[index - 1]?.收盘 || item.收盘
+      let percent = ((price - basePrice) / basePrice) * 100
+      maxminPercent += percent
+      return {
+        name: dayjs(item.时间).format('YYYY-MM-DD'),
+        time: dayjs(item.时间).format('YYYY-MM-DD HH:mm:ss'),
+        percent: percent.toFixed(2),
+        value: price
+      }
+    }
+    const min = Math.min(
+      ...(dayhours?.map((item) => {
+        return Number((item.最低 || item.最新)?.toFixed(2)) || 0
+      }) || [])
+    )
+    const max = Math.max(
+      ...(dayhours?.map((item) => {
+        return Number((item.最高 || item.最新)?.toFixed(2)) || 0
+      }) || [])
+    )
+    const maxPercent = (((max - min) / min) * 100).toFixed(2)
+    const minPercent = -maxPercent
+    return (
+      <Spin spinning={dayHoursLoading}>
+        <div className="absolute top-0 right-0">{minPercent}%</div>
+        <div className="absolute bottom-[30px] right-0">{maxPercent}%</div>
+        <DayHoursChart
+          data={{
+            list: dayhours?.map(covert) || props.data.daily_data_list || [],
+            data: {
+              min,
+              max,
+              ...props.data.data,
+              ...props.data.data_info
+            }
+          }}
+        />
+      </Spin>
+    )
+  }, [dayhours])
   useEffect(() => {
     const currentBoard = boardData.find(
       (item) => item.名称 === props.data.data_info?.行业
@@ -263,6 +363,12 @@ const StockInfoComponent = (props: {
         ?.list?.find((i) => i.股票代码 === props.data.data_info?.股票代码)
     )
   }, [props.data, stockData])
+  useEffect(() => {
+    data && setDayhours(data)
+  }, [data])
+  useEffect(() => {
+    kData && setDaykData(kData)
+  }, [kData])
   const onEdit = () => {
     if (hasSelf) {
       let newData = [...stockData]
@@ -286,6 +392,13 @@ const StockInfoComponent = (props: {
       }
     ])
     setHasSelf({ ...props.data.data, ...props.data.data_info })
+  }
+  const onChangeTab = (key: string) => {
+    if (key === '5日') {
+      fetch5daykData()
+    } else if (key === '日K') {
+      fetchkData()
+    }
   }
   return (
     <ThemeProvider
@@ -401,6 +514,7 @@ const StockInfoComponent = (props: {
             </Row>
             <Tabs
               defaultActiveKey="1"
+              onChange={onChangeTab}
               items={[
                 {
                   label: `分时`,
@@ -432,36 +546,12 @@ const StockInfoComponent = (props: {
                 {
                   label: `五日`,
                   key: '5日',
-                  children: (
-                    <div className="mt-2">
-                      <HoursKChart
-                        data={{
-                          list: props.data.daily_data_list,
-                          data: {
-                            ...props.data.data,
-                            ...props.data.data_info
-                          }
-                        }}
-                      />
-                    </div>
-                  )
+                  children: <div className="mt-2">{renderDayHoursChart}</div>
                 },
                 {
                   label: `日K`,
-                  key: '10日',
-                  children: (
-                    <div className="mt-2">
-                      <DailyKChart
-                        data={{
-                          list: props.data.daily_data_list,
-                          data: {
-                            ...props.data.data,
-                            ...props.data.data_info
-                          }
-                        }}
-                      />
-                    </div>
-                  )
+                  key: '日K',
+                  children: <div className="mt-2">{renderDailyKChart}</div>
                 }
               ]}
             />

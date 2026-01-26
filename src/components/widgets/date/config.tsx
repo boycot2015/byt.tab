@@ -962,7 +962,7 @@ export const WidgetLunar = ({ selected }: { selected: Day }) => {
 }
 function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
   const [state, setState] = useState({
-    selected: new Day()
+    selected: buildDay()
   })
   const onSelect = ({ selected }: { selected: Day }) => {
     setState({ ...state, selected })

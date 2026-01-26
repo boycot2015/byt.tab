@@ -40,7 +40,6 @@ export default function Header() {
                 .map((item) => item + ' ' + state.dateIcons[item] || '')
                 .join('')
             : state.jieQi || ''}
-          {state.dateIcon || ''}
         </Text>
         <Text className="!text-[18px] !text-white flex justify-center gap-4">
           <span>

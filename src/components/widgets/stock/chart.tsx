@@ -226,11 +226,72 @@ const HoursKChart = (props: Record<string, any>) => {
   }, [props.data])
   return <div id={id} ref={chartRef} className="!h-[140px] w-full"></div>
 }
+
+const DayHoursChart = (props: Record<string, any>) => {
+  const chartRef = useRef(null)
+  const id = props.id || 'stock-echarts-hours'
+  const [hourilyEcharts, setHourilyEcharts] = useState<any>(null)
+  useEffect(() => {
+    if (props.data && props.data.data) {
+      const option = {
+        ...baseOption,
+        tooltip: {
+          show: true,
+          trigger: 'axis',
+          formatter: (params: any) => {
+            return `<div>
+            ${params[0].data.time}
+            <p>成本价：${(params[0].data.value || 0).toFixed(2)} 涨跌幅：${params[0].data.percent || 0}%</p>
+            </div>`
+          }
+        },
+        xAxis: {
+          type: 'category',
+          min: function (value) {
+            return value.min + 20
+          },
+          // boundaryGap: true,
+          data: props.data?.list?.map((item: any) => item.name) || []
+        },
+        yAxis: {
+          type: 'value',
+          show: false,
+          min: props.data.data.min,
+          max: props.data.data.max
+        },
+        series: [
+          {
+            name: '涨跌幅',
+            type: 'line',
+            symbolSize: 0,
+            smooth: false,
+            data: props.data?.list || []
+          }
+        ]
+      }
+      if (hourilyEcharts && document.getElementById(id)) {
+        hourilyEcharts?.setOption(option, true, true)
+      } else {
+        setHourilyEcharts(EchartsInit(chartRef.current, option))
+        hourilyEcharts?.resize()
+      }
+    }
+    window.addEventListener('resize', () => {
+      hourilyEcharts?.resize()
+    })
+    // const observer = new ResizeObserver(() => hourilyEcharts?.resize())
+    // observer.observe(chartRef?.current)
+    // return () => {
+    //   observer.disconnect()
+    //   // hourilyEcharts?.dispose()
+    // }
+  }, [props.data])
+  return <div id={id} ref={chartRef} className="!h-[265px] w-full"></div>
+}
 const DailyKChart = (props: Record<string, any>) => {
   const chartRef = useRef(null)
   type DataItem = (number | string)[]
   // prettier-ignore
-  const rawData = kdata.reverse();
 
   function calculateMA(dayCount: number, data: DataItem[]) {
     var result = []
@@ -243,26 +304,39 @@ const DailyKChart = (props: Record<string, any>) => {
       for (var j = 0; j < dayCount; j++) {
         sum += +data[i - j][1]
       }
-      result.push(sum / dayCount)
+      result.push((sum / dayCount).toFixed(2))
     }
     return result
   }
 
-  const dates = rawData.map(function (item) {
-    return item[0]
-  })
-
-  const data = rawData.map(function (item) {
-    return [+item[1], +item[2], +item[5], +item[6]]
-  })
-
   const id = props.id || 'stock-echarts-daily'
   const [dailyEcharts, setDailyEcharts] = useState<any>(null)
   useEffect(() => {
-    if (props.data && props.data.data) {
+    if (props.data) {
+      const rawData = (
+        props.data?.list ||
+        kdata.map((el) => ({
+          时间: dayjs(el[0]).format('YYYY-MM-DD'),
+          开盘: el[1],
+          收盘: el[2],
+          涨跌额: el[3],
+          涨跌幅: el[4],
+          最低: el[5],
+          最高: el[6]
+        })) ||
+        []
+      ).reverse()
+
+      const dates = rawData.map(function (item) {
+        return dayjs(item['时间']).format('YYYY-MM-DD')
+      })
+
+      const data = rawData.map(function (item) {
+        return [+item['开盘'], +item['收盘'], +item['最低'], +item['最高']]
+      })
       const option = {
         legend: {
-          data: ['日K', 'MA5', 'MA10', 'MA20', 'MA30'],
+          data: ['日K', '5日线', '15日线', '20日线', '30日线'],
           inactiveColor: '#777',
           top: 10,
           right: 0
@@ -325,7 +399,7 @@ const DailyKChart = (props: Record<string, any>) => {
         series: [
           {
             type: 'candlestick',
-            name: 'Day',
+            name: '日K',
             data: data,
             itemStyle: {
               color: '#f00',
@@ -335,7 +409,7 @@ const DailyKChart = (props: Record<string, any>) => {
             }
           },
           {
-            name: 'MA5',
+            name: '5日线',
             type: 'line',
             data: calculateMA(5, data),
             smooth: true,
@@ -345,7 +419,7 @@ const DailyKChart = (props: Record<string, any>) => {
             }
           },
           {
-            name: 'MA10',
+            name: '15日线',
             type: 'line',
             data: calculateMA(10, data),
             smooth: true,
@@ -355,7 +429,7 @@ const DailyKChart = (props: Record<string, any>) => {
             }
           },
           {
-            name: 'MA20',
+            name: '20日线',
             type: 'line',
             data: calculateMA(20, data),
             smooth: true,
@@ -365,7 +439,7 @@ const DailyKChart = (props: Record<string, any>) => {
             }
           },
           {
-            name: 'MA30',
+            name: '30日线',
             type: 'line',
             data: calculateMA(30, data),
             smooth: true,
@@ -386,15 +460,8 @@ const DailyKChart = (props: Record<string, any>) => {
     window.addEventListener('resize', () => {
       dailyEcharts?.resize()
     })
-    // const observer = new ResizeObserver(() => dailyEcharts?.resize())
-    // observer.observe(chartRef?.current)
-    // return () => {
-    //   observer.disconnect()
-    //   // dailyEcharts?.dispose()
-    // }
   }, [props.data])
-  const size = useSize(chartRef.current)
-  return <div id={id} ref={chartRef} className="!h-[280px] w-full"></div>
+  return <div id={id} ref={chartRef} className="!h-[265px] w-full"></div>
 }
 const TradingChart = (props: Record<string, any>) => {
   const chartRef = useRef(null)
@@ -576,4 +643,4 @@ const DailyVolChart = (props: Record<string, any>) => {
   }, [props.data])
   return <div id={id} ref={chartRef} className="!h-[80px] w-full"></div>
 }
-export { HoursKChart, DailyKChart, TradingChart, DailyVolChart }
+export { HoursKChart, DayHoursChart, DailyKChart, TradingChart, DailyVolChart }

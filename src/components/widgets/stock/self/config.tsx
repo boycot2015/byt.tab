@@ -136,7 +136,7 @@ const SearchComponent = ({ onScroll }: { onScroll: () => void }) => {
   } = useRequest(fetchSearchData, {
     cacheKey: symbol,
     throttleWait: 500,
-    pollingInterval: shouldQuery ? 3000 : 0,
+    // pollingInterval: shouldQuery ? 3000 : 0,
     cacheTime: 1000 * 15,
     pollingErrorRetryCount: 3
   })
@@ -208,7 +208,7 @@ function WidgetModal(props: {
   const [loading, setLoading] = useState<boolean>(false)
   const stockTableComponent = useMemo(
     () => <StockTable size="biggest" stockType={stockType} />,
-    [stockType]
+    [stockType, stockData]
   )
   const rankComponent = useMemo(
     () => <StockRank size="biggest" withComponents />,
