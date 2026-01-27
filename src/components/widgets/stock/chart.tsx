@@ -312,23 +312,24 @@ const DailyKChart = (props: Record<string, any>) => {
   const id = props.id || 'stock-echarts-daily'
   const [dailyEcharts, setDailyEcharts] = useState<any>(null)
   useEffect(() => {
-    if (props.data) {
-      const rawData = (
-        props.data?.list ||
-        kdata.map((el) => ({
-          时间: dayjs(el[0]).format('YYYY-MM-DD'),
-          开盘: el[1],
-          收盘: el[2],
-          涨跌额: el[3],
-          涨跌幅: el[4],
-          最低: el[5],
-          最高: el[6]
-        })) ||
+    if (props.data && props.data.list) {
+      const rawData =
+        props.data.list ||
+        kdata
+          .map((el) => ({
+            日期: dayjs(el[0]).format('YYYY-MM-DD'),
+            开盘: el[1],
+            收盘: el[2],
+            涨跌额: el[3],
+            涨跌幅: el[4],
+            最低: el[5],
+            最高: el[6]
+          }))
+          .reverse() ||
         []
-      ).reverse()
 
       const dates = rawData.map(function (item) {
-        return dayjs(item['时间']).format('YYYY-MM-DD')
+        return dayjs(item['日期']).format('YYYY-MM-DD')
       })
 
       const data = rawData.map(function (item) {
@@ -355,6 +356,7 @@ const DailyKChart = (props: Record<string, any>) => {
         },
         xAxis: {
           type: 'category',
+          boundaryGap: true,
           data: dates,
           axisLine: { lineStyle: { color: '#8392A5' } }
         },
@@ -375,10 +377,10 @@ const DailyKChart = (props: Record<string, any>) => {
               color: '#8392A5'
             },
             show: false,
-            start: 80,
+            start: 98,
             end: 100,
-            minSpan: 20,
-            maxSpan: 80,
+            minSpan: 1,
+            maxSpan: 30,
             handleIcon:
               'path://M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
             dataBackground: {

@@ -41,7 +41,7 @@ function Widget(props: WidgetProp) {
       stockData.map(async (item) => {
         let list = await Promise.all(
           item.list
-            ?.filter((child) => child.股票代码)
+            ?.filter((child) => child && child.股票代码)
             .map(async (child): Promise<Stock> => {
               let res = await getStockRealTime({
                 code: 'stock_bid_ask_em',
@@ -82,8 +82,8 @@ function Widget(props: WidgetProp) {
     loading
   } = useRequest(fetchData, {
     cacheKey: 'stock_spot_data_self',
-    pollingInterval: shouldQuery ? 3000 : 0,
-    staleTime: 1000 * 10
+    pollingInterval: shouldQuery ? 30000 : 0,
+    staleTime: 1000 * 30
   })
   const [stockData, setStockData] = useLocalStorageState<StockData[]>(
     'stock_spot_data_self',

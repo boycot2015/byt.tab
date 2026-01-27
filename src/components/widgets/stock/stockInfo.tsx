@@ -292,25 +292,34 @@ const StockInfoComponent = (props: {
   const [currentBoardData, setCurrentBoardData] = useState<BoardRank>()
   const renderDailyKChart = useMemo(() => {
     return (
-      <Spin spinning={kLoading}>
-        <DailyKChart
-          data={{
-            list: daykData,
-            data: {
-              ...props.data.data,
-              ...props.data.data_info
-            }
-          }}
-        />
+      <Spin spinning={kLoading || !daykData}>
+        {daykData ? (
+          <DailyKChart
+            data={{
+              list: daykData,
+              data: {
+                ...props.data.data,
+                ...props.data.data_info
+              }
+            }}
+          />
+        ) : (
+          <div className="h-[270px] w-full"></div>
+        )}
       </Spin>
     )
-  }, [])
+  }, [daykData])
   const renderDayHoursChart = useMemo(() => {
+    if (!dayhours)
+      return (
+        <Spin spinning={true}>
+          <div className="h-[270px] w-full"></div>
+        </Spin>
+      )
     let maxminPercent = 0
     const covert = (item = {} as any, index: number) => {
-      let price = item.均价 > item.最高 ? item.最高 : item.最低
-      let basePrice = dayhours[index - 1]?.收盘 || item.收盘
-      let percent = ((price - basePrice) / basePrice) * 100
+      let price = item.收盘 || (item.均价 > item.最高 ? item.最高 : item.最低)
+      let percent = ((price - dayhours[0]?.收盘) / dayhours[0]?.收盘) * 100
       maxminPercent += percent
       return {
         name: dayjs(item.时间).format('YYYY-MM-DD'),
@@ -329,23 +338,29 @@ const StockInfoComponent = (props: {
         return Number((item.最高 || item.最新)?.toFixed(2)) || 0
       }) || [])
     )
-    const maxPercent = (((max - min) / min) * 100).toFixed(2)
+    const maxPercent = (
+      ((dayhours[0].收盘 - dayhours[dayhours.length - 1].收盘) /
+        dayhours[0].收盘) *
+      100
+    ).toFixed(2)
     const minPercent = -maxPercent
     return (
       <Spin spinning={dayHoursLoading}>
-        <div className="absolute top-0 right-0">{minPercent}%</div>
-        <div className="absolute bottom-[30px] right-0">{maxPercent}%</div>
-        <DayHoursChart
-          data={{
-            list: dayhours?.map(covert) || props.data.daily_data_list || [],
-            data: {
-              min,
-              max,
-              ...props.data.data,
-              ...props.data.data_info
-            }
-          }}
-        />
+        <div className="h-[270px] w-full">
+          <div className="absolute top-0 right-0">{minPercent}%</div>
+          <div className="absolute bottom-[30px] right-0">{maxPercent}%</div>
+          <DayHoursChart
+            data={{
+              list: dayhours?.map(covert) || props.data.daily_data_list || [],
+              data: {
+                min,
+                max,
+                ...props.data.data,
+                ...props.data.data_info
+              }
+            }}
+          />
+        </div>
       </Spin>
     )
   }, [dayhours])
