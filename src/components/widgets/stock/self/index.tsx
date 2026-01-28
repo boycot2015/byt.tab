@@ -71,6 +71,7 @@ function Widget(props: WidgetProp) {
               }
             })
         )
+        list = list.filter((item) => item && Object.keys(item).length > 0)
         return { ...item, list: list ? [...list] : [] }
       })
     )
@@ -122,7 +123,8 @@ function Widget(props: WidgetProp) {
       let data =
         stockData
           ?.find((item) => item.type === 'se')
-          ?.list?.slice(page * pageSize, (page + 1) * pageSize) || []
+          ?.list?.filter((item) => item && item.股票代码)
+          ?.slice(page * pageSize, (page + 1) * pageSize) || []
       data.length && setList(data)
       return data.length ? page + 1 : 0
     })
@@ -173,34 +175,37 @@ function Widget(props: WidgetProp) {
         {loading || list.length ? (
           <Spin spinning={loading} wrapperClassName={`w-full h-full`}>
             <div className="h-full w-full min-h-[144px] !p-4 flex flex-col text-white gap-2">
-              {list?.map((item, index) => (
-                <div
-                  className={`flex justify-between w-full gap-2 ${props.size === 'large' ? 'flex-row' : 'flex-col'}`}
-                  title={item['股票简称']}
-                  key={item['股票简称'] || item['股票代码'] || index}>
-                  {item['股票简称'] && (
-                    <span className="flex justify-between w-full gap-1">
-                      <span className="line-clamp-1">{item['股票简称']}</span>
-                      <span className={props.size === 'large' ? 'hidden' : ''}>
+              {list
+                .filter((el) => el)
+                .map((item, index) => (
+                  <div
+                    className={`flex justify-between w-full gap-2 ${props.size === 'large' ? 'flex-row' : 'flex-col'}`}
+                    title={item['股票简称']}
+                    key={item['股票简称'] || item['股票代码'] || index}>
+                    {item['股票简称'] && (
+                      <span className="flex justify-between w-full gap-1">
+                        <span className="line-clamp-1">{item['股票简称']}</span>
+                        <span
+                          className={props.size === 'large' ? 'hidden' : ''}>
+                          {item['最新价'] || item['最新']}
+                        </span>
+                      </span>
+                    )}
+                    <span
+                      className={`text-right flex gap-2 ${(item['涨跌幅'] || item['涨幅']) > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                      <span className={props.size === 'large' ? '' : 'hidden'}>
                         {item['最新价'] || item['最新']}
                       </span>
+                      <span>{item['涨跌额'] || item['涨跌']}</span>
+                      <span>
+                        {(item['最新价'] || item['最新']) > item['昨收']
+                          ? '+'
+                          : ''}
+                        {item['涨跌幅'] || item['涨幅'] || '-'}%
+                      </span>
                     </span>
-                  )}
-                  <span
-                    className={`text-right flex gap-2 ${(item['涨跌幅'] || item['涨幅']) > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                    <span className={props.size === 'large' ? '' : 'hidden'}>
-                      {item['最新价'] || item['最新']}
-                    </span>
-                    <span>{item['涨跌额'] || item['涨跌']}</span>
-                    <span>
-                      {(item['最新价'] || item['最新']) > item['昨收']
-                        ? '+'
-                        : ''}
-                      {item['涨跌幅'] || item['涨幅'] || '-'}%
-                    </span>
-                  </span>
-                </div>
-              ))}
+                  </div>
+                ))}
             </div>
           </Spin>
         ) : (

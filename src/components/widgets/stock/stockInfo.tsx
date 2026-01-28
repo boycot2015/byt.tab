@@ -420,6 +420,9 @@ const StockInfoComponent = (props: {
       token={{
         Tabs: {
           horizontalMargin: 0
+        },
+        Tag: {
+          defaultBg: 'var(--byt-color-primary)'
         }
       }}>
       <div className="flex w-full flex-col">

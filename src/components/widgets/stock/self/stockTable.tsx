@@ -170,7 +170,7 @@ export function StockPanel(props: {
               {record.股票简称 || '--'}
             </span>
             <span className="text-white/70 text-sm text-[14px]">
-              {record.股票代码 || '--'}{' '}
+              {record.股票代码 || '--'}
               <Button
                 onClick={(e) => {
                   e.stopPropagation()

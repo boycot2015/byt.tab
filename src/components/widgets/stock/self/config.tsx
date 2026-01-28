@@ -315,7 +315,7 @@ function WidgetModal(props: {
                             color: '#fff'
                           }
                         }}
-                        description="暂无自选的股票"
+                        description="暂无自选数据，请先添加股票到自选列表"
                       />
                     )}
                     <div className="w-full mt-4">

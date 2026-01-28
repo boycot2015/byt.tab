@@ -20,7 +20,7 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
         open={props.visible}
         loading={loading}
         classNames={{
-          content:
+          container:
             '!overflow-hidden !box-radius-md !p-0 !bg-black backdrop-blur-md',
           body: '!p-5'
         }}

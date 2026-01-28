@@ -1,4 +1,10 @@
-import { CloseOutlined, CopyOutlined, ReloadOutlined } from '@ant-design/icons'
+import {
+  CheckOutlined,
+  CloseOutlined,
+  CopyOutlined,
+  PlusOutlined,
+  ReloadOutlined
+} from '@ant-design/icons'
 import {
   useLocalStorageState,
   useRequest,
@@ -16,17 +22,20 @@ import {
   Table,
   Tabs
 } from 'antd'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
+import type { Stock, StockData, StockInfo } from '~components/widgets/stock'
 import { SearchContext } from '~components/widgets/stock/self/config'
-import { getStockBoardRank } from '~data/stock'
+import { getStockBoardRank, getStockRealTime } from '~data/stock'
 import { sizeMap, ThemeProvider } from '~layouts'
 
 export interface StockRank {
   序号: string
   名称: string
   股票名称?: string
+  股票简称?: string
   代码?: string
+  股票代码?: string
   最新价: number
   涨跌幅: number
   涨跌额: number
@@ -70,6 +79,72 @@ export function StockRankPanel(props: {
 }) {
   const tabWrapRef = useRef<HTMLDivElement>(null)
   const { symbol, setSymbol } = React.useContext(SearchContext)
+  const [stockData, setStockData] = useLocalStorageState<StockData[]>(
+    'stock_spot_data_self',
+    {
+      defaultValue: [],
+      listenStorageChange: true
+    }
+  )
+  const fetchSearchData = async (value: string) => {
+    if (value.length === 6 || value.length === 8) {
+      let searchKey = value.length === 6 ? value : value.substring(2)
+      let res = await getStockRealTime({
+        code: 'stock_bid_ask_em',
+        symbol: searchKey
+      })
+      let res2 = await getStockRealTime({
+        code: 'stock_individual_info_em',
+        symbol: searchKey
+      })
+      if (!res) return
+      let data = {} as Stock
+      let data_info = {} as StockInfo
+      res.slice(20)?.map((item) => {
+        data[item.item] = item.value
+      })
+      res2?.map((item) => {
+        data_info[item.item] = item.value
+      })
+      return {
+        data,
+        data_info
+      }
+    }
+    return null
+  }
+  const hasSelf = (data) =>
+    stockData
+      ?.find((item) => item.type === 'se')
+      ?.list?.find((i) => i.股票代码 === (data?.股票代码 || data?.代码))
+  const onToggleSelf = async (data) => {
+    let hasSelf = stockData
+      ?.find((item) => item.type === 'se')
+      ?.list?.find((i) => i.股票代码 === data?.代码)
+    if (hasSelf) {
+      let newData = [...stockData]
+      newData.map((el) => {
+        el.list = el.list.filter((i) => i.股票代码 !== hasSelf?.股票代码)
+      })
+      setStockData(newData)
+      return
+    }
+    await fetchSearchData(data?.代码)?.then((res) => {
+      setStockData([
+        {
+          type: 'se',
+          name: '自选',
+          list: [
+            { ...res.data, ...res.data_info },
+            ...(stockData?.find((item) => item.type === 'se')?.list || [])
+          ].filter(
+            (item, index, arr) =>
+              arr.findIndex((i) => i.股票代码 === item.股票代码) === index
+          )
+        }
+      ])
+    })
+  }
   // 表格列配置 - 针对个股数据
   const columns = [
     {
@@ -91,16 +166,23 @@ export function StockRankPanel(props: {
       render: (text: string, record: StockRank) => (
         <div>
           <div className="text-white font-medium line-clamp-1">
-            {record.股票名称 || record.名称}
+            {record.股票名称 || record.股票简称 || record.名称}
           </div>
           <p className="text-[12px] text-white/50">
-            {record.代码 || '--'}
+            {record.代码 || record.股票代码 || '--'}
             <Button
               onClick={() => {
-                navigator.clipboard.writeText(record.代码)
+                navigator.clipboard.writeText(record.代码 || record.股票代码)
               }}
               type="link"
               icon={<CopyOutlined />}></Button>
+            <Button
+              onClick={() => onToggleSelf(record)}
+              type="link"
+              title={hasSelf(record) ? '取消自选' : '加自选'}
+              icon={
+                hasSelf(record) ? <CheckOutlined /> : <PlusOutlined />
+              }></Button>
           </p>
         </div>
       )
