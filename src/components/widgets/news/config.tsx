@@ -18,6 +18,7 @@ function WidgetModal(props: {
   afterOpenChange: (visible: boolean) => void
 }) {
   const tabWrapRef = useRef<HTMLDivElement>(null)
+
   const [news, setNews] = useLocalStorageState<News[]>('news', {
     defaultValue: [],
     listenStorageChange: true
@@ -26,16 +27,11 @@ function WidgetModal(props: {
     props.cateId || news?.[0]?.id || ''
   )
   const TabContent = (props: { id?: string | number; data?: News['list'] }) => {
-    const scrollRef = useRef<HTMLDivElement>(null)
     const [loaded, setLoaded] = useState<boolean>(false)
-    useEffect(() => {
-      if (scrollRef.current) scrollRef.current.scrollTop = scrollTop
-    }, [])
     useTimeout(() => setLoaded(true), 500)
     return (
       <Spin spinning={!loading && !loaded && !props.data?.length}>
         <div
-          ref={(el) => el && (scrollRef.current = el)}
           id={`scrollable_${props.id || 'main'}`}
           className="h-[50vh] overflow-auto">
           <Row gutter={[20, 10]} className="w-full">
@@ -162,7 +158,9 @@ function WidgetModal(props: {
                     disabled: loading,
                     children: (
                       <Spin spinning={loading}>
-                        <TabContent id={item.id || index} data={item.list} />
+                        <div className="h-[50vh] overflow-auto">
+                          <TabContent id={item.id || index} data={item.list} />
+                        </div>
                       </Spin>
                     )
                   }))}

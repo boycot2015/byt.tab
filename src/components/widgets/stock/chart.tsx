@@ -337,7 +337,7 @@ const DailyKChart = (props: Record<string, any>) => {
       })
       const option = {
         legend: {
-          data: ['日K', '5日线', '15日线', '20日线', '30日线'],
+          data: ['日K', '5日', '15日', '20日', '30日'],
           inactiveColor: '#777',
           top: 10,
           right: 0
@@ -352,6 +352,34 @@ const DailyKChart = (props: Record<string, any>) => {
               width: 2,
               opacity: 1
             }
+          },
+          formatter: function (params) {
+            // console.log(params, 'params')
+            let arr = ['开盘', '收盘', '最低', '最高']
+            return `${params[0]?.name}
+              <br>
+              ${params[0]?.marker}
+              ${params[0]?.seriesName}
+              ${arr
+                .map(
+                  (
+                    el
+                  ) => `<div style="display:flex;justify-content:space-between;">
+              <span>${el}</span>
+              <span style="font-weight:bold;">${params[0]?.value[arr.indexOf(el) + 1]}</span>
+              </div>`
+                )
+                .join('')}
+              </div>${params
+                ?.slice(1)
+                .map((el) => {
+                  return `<div style="display:flex;justify-content:space-between;">
+                <span>${el?.marker}
+                ${el?.seriesName}</span>
+                <span style="font-weight:bold;">${el?.value}</span>
+                </div>`
+                })
+                .join('')}`
           }
         },
         xAxis: {
@@ -411,7 +439,7 @@ const DailyKChart = (props: Record<string, any>) => {
             }
           },
           {
-            name: '5日线',
+            name: '5日',
             type: 'line',
             data: calculateMA(5, data),
             smooth: true,
@@ -421,7 +449,7 @@ const DailyKChart = (props: Record<string, any>) => {
             }
           },
           {
-            name: '15日线',
+            name: '15日',
             type: 'line',
             data: calculateMA(10, data),
             smooth: true,
@@ -431,7 +459,7 @@ const DailyKChart = (props: Record<string, any>) => {
             }
           },
           {
-            name: '20日线',
+            name: '20日',
             type: 'line',
             data: calculateMA(20, data),
             smooth: true,
@@ -441,7 +469,7 @@ const DailyKChart = (props: Record<string, any>) => {
             }
           },
           {
-            name: '30日线',
+            name: '30日',
             type: 'line',
             data: calculateMA(30, data),
             smooth: true,

@@ -159,13 +159,14 @@ const SearchComponent = ({ onScroll }: { onScroll: () => void }) => {
                 value={searchKey}
                 placeholder="请输入股票代码"
                 style={{ width: '100%' }}
+                prefix={<SearchOutlined />}
                 allowClear
                 onChange={(e) => onSearch(e.target.value)}
               />
               <Button
                 onClick={() => onSearch(symbol)}
                 disabled={!searchKey}
-                icon={<SearchOutlined />}>
+                loading={searchLoading}>
                 搜索
               </Button>
             </Space.Compact>

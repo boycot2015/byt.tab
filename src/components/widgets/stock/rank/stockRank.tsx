@@ -3,7 +3,8 @@ import {
   CloseOutlined,
   CopyOutlined,
   PlusOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  StockOutlined
 } from '@ant-design/icons'
 import {
   useLocalStorageState,
@@ -31,7 +32,7 @@ import { sizeMap, ThemeProvider } from '~layouts'
 
 export interface StockRank {
   序号: string
-  名称: string
+  名称?: string
   股票名称?: string
   股票简称?: string
   代码?: string
@@ -67,13 +68,10 @@ type WidgetProp = {
 export function StockRankPanel(props: {
   loading?: boolean
   stockTypes: any[]
-  indicatorOptions: any[]
   currentStockType: string
-  currentIndicator: string
   stockData: StockRank[]
   onUpdate: () => void
   onStockTypeChange: (key: string) => void
-  onIndicatorChange: (value: string) => void
   className?: string
   height?: string
 }) {
@@ -129,21 +127,36 @@ export function StockRankPanel(props: {
       setStockData(newData)
       return
     }
-    await fetchSearchData(data?.代码)?.then((res) => {
-      setStockData([
-        {
-          type: 'se',
-          name: '自选',
-          list: [
-            { ...res.data, ...res.data_info },
-            ...(stockData?.find((item) => item.type === 'se')?.list || [])
-          ].filter(
-            (item, index, arr) =>
-              arr.findIndex((i) => i.股票代码 === item.股票代码) === index
-          )
-        }
-      ])
-    })
+    setStockData([
+      {
+        type: 'se',
+        name: '自选',
+        list: [
+          {
+            序号: data.序号,
+            股票代码: data.代码,
+            股票简称: data.股票名称,
+            最新: data.最新价,
+            最高: data.最高,
+            最低: data.最低,
+            今开: data.今开,
+            昨收: data.昨收,
+            均价: data.均价,
+            涨幅: data.涨跌幅,
+            涨跌: data.涨跌额,
+            总手: data.总手,
+            金额: data.金额,
+            换手: data.换手,
+            涨停: data.涨停,
+            跌停: data.跌停
+          },
+          ...(stockData?.find((item) => item.type === 'se')?.list || [])
+        ].filter(
+          (item, index, arr) =>
+            arr.findIndex((i) => i.股票代码 === item.股票代码) === index
+        )
+      }
+    ])
   }
   // 表格列配置 - 针对个股数据
   const columns = [
@@ -171,13 +184,17 @@ export function StockRankPanel(props: {
           <p className="text-[12px] text-white/50">
             {record.代码 || record.股票代码 || '--'}
             <Button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation()
                 navigator.clipboard.writeText(record.代码 || record.股票代码)
               }}
               type="link"
               icon={<CopyOutlined />}></Button>
             <Button
-              onClick={() => onToggleSelf(record)}
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleSelf(record)
+              }}
               type="link"
               title={hasSelf(record) ? '取消自选' : '加自选'}
               icon={
@@ -334,7 +351,7 @@ export function StockRankPanel(props: {
       }}>
       <App>
         <div
-          className={`flex w-full overflow-hidden ${props.className || ''}`}
+          className={`flex w-full overflow-hidden ${props.className || 'pt-2'}`}
           ref={(el) => (tabWrapRef.current = el)}>
           <div className="flex flex-col w-full !px-4">
             {/* 使用Tabs组件展示个股排行类型 */}
@@ -344,7 +361,7 @@ export function StockRankPanel(props: {
                 onChange={props.onStockTypeChange}
                 tabBarExtraContent={{
                   right: (
-                    <div className="flex items-center gap-2 mr-4">
+                    <div className="flex items-center gap-2">
                       {/* 刷新按钮 */}
                       <Button
                         type="text"
@@ -356,22 +373,6 @@ export function StockRankPanel(props: {
                         title="获取最新数据">
                         刷新
                       </Button>
-                      {/* 时间周期选择器放在tabBarExtraContent中 */}
-                      <Select
-                        size="small"
-                        value={props.currentIndicator}
-                        onChange={props.onIndicatorChange}
-                        options={props.indicatorOptions}
-                        className="w-24"
-                        styles={{
-                          popup: {
-                            root: {
-                              background: 'rgba(0, 0, 0, 0.8)',
-                              backdropFilter: 'blur(10px)'
-                            }
-                          }
-                        }}
-                      />
                     </div>
                   )
                 }}
@@ -421,17 +422,7 @@ function StockRankWidget(props: WidgetProp) {
     }
   ]
 
-  // 时间周期配置
-  const indicatorOptions = [
-    { label: '今日', value: '即时' },
-    { label: '3日', value: '3日排行' },
-    { label: '5日', value: '5日排行' },
-    { label: '10日', value: '10日排行' },
-    { label: '20日', value: '20日排行' }
-  ]
-
   const [currentStockType, setCurrentStockType] = useState(stockTypes[0].key)
-  const [currentIndicator, setCurrentIndicator] = useState('即时')
   const [stockData, setStockData] = useLocalStorageState<StockRank[]>(
     'stock_rank',
     {
@@ -456,7 +447,7 @@ function StockRankWidget(props: WidgetProp) {
       return result || []
     },
     {
-      cacheKey: `stock_rank_${currentStockType}_${currentIndicator}`,
+      cacheKey: `stock_rank_${currentStockType}`,
       staleTime: 60 * 1000, // 缓存60秒
       manual: true
     }
@@ -471,7 +462,7 @@ function StockRankWidget(props: WidgetProp) {
   // 初始化加载数据
   useEffect(() => {
     fetchStockRank()
-  }, [currentStockType, currentIndicator])
+  }, [currentStockType])
 
   // 处理数据更新
   const handleUpdate = () => {
@@ -482,12 +473,6 @@ function StockRankWidget(props: WidgetProp) {
   const handleStockTypeChange = (key: string) => {
     setCurrentStockType(key)
   }
-
-  // 处理时间周期切换
-  const handleIndicatorChange = (value: string) => {
-    setCurrentIndicator(value)
-  }
-
   return (
     <ThemeProvider
       token={{
@@ -560,13 +545,10 @@ function StockRankWidget(props: WidgetProp) {
               <StockRankPanel
                 loading={loading}
                 stockTypes={stockTypes}
-                indicatorOptions={indicatorOptions}
                 currentStockType={currentStockType}
-                currentIndicator={currentIndicator}
                 stockData={stockData}
                 onUpdate={handleUpdate}
                 onStockTypeChange={handleStockTypeChange}
-                onIndicatorChange={handleIndicatorChange}
                 {...props}
               />
             )}
@@ -595,16 +577,17 @@ function StockRankWidget(props: WidgetProp) {
               props: { size: props.size, cateId: 'stock_rank' }
             })
           }}>
+          <h5 className="text-white ml-4 flex gap-2 text-xl">
+            <StockOutlined />
+            股票排行
+          </h5>
           <StockRankPanel
             loading={loading}
             stockTypes={stockTypes}
-            indicatorOptions={indicatorOptions}
             currentStockType={currentStockType}
-            currentIndicator={currentIndicator}
             stockData={stockData}
             onUpdate={handleUpdate}
             onStockTypeChange={handleStockTypeChange}
-            onIndicatorChange={handleIndicatorChange}
             height="400px"
             {...props}
           />

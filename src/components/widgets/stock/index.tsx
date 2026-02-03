@@ -20,7 +20,9 @@ export interface StockDaily {
   时间: string
   成交价: number
   手数: number
+  均价?: number
   买卖盘性质: string
+  average?: number
   ticktime?: string
   price?: number
   volume?: number
@@ -42,27 +44,27 @@ export interface Stock {
   序号?: string
   代码?: string
   股票代码?: string
-  名称: string
-  最新价: number
-  涨跌幅: number
-  涨跌额: number
+  名称?: string
+  最新价?: number
+  涨跌幅?: number
+  涨跌额?: number
   振幅?: number
   最高: number
   最低: number
   今开: number
   昨收: number
   量比?: number
-  最新: number
-  均价: number
-  涨幅: number
-  涨跌: number
-  总手: number
-  金额: number
-  换手: number
-  涨停: number
-  跌停: number
-  外盘: number
-  内盘: number
+  最新?: number
+  均价?: number
+  涨幅?: number
+  涨跌?: number
+  总手?: number
+  金额?: number
+  换手?: number
+  涨停?: number
+  跌停?: number
+  外盘?: number
+  内盘?: number
 }
 export interface StockData {
   type: 'hk' | 'se' | 'us'

@@ -325,6 +325,11 @@ const StockInfoComponent = (props: {
         name: dayjs(item.时间).format('YYYY-MM-DD'),
         time: dayjs(item.时间).format('YYYY-MM-DD HH:mm:ss'),
         percent: percent.toFixed(2),
+        averagePercent: (
+          ((dayhours[dayhours.length - 1].收盘 - item.均价) /
+            dayhours[dayhours.length - 1].均价) *
+          100
+        ).toFixed(2),
         value: price
       }
     }
@@ -344,11 +349,28 @@ const StockInfoComponent = (props: {
       100
     ).toFixed(2)
     const minPercent = -maxPercent
+    const list = dayhours?.map(covert) || []
+    const average = dayhours[dayhours.length - 1]?.均价 || 0
+    const price = list[list.length - 1]?.value || 0
+    const percent = list[list.length - 1]?.averagePercent || 0
+    const volume = dayhours[dayhours.length - 1]?.成交量 || 0
     return (
       <Spin spinning={dayHoursLoading}>
-        <div className="h-[270px] w-full">
-          <div className="absolute top-0 right-0">{minPercent}%</div>
-          <div className="absolute bottom-[30px] right-0">{maxPercent}%</div>
+        <div className="h-[290px] w-full">
+          <div className="text-[#fff] flex gap-4 ml-[60px]">
+            <span>价 {price}</span>
+            <span>幅 {percent}%</span>
+            <span>均 {average}</span>
+            <span>量 {volume}</span>
+          </div>
+          <div className="absolute top-0 left-0 text-[#fff]">{max}</div>
+          <div className="absolute bottom-[30px] left-0 text-[#0f0]">{min}</div>
+          <div className="absolute top-0 right-0 text-[#f00]">
+            {minPercent}%
+          </div>
+          <div className="absolute bottom-[30px] right-0 text-[#0f0]">
+            {maxPercent}%
+          </div>
           <DayHoursChart
             data={{
               list: dayhours?.map(covert) || props.data.daily_data_list || [],

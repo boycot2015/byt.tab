@@ -5,7 +5,7 @@ import {
   useRequest
 } from 'ahooks'
 import { Card, Spin } from 'antd'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import { getNews, getNewsCate } from '~data/news'
 import { sizeMap, ThemeProvider } from '~layouts'
@@ -82,6 +82,34 @@ function Widget(props: WidgetProp) {
       return data.length ? page + 1 : 0
     })
   }, 1000 * 10)
+  const dialogRender = useMemo(() => {
+    return (
+      <WidgetModal
+        visible={visible}
+        cateId={props.cateId || ''}
+        id={props.id || ''}
+        cates={news}
+        afterOpenChange={(visible) => {
+          setShow(visible)
+        }}
+        onCancel={(cateId, list) => {
+          setVisible(false)
+          setList(list)
+          setCurrentList(list.slice(0, 4))
+          setNews(
+            news.map((item) => ({
+              ...item,
+              list: cateId === item.id ? list : item.list || []
+            })) || []
+          )
+          props.update({
+            id: props.id,
+            props: { size: props.size, cateId: cateId }
+          })
+        }}
+      />
+    )
+  }, [props.cateId, news])
   return (
     <ThemeProvider>
       <Card
@@ -112,32 +140,7 @@ function Widget(props: WidgetProp) {
           </div>
         </Spin>
       </Card>
-      {show && (
-        <WidgetModal
-          visible={visible}
-          cateId={props.cateId || ''}
-          id={props.id || ''}
-          cates={news}
-          afterOpenChange={(visible) => {
-            setShow(visible)
-          }}
-          onCancel={(cateId, list) => {
-            setVisible(false)
-            setList(list)
-            setCurrentList(list.slice(0, 4))
-            setNews(
-              news.map((item) => ({
-                ...item,
-                list: cateId === item.id ? list : item.list || []
-              })) || []
-            )
-            props.update({
-              id: props.id,
-              props: { size: props.size, cateId: cateId }
-            })
-          }}
-        />
-      )}
+      {show && dialogRender}
     </ThemeProvider>
   )
 }
