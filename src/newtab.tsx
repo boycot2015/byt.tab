@@ -334,8 +334,8 @@ function IndexTab() {
           colorBorder: 'rgba(0, 0, 0, 0.3)'
         }}>
         <Button
-          className="text-shadow"
-          type="text"
+          className="text-shadow !text-white"
+          type="link"
           size="small"
           disabled={props.disabled}
           onClick={() => {

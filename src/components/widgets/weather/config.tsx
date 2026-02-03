@@ -182,16 +182,8 @@ function WidgetModal(props: {
                     <div className="flex items-center gap-2 order-1">
                       {currentWeather?.location?.province}·
                       {currentWeather?.location?.city}
-                      <div className="flex items-center gap-1">
-                        <span
-                          dangerouslySetInnerHTML={{
-                            __html:
-                              weatherIcon[
-                                currentWeather?.weather?.condition || 'sunny'
-                              ]
-                          }}></span>
-                        {currentWeather?.weather?.condition}
-                      </div>
+                      <span>{currentWeather?.weather?.condition}
+                      </span>
                     </div>
                     <div className="sm:order-2 md:order-1">
                       更新于：
