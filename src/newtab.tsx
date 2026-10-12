@@ -96,10 +96,10 @@ const animationFN = (
     scale = 0,
     item
   } = options
-  let elements = document.querySelectorAll(selector) as unknown as HTMLElement[]
+  let elements = document.querySelectorAll<HTMLElement>(selector)
   let currentIndex = 0
   let offsetWidth = 0
-  elements.entries().forEach(([index, element]) => {
+  elements.forEach((element, index) => {
     element.style.transition = `all ${duration / 1000}s ease`
     if (element.getAttribute('data-id') == item.id) {
       offsetWidth = element.offsetWidth
@@ -107,15 +107,15 @@ const animationFN = (
       currentIndex = index
     }
   })
-  elements.entries().forEach(([index, element]) => {
+  elements.forEach((element, index) => {
     if (index > currentIndex) {
       element.style.transition = `all ${duration / 2 / 1000}s ${duration / 1000}s ease`
       element.style.transform = `translate3d(${directionMap[direction]}${offsetWidth}px, 0, 0)`
     }
   })
   timer = setTimeout(() => {
-    elements = document.querySelectorAll(selector) as unknown as HTMLElement[]
-    elements.entries().forEach(([index, element]) => {
+    elements = document.querySelectorAll<HTMLElement>(selector)
+    elements.forEach((element, index) => {
       if (index >= currentIndex) {
         element.style.transition = 'none'
         element.style.transform = ''

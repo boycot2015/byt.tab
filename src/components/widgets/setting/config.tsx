@@ -172,9 +172,7 @@ function WidgetModal(props: { visible: boolean; onCancel: () => void }) {
                 { label: '苍耳渔阳体', value: 'CangErYuYang' },
                 { label: '微软雅黑', value: 'Microsoft YaHei' },
                 { label: '楷体', value: 'KaiTi' },
-                { label: '黑体', value: 'Black' },
-                { label: '宋体', value: 'Song' },
-                { label: 'OPPO 字体', value: 'OPPOSans' }
+                { label: '宋体', value: 'Song' }
               ]}
             />
           </Form.Item>

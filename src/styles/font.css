@@ -5,12 +5,6 @@
     src: url(data-base64:~styles/fonts/CangErYuYang.ttf) format("truetype");
 }
 @font-face {
-    font-family: "Black";
-    font-style: normal;
-    font-weight: 400;
-    src: url(data-base64:~styles/fonts/black.ttf) format("truetype");
-}
-@font-face {
     font-family: "KaiTi";
     font-style: normal;
     font-weight: 400;
@@ -21,10 +15,4 @@
     font-style: normal;
     font-weight: 400;
     src: url(data-base64:~styles/fonts/Song.ttf) format("truetype");
-}
-@font-face {
-    font-family: "OPPOSans";
-    font-style: normal;
-    font-weight: 400;
-    src: url(data-base64:~styles/fonts/OPPOSans-Regular.woff) format("woff");
 }
