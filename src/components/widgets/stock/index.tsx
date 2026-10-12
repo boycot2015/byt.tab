@@ -12,7 +12,7 @@ import { getCurrentJobs } from '~components/widgets/date/config'
 import type { Job } from '~components/widgets/date/config'
 import { getStockSpot } from '~data/stock'
 import { sizeMap, ThemeProvider } from '~layouts'
-import { buildDay } from '~utils'
+import { buildDay, isMarketOpen } from '~utils'
 
 import WidgetModal from './config'
 
@@ -137,18 +137,21 @@ function Widget(props: WidgetProp) {
     defaultValue: false,
     listenStorageChange: true
   })
+  // 交易时段内才轮询，非交易时段（含周末/午休）停止调用接口，避免频繁请求封 IP
+  const [marketOpen, setMarketOpen] = useState(isMarketOpen())
+  useInterval(() => setMarketOpen(isMarketOpen()), 60 * 1000)
   const { data, run: getSpotData, error: seError } = useRequest(fetchData, {
     cacheKey: 'stock_spot_data_se_hk',
-    refreshDeps: [shouldQuery],
-    pollingInterval: shouldQuery ? 5000 : 0,
-    staleTime: 1000 * 5 * 6
+    refreshDeps: [shouldQuery, marketOpen],
+    pollingInterval: shouldQuery && marketOpen ? 30000 : 0,
+    staleTime: 1000 * 30
   })
   const { data: usData, run: getUsData, error: usError } = useRequest(
     fetchUsData,
     {
       cacheKey: 'stock_spot_data_us',
-      refreshDeps: [shouldQuery],
-      pollingInterval: shouldQuery ? 5000 : 0,
+      refreshDeps: [shouldQuery, marketOpen],
+      pollingInterval: shouldQuery && marketOpen ? 30000 : 0,
       staleTime: 1000 * 60 * 60 * 12
     }
   )
@@ -225,8 +228,7 @@ function Widget(props: WidgetProp) {
       data.length && setList(data)
       return data.length ? page + 1 : 0
     })
-    if (!seError) getSpotData()
-    if (!usError) getUsData()
+    // 仅做页内轮播，刷新交给上面的 pollingInterval（30s + 交易时段判断），不再此处强制调接口
   }, 1000 * 15)
   // 数据清除自动获取
   useUpdateEffect(() => {

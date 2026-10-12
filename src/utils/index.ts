@@ -74,6 +74,18 @@ export const $GET = async (url: string, options?: RequestInit) => {
         console.log(err)
     }
 }
+
+// A股交易时段判断（本地时间）：周一至周五，上午 09:30-11:30、下午 13:00-15:00
+export const isMarketOpen = (date: Date = new Date()): boolean => {
+  const day = date.getDay()
+  if (day === 0 || day === 6) return false
+  const h = date.getHours()
+  const m = date.getMinutes()
+  const minutes = h * 60 + m
+  const morning = minutes >= 9 * 60 + 30 && minutes <= 11 * 60 + 30
+  const afternoon = minutes >= 13 * 60 && minutes <= 15 * 60
+  return morning || afternoon
+}
 export class Day {
     public month: number = 0
     public day: number = 0
