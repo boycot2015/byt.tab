@@ -316,7 +316,8 @@ const getStockHistory = async ({
  * 兼容旧组件对 具体事项 / 简称 字段的读取
  */
 const getStockNews = async (date = ''): Promise<any[]> => {
-  const data = (await $GET(`${stockApiUrl}/news/list?count=50`)) || []
+  // 拉取股票分类资讯（category=stock），避免默认 economy 混入热点/财经要闻
+  const data = (await $GET(`${stockApiUrl}/news/list?category=stock&count=50`)) || []
   const list = data?.list || []
   return list.map((el: any, i: number) => ({
     id: String(i),

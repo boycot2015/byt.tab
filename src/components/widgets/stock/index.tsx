@@ -137,18 +137,21 @@ function Widget(props: WidgetProp) {
     defaultValue: false,
     listenStorageChange: true
   })
-  const { data, run: getSpotData } = useRequest(fetchData, {
+  const { data, run: getSpotData, error: seError } = useRequest(fetchData, {
     cacheKey: 'stock_spot_data_se_hk',
     refreshDeps: [shouldQuery],
     pollingInterval: shouldQuery ? 5000 : 0,
     staleTime: 1000 * 5 * 6
   })
-  const { data: usData, run: getUsData } = useRequest(fetchUsData, {
-    cacheKey: 'stock_spot_data_us',
-    refreshDeps: [shouldQuery],
-    pollingInterval: shouldQuery ? 5000 : 0,
-    staleTime: 1000 * 60 * 60 * 12
-  })
+  const { data: usData, run: getUsData, error: usError } = useRequest(
+    fetchUsData,
+    {
+      cacheKey: 'stock_spot_data_us',
+      refreshDeps: [shouldQuery],
+      pollingInterval: shouldQuery ? 5000 : 0,
+      staleTime: 1000 * 60 * 60 * 12
+    }
+  )
   const [stockData, setStockData] = useLocalStorageState<StockData[]>(
     'stock_spot_data',
     {
@@ -207,6 +210,10 @@ function Widget(props: WidgetProp) {
       setLoading(false)
     }
   }, [usData])
+  // 行情请求失败时停止 loading（避免一直转圈）
+  useEffect(() => {
+    if (seError || usError) setLoading(false)
+  }, [seError, usError])
   const getJobs = useCallback(() => getCurrentJobs(jobs, buildDay()), [])
   useInterval(() => {
     setPage((page) => {
@@ -218,8 +225,8 @@ function Widget(props: WidgetProp) {
       data.length && setList(data)
       return data.length ? page + 1 : 0
     })
-    getSpotData()
-    getUsData()
+    if (!seError) getSpotData()
+    if (!usError) getUsData()
   }, 1000 * 15)
   // 数据清除自动获取
   useUpdateEffect(() => {
@@ -247,7 +254,7 @@ function Widget(props: WidgetProp) {
           !props.withComponents && setVisible(true)
           !props.withComponents && setShow(true)
         }}>
-        <Spin spinning={!list.length} wrapperClassName={`w-full h-full`}>
+        <Spin spinning={!list.length && !seError && !usError} wrapperClassName={`w-full h-full`}>
           <div className="h-full w-full min-h-[144px] !p-4 flex flex-col text-white gap-2">
             {list?.map((item, index) => (
               <div

@@ -44,13 +44,16 @@ function Widget(props: WidgetProp) {
     defaultValue: [],
     listenStorageChange: true
   })
-  const { data, run: fetchNews } = useRequest(getStockNews, {
+  const { data, run: fetchNews, loading, error } = useRequest(getStockNews, {
     cacheKey: 'stock_news',
     staleTime: 1000 * 60 * 5,
-    manual: true
+    manual: true,
+    onError: () => setNewsError(true),
+    onSuccess: () => setNewsError(false)
   })
   const [list, setList] = useState<News['list']>([])
   const [currentList, setCurrentList] = useState<News['list']>([])
+  const [newsError, setNewsError] = useState(false)
   useEffect(() => {
     if (news && news.length) {
       setList(news)
@@ -74,7 +77,7 @@ function Widget(props: WidgetProp) {
         data.length && setCurrentList(data)
         return data.length ? page + 1 : 0
       })
-      list && !list.length && fetchNews()
+      list && !list.length && !newsError && fetchNews()
     },
     1000 * 10,
     {
@@ -92,8 +95,13 @@ function Widget(props: WidgetProp) {
           !props.withComponents && setVisible(true)
           !props.withComponents && setShow(true)
         }}>
-        <Spin spinning={!currentList.length} wrapperClassName={`w-full h-full`}>
+        <Spin spinning={loading && !currentList.length && !newsError} wrapperClassName={`w-full h-full`}>
           <div className="h-full w-full min-h-[144px] !p-4 flex flex-col text-white gap-2">
+            {!currentList.length && (
+              <div className="text-white/60 text-sm">
+                {newsError ? '资讯加载失败，稍后重试' : '暂无资讯'}
+              </div>
+            )}
             {currentList?.map((item, index) => (
               <div
                 className="flex justify-between gap-2"
