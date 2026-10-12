@@ -44,7 +44,7 @@ function Widget(props: WidgetProp) {
     defaultValue: [],
     listenStorageChange: true
   })
-  const { data, run: fetchNews, loading, error } = useRequest(getStockNews, {
+  const { data, run: fetchNews, loading } = useRequest(getStockNews, {
     cacheKey: 'stock_news',
     staleTime: 1000 * 60 * 5,
     manual: true,
@@ -54,6 +54,7 @@ function Widget(props: WidgetProp) {
   const [list, setList] = useState<News['list']>([])
   const [currentList, setCurrentList] = useState<News['list']>([])
   const [newsError, setNewsError] = useState(false)
+  const [loaded, setLoaded] = useState(false)
   useEffect(() => {
     if (news && news.length) {
       setList(news)
@@ -64,10 +65,13 @@ function Widget(props: WidgetProp) {
     }
   }, [news])
   useEffect(() => {
-    if (data && data.length) {
-      setList(data)
-      setCurrentList(data.slice(0, 4))
-      setNews(data)
+    if (data) {
+      setLoaded(true)
+      if (data.length) {
+        setList(data)
+        setCurrentList(data.slice(0, 4))
+        setNews(data)
+      }
     }
   }, [data])
   useInterval(
@@ -95,7 +99,7 @@ function Widget(props: WidgetProp) {
           !props.withComponents && setVisible(true)
           !props.withComponents && setShow(true)
         }}>
-        <Spin spinning={loading && !currentList.length && !newsError} wrapperClassName={`w-full h-full`}>
+        <Spin spinning={!loaded && loading} wrapperClassName={`w-full h-full`}>
           <div className="h-full w-full min-h-[144px] !p-4 flex flex-col text-white gap-2">
             {!currentList.length && (
               <div className="text-white/60 text-sm">
