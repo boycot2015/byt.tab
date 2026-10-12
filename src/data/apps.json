@@ -128,5 +128,35 @@
                 "component": "SettingWidget"
             }
         ]
+    },
+    {
+        "name": "资讯",
+        "key": "news",
+        "icon": "ReadOutlined",
+        "children": []
+    },
+    {
+        "name": "购物",
+        "key": "shopping",
+        "icon": "ShoppingOutlined",
+        "children": []
+    },
+    {
+        "name": "音乐",
+        "key": "music",
+        "icon": "CustomerServiceOutlined",
+        "children": []
+    },
+    {
+        "name": "阅读",
+        "key": "read",
+        "icon": "BookOutlined",
+        "children": []
+    },
+    {
+        "name": "其他",
+        "key": "others",
+        "icon": "AppstoreOutlined",
+        "children": []
     }
 ]

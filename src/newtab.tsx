@@ -275,6 +275,29 @@ function IndexTab() {
                               child.backgroundColor || 'transparent'
                           }}
                           alt={child.name}
+                          onError={(e) => {
+                            const img = e.currentTarget
+                            const step = Number(img.dataset.fallback || '0')
+                            // 旧图标域名已失效，同路径迁移到 itab.link
+                            if (step === 0 && child.icon?.includes('files.codebife.cc')) {
+                              img.dataset.fallback = '1'
+                              img.src = child.icon.replace(
+                                'files.codebife.cc',
+                                'files.itab.link'
+                              )
+                              return
+                            }
+                            if (step <= 1 && child.href) {
+                              img.dataset.fallback = '2'
+                              try {
+                                img.src = `https://api.iowen.cn/favicon/${new URL(child.href).hostname}.png`
+                                return
+                              } catch {
+                                /* href 非法则继续隐藏 */
+                              }
+                            }
+                            img.style.display = 'none'
+                          }}
                         />
                       ) : (
                         renderComponent(child.icon, {
